@@ -217,7 +217,7 @@ valueRecordDef < 0 0 -250 0 > QUARTER;
 feature cspc { # "Contextual Spacing"
   # Horizontal glyph classes
   @OpeningBracket = [uni2018 uni201C uni3008 uni300A uni300C uni300E uni3010 uni3014 uni3016 uni3018 uni301A uni301D uniFF08 uniFF3B uniFF5B uniFF5F];
-  @ClosingBracket = [uni2019 uni201D uni3009 uni300B uni300D uni300F uni3011 uni3015 uni3017 uni3019 uni301B uni301F uniFF09 uniFF3D uniFF5D uniFF60];
+  @ClosingBracket = [uni2019 uni201D uni3009 uni300B uni300D uni300F uni3011 uni3015 uni3017 uni3019 uni301B uni301E uni301F uniFF09 uniFF3D uniFF5D uniFF60];
   @PeriodComma = [uni3001 uni3002 uniFF0C uniFF0E];
   @Centered = [uni3001.tw uni3002.tw uni30FB uniFF0C.tw uniFF0E.tw uniFF1A uniFF1B];
 
