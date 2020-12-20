@@ -8,9 +8,10 @@ from fontTools.otlLib.builder import buildValue
 from fontTools.otlLib.builder import PairPosBuilder
 
 class EastAsianSpacingBuilder(object):
-  def __init__(self, font, font_path):
+  def __init__(self, font, font_path, is_vertical = False):
     self.font = font
     self.font_path = font_path
+    self.is_vertical = is_vertical
     self.show_glyph_images = False
 
   def build(self):
@@ -37,7 +38,11 @@ class EastAsianSpacingBuilder(object):
 
     # Fullwidth colon, semicolon, exclamation mark, and question mark are on
     # left in ZHS but centered in other languages.
-    colon_exclam_question = [0xFF01, 0xFF1A, 0xFF1B, 0xFF1F]
+    colon_exclam_question = [0xFF01, 0xFF1A, 0xFF1F]
+    if not self.is_vertical:
+      # Add U+FF1B FULLWIDTH SEMICOLON only for horizontal because it is upright
+      # in vertical flow in Chinese, or may be so even in Japanese.
+      colon_exclam_question.append(0xFF1B)
     colon_exclam_question_jan = set(self.glyphs(colon_exclam_question,
                                                 language="JAN", script="hani"))
     colon_exclam_question_zhs = self.glyphs(colon_exclam_question,
@@ -55,8 +60,12 @@ class EastAsianSpacingBuilder(object):
     right = to_tuple(right)
     middle = to_tuple(middle)
     fullwidth_space = to_tuple(fullwidth_space)
-    left_half_value = buildValue({"XAdvance": -500})
-    right_half_value = buildValue({"XPlacement": -500, "XAdvance": -500})
+    if self.is_vertical:
+      left_half_value = buildValue({"YAdvance": -500})
+      right_half_value = buildValue({"YPlacement": 500, "YAdvance": -500})
+    else:
+      left_half_value = buildValue({"XAdvance": -500})
+      right_half_value = buildValue({"XPlacement": -500, "XAdvance": -500})
     pair_pos_builder = PairPosBuilder(self.font, None)
     pair_pos_builder.addClassPair(None, left, left_half_value,
                                   left + middle + right + fullwidth_space, None)
@@ -76,6 +85,9 @@ class EastAsianSpacingBuilder(object):
     # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
     # Enable "fwid" feature to get fullwidth glyphs.
     features = ["fwid"]
+    if self.is_vertical:
+      args.append("--direction=ttb")
+      features.append("vert")
     args.append("--features=" + ",".join(features))
     unicodes_as_hex_string = ",".join(hex(c) for c in text)
     args.append("--unicodes=" + unicodes_as_hex_string)
@@ -89,8 +101,16 @@ class EastAsianSpacingBuilder(object):
       view_args = ["hb-view", "--font-size=64"]
       view_args.extend(args[3:])
       subprocess.run(view_args)
-    glyphs = filter(lambda glyph: glyph["g"] and glyph["ax"] == 1000, glyphs)
-    return (glyph["g"] for glyph in glyphs)
+    # East Asian spacing applies only to fullwidth glyphs.
+    if self.is_vertical:
+      glyphs = filter(lambda glyph: glyph["ay"] == -1000, glyphs)
+    else:
+      glyphs = filter(lambda glyph: glyph["ax"] == 1000, glyphs)
+    glyphs = (glyph["g"] for glyph in glyphs)
+    # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
+    # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
+    glyphs = filter(lambda glyph_id: glyph_id, glyphs)
+    return glyphs
 
   def test(self):
     print(self.glyphs([0x2018, 0x2019, 0x201C, 0x201D]))
@@ -110,12 +130,15 @@ if __name__ == '__main__':
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",
                       action="count", default=0)
+  parser.add_argument("--vertical",
+                      action="store_true")
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
   else:
     logging.basicConfig(level=logging.INFO)
-  builder = EastAsianSpacingBuilder(None, args.file)
+  builder = EastAsianSpacingBuilder(None, args.file,
+                                    is_vertical = args.vertical)
   if args.verbose >= 2:
     builder.show_glyph_images = True
   builder.build()

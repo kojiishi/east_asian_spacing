@@ -4,12 +4,8 @@ import os.path
 import re
 import sys
 
-from fontTools.feaLib.parser import Parser
-from fontTools.feaLib.builder import addOpenTypeFeatures
-from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.otlLib.builder import buildValue
 from fontTools.ttLib import TTFont
-from fontTools.ttLib.tables import otBase, otTables
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 
 from EastAsianSpacingBuilder import EastAsianSpacingBuilder
@@ -47,9 +43,15 @@ class Builder(object):
   def add(self, font):
     spacing_builder = EastAsianSpacingBuilder(self.font, self.font_path)
     lookup = spacing_builder.build()
-
     GPOS = font.get('GPOS')
     table = GPOS.table
+    self.add_feature(table, 'chws', lookup)
+    spacing_builder = EastAsianSpacingBuilder(self.font, self.font_path,
+                                              is_vertical = True)
+    lookup = spacing_builder.build()
+    self.add_feature(table, 'vchw', lookup)
+
+  def add_feature(self, table, feature_tag, lookup):
     lookups = table.LookupList.Lookup
     lookup_index = len(lookups)
     logging.info("Adding Lookup at index %d", lookup_index)
@@ -58,21 +60,21 @@ class Builder(object):
     features = table.FeatureList.FeatureRecord
     feature_index = len(features)
     feature_record = otTables.FeatureRecord()
-    feature_record.FeatureTag = 'chws'
+    feature_record.FeatureTag = feature_tag
     feature_record.Feature = otTables.Feature()
-    #feature_record.Feature.FeatureParams = self.buildFeatureParams(feature_tag)
     feature_record.Feature.LookupListIndex = [lookup_index]
     feature_record.Feature.LookupCount = 1
-    logging.info("Adding Feature '%s' at index %d", feature_record.FeatureTag, feature_index)
+    logging.info("Adding Feature '%s' at index %d", feature_tag, feature_index)
     features.append(feature_record)
 
     scripts = table.ScriptList.ScriptRecord
     for script_record in scripts:
-      #if script_record.ScriptTag == 'DFLT':
-      logging.info("Adding Feature index %d to script '%s' DefaultLangSys", feature_index, script_record.ScriptTag)
+      logging.info("Adding Feature index %d to script '%s' DefaultLangSys",
+                   feature_index, script_record.ScriptTag)
       script_record.Script.DefaultLangSys.FeatureIndex.append(feature_index)
       for lang_sys in script_record.Script.LangSysRecord:
-        logging.info("Adding Feature index %d to script '%s' langsys '%s'", feature_index, script_record.ScriptTag, lang_sys.LangSysTag)
+        logging.info("Adding Feature index %d to script '%s' LangSys '%s'",
+                     feature_index, script_record.ScriptTag, lang_sys.LangSysTag)
         lang_sys.LangSys.FeatureIndex.append(feature_index)
 
 if __name__ == '__main__':
