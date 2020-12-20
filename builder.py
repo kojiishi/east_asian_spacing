@@ -85,9 +85,12 @@ if __name__ == '__main__':
                       action="count", default=0)
   args = parser.parse_args()
   if args.verbose:
-    logging.basicConfig(level=logging.DEBUG)
-  else:
-    logging.basicConfig(level=logging.INFO)
+    if args.verbose >= 2:
+      if args.verbose >= 3:
+        EastAsianSpacingBuilder.show_glyph_images = True
+      logging.basicConfig(level=logging.DEBUG)
+    else:
+      logging.basicConfig(level=logging.INFO)
   builder = Builder()
   builder.load(args.file)
   builder.build()

@@ -8,11 +8,12 @@ from fontTools.otlLib.builder import buildValue
 from fontTools.otlLib.builder import PairPosBuilder
 
 class EastAsianSpacingBuilder(object):
+  show_glyph_images = False
+
   def __init__(self, font, font_path, is_vertical = False):
     self.font = font
     self.font_path = font_path
     self.is_vertical = is_vertical
-    self.show_glyph_images = False
 
   def build(self):
     opening = [0x2018, 0x201C, 0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014,
@@ -97,7 +98,7 @@ class EastAsianSpacingBuilder(object):
     with io.BytesIO(result.stdout) as file:
       glyphs = json.load(file)
     logging.debug("result = %s", glyphs)
-    if self.show_glyph_images:
+    if EastAsianSpacingBuilder.show_glyph_images:
       view_args = ["hb-view", "--font-size=64"]
       view_args.extend(args[3:])
       subprocess.run(view_args)
@@ -134,11 +135,11 @@ if __name__ == '__main__':
                       action="store_true")
   args = parser.parse_args()
   if args.verbose:
+    if args.verbose >= 2:
+      EastAsianSpacingBuilder.show_glyph_images = True
     logging.basicConfig(level=logging.DEBUG)
   else:
     logging.basicConfig(level=logging.INFO)
   builder = EastAsianSpacingBuilder(None, args.file,
                                     is_vertical = args.vertical)
-  if args.verbose >= 2:
-    builder.show_glyph_images = True
   builder.build()
