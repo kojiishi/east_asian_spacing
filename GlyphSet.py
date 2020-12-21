@@ -82,11 +82,13 @@ class GlyphSet(object):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("font_path")
+  parser.add_argument("text", nargs="?")
+  parser.add_argument("--language", )
+  parser.add_argument("--script", )
+  parser.add_argument("--vertical", dest="is_vertical", action="store_true")
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",
                       action="count", default=0)
-  parser.add_argument("--vertical", dest="is_vertical",
-                      action="store_true")
   args = parser.parse_args()
   if args.verbose:
     if args.verbose >= 2:
@@ -94,14 +96,20 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
   else:
     logging.basicConfig(level=logging.INFO)
-  GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], args)
-  GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], args)
-  GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F], args)
-  GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-           args, language="JAN", script="hani")
-  GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-           args, language="ZHS", script="hani")
-  GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-           args, language="ZHH", script="hani")
-  GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-           args, language="ZHT", script="hani")
+  if args.text:
+    text = list(ord(c) for c in args.text)
+    glyphs = GlyphSet(text, args, language=args.language, script=args.script)
+    print(glyphs.glyph_ids)
+  else:
+    # Print samples.
+    GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], args)
+    GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], args)
+    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F], args)
+    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+            args, language="JAN", script="hani")
+    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+            args, language="ZHS", script="hani")
+    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+            args, language="ZHH", script="hani")
+    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+            args, language="ZHT", script="hani")
