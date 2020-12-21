@@ -23,8 +23,7 @@ class EastAsianSpacingBuilder(object):
                0xFF60]
     left = GlyphSet(closing, self)
     right = GlyphSet(opening, self)
-    middle = GlyphSet([0x30FB], self)
-    fullwidth_space = GlyphSet([0x3000], self)
+    middle = GlyphSet([0x3000, 0x30FB], self)
 
     # Fullwidth period/comma are centered in ZHT but on left in other languages.
     period_comma = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
@@ -58,7 +57,6 @@ class EastAsianSpacingBuilder(object):
     left = tuple(left.get_glyph_names(font))
     right = tuple(right.get_glyph_names(font))
     middle = tuple(middle.get_glyph_names(font))
-    fullwidth_space = tuple(fullwidth_space.to_glyph_names(font))
     if self.is_vertical:
       left_half_value = buildValue({"YAdvance": -500})
       right_half_value = buildValue({"YPlacement": 500, "YAdvance": -500})
@@ -67,8 +65,8 @@ class EastAsianSpacingBuilder(object):
       right_half_value = buildValue({"XPlacement": -500, "XAdvance": -500})
     pair_pos_builder = PairPosBuilder(self.font, None)
     pair_pos_builder.addClassPair(None, left, left_half_value,
-                                  left + middle + right + fullwidth_space, None)
-    pair_pos_builder.addClassPair(None, middle + right + fullwidth_space, None,
+                                  left + middle + right, None)
+    pair_pos_builder.addClassPair(None, middle + right, None,
                                   right, right_half_value)
     lookup = pair_pos_builder.build()
     assert lookup
