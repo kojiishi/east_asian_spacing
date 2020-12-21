@@ -37,18 +37,24 @@ class EastAsianSpacingBuilder(object):
     # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
     middle.unite(period_comma_zht)
 
+    colon = [0xFF1A, 0xFF1B]
+    colon_jan = GlyphSet(colon, self, language="JAN", script="hani")
+    colon_zhs = GlyphSet(colon, self, language="ZHS", script="hani")
+    assert colon_jan.isdisjoint(colon_zhs)
     if not self.is_vertical:
-      # Add FULLWIDTH COLON/SEMICOLON only for horizontal flow because they are
-      # upright in vertical flow in Chinese, or may be so even in Japanese.
-      # TODO: Check the existence of `vert` glyphs?
-      colon_jan = GlyphSet([0xFF1A, 0xFF1B], self,
-                           language="JAN", script="hani")
-      colon_zhs = GlyphSet([0xFF1A, 0xFF1B], self,
-                           language="ZHS", script="hani")
-      assert colon_jan.isdisjoint(colon_zhs)
+      # Colon/semicolon are at middle for Japanese, left in Chinese.
       middle.unite(colon_jan)
       left.unite(colon_zhs)
+    else:
+      # Add to middle if they have vertical alternatte glyphs.
+      # In vertical flow, Colon/semicolon are upright in Chinese. In Japanese,
+      # it may or may not be upright.
+      colon_jan_hor = GlyphSet(colon, self, language="JAN", script="hani",
+                               is_vertical=False)
+      colon_jan.subtract(colon_jan_hor)
+      middle.unite(colon_jan)
 
+    if not self.is_vertical:
       # Fullwidth exclamation mark and question mark are on left in ZHS but
       # centered in other languages.
       exclam_question = [0xFF01, 0xFF1F]

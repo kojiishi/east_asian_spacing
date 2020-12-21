@@ -6,11 +6,12 @@ import logging
 import subprocess
 
 class GlyphSet(object):
-  def __init__(self, text, config, language = None, script = None):
+  def __init__(self, text, config, language = None, script = None,
+               is_vertical = None):
     assert isinstance(config.font_path, str)
     self.font_path = config.font_path
-    assert isinstance(config.is_vertical, bool)
-    self.is_vertical = config.is_vertical
+    self.is_vertical = is_vertical if is_vertical is not None else config.is_vertical
+    assert isinstance(self.is_vertical, bool)
     self.language = language
     self.script = script
     self.glyph_ids = set(self.get_glyph_ids(text))
@@ -30,6 +31,11 @@ class GlyphSet(object):
     assert isinstance(self.glyph_ids, set)
     assert isinstance(other.glyph_ids, set)
     self.glyph_ids = self.glyph_ids.union(other.glyph_ids)
+
+  def subtract(self, other):
+    assert isinstance(self.glyph_ids, set)
+    assert isinstance(other.glyph_ids, set)
+    self.glyph_ids = self.glyph_ids.difference(other.glyph_ids)
 
   def get_glyph_ids(self, text):
     args = ["hb-shape", "--output-format=json", "--no-glyph-names"]
