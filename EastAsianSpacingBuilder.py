@@ -7,9 +7,9 @@ import subprocess
 from fontTools.otlLib.builder import buildValue
 from fontTools.otlLib.builder import PairPosBuilder
 
-class EastAsianSpacingBuilder(object):
-  show_glyph_images = False
+from GlyphSet import GlyphSet
 
+class EastAsianSpacingBuilder(object):
   def __init__(self, font, font_path, is_vertical = False):
     self.font = font
     self.font_path = font_path
@@ -21,21 +21,21 @@ class EastAsianSpacingBuilder(object):
     closing = [0x2019, 0x201D, 0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015,
                0x3017, 0x3019, 0x301B, 0x301E, 0x301F, 0xFF09, 0xFF3D, 0xFF5D,
                0xFF60]
-    left = set(self.glyphs(closing))
-    right = set(self.glyphs(opening))
-    middle = set(self.glyphs([0x30FB]))
-    fullwidth_space = self.glyphs([0x3000])
+    left = GlyphSet(closing, self)
+    right = GlyphSet(opening, self)
+    middle = GlyphSet([0x30FB], self)
+    fullwidth_space = GlyphSet([0x3000], self)
 
     # Fullwidth period/comma are centered in ZHT but on left in other languages.
     period_comma = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
-    period_comma_jan = set(self.glyphs(period_comma,
-                           language="JAN", script="hani"))
-    period_comma_zht = self.glyphs(period_comma,
-                                   language="ZHT", script="hani")
+    period_comma_jan = GlyphSet(period_comma, self,
+                                language="JAN", script="hani")
+    period_comma_zht = GlyphSet(period_comma, self,
+                                language="ZHT", script="hani")
     # TODO: Check the font supports both glyphs?
-    left = left.union(period_comma_jan)
+    left.unite(period_comma_jan)
     # TODO: Should ZHT be added to center?
-    middle = middle.union(period_comma_zht)
+    middle.unite(period_comma_zht)
 
     # Fullwidth colon, semicolon, exclamation mark, and question mark are on
     # left in ZHS but centered in other languages.
@@ -44,23 +44,21 @@ class EastAsianSpacingBuilder(object):
       # Add U+FF1B FULLWIDTH SEMICOLON only for horizontal because it is upright
       # in vertical flow in Chinese, or may be so even in Japanese.
       colon_exclam_question.append(0xFF1B)
-    colon_exclam_question_jan = set(self.glyphs(colon_exclam_question,
-                                                language="JAN", script="hani"))
-    colon_exclam_question_zhs = self.glyphs(colon_exclam_question,
-                                            language="ZHS", script="hani")
+    colon_exclam_question_jan = GlyphSet(colon_exclam_question, self,
+                                         language="JAN", script="hani")
+    colon_exclam_question_zhs = GlyphSet(colon_exclam_question, self,
+                                         language="ZHS", script="hani")
     # TODO: Check the font supports both glyphs?
-    middle = middle.union(colon_exclam_question_jan)
+    middle.unite(colon_exclam_question_jan)
     # TODO: Not sure if ZHS should be added to the left-half group.
 
     font = self.font
     if not font:
       return
-    def to_tuple(glyphs):
-      return tuple(font.getGlyphName(glyph) for glyph in glyphs)
-    left = to_tuple(left)
-    right = to_tuple(right)
-    middle = to_tuple(middle)
-    fullwidth_space = to_tuple(fullwidth_space)
+    left = tuple(left.get_glyph_names(font))
+    right = tuple(right.get_glyph_names(font))
+    middle = tuple(middle.get_glyph_names(font))
+    fullwidth_space = tuple(fullwidth_space.to_glyph_names(font))
     if self.is_vertical:
       left_half_value = buildValue({"YAdvance": -500})
       right_half_value = buildValue({"YPlacement": 500, "YAdvance": -500})
@@ -76,55 +74,6 @@ class EastAsianSpacingBuilder(object):
     assert lookup
     return lookup
 
-  def glyphs(self, text, language = None, script = None):
-    args = ["hb-shape", "--output-format=json", "--no-glyph-names"]
-    args.append("--font-file=" + self.font_path)
-    if language:
-      args.append("--language=x-hbot" + language)
-    if script:
-      args.append("--script=" + script)
-    # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
-    # Enable "fwid" feature to get fullwidth glyphs.
-    features = ["fwid"]
-    if self.is_vertical:
-      args.append("--direction=ttb")
-      features.append("vert")
-    args.append("--features=" + ",".join(features))
-    unicodes_as_hex_string = ",".join(hex(c) for c in text)
-    args.append("--unicodes=" + unicodes_as_hex_string)
-
-    logging.debug("subprocess.run: %s", args)
-    result = subprocess.run(args, stdout=subprocess.PIPE)
-    with io.BytesIO(result.stdout) as file:
-      glyphs = json.load(file)
-    logging.debug("result = %s", glyphs)
-    if EastAsianSpacingBuilder.show_glyph_images:
-      view_args = ["hb-view", "--font-size=64"]
-      view_args.extend(args[3:])
-      subprocess.run(view_args)
-    # East Asian spacing applies only to fullwidth glyphs.
-    if self.is_vertical:
-      glyphs = filter(lambda glyph: glyph["ay"] == -1000, glyphs)
-    else:
-      glyphs = filter(lambda glyph: glyph["ax"] == 1000, glyphs)
-    glyphs = (glyph["g"] for glyph in glyphs)
-    # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
-    # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
-    glyphs = filter(lambda glyph_id: glyph_id, glyphs)
-    return glyphs
-
-  def test(self):
-    print(self.glyphs([0x2018, 0x2019, 0x201C, 0x201D]))
-    print(self.glyphs([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F]))
-    print(self.glyphs([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="JAN", script="hani"))
-    print(self.glyphs([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="ZHS", script="hani"))
-    print(self.glyphs([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="ZHH", script="hani"))
-    print(self.glyphs([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="ZHT", script="hani"))
-
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("file")
@@ -136,7 +85,7 @@ if __name__ == '__main__':
   args = parser.parse_args()
   if args.verbose:
     if args.verbose >= 2:
-      EastAsianSpacingBuilder.show_glyph_images = True
+      GlyphSet.show_dump_images()
     logging.basicConfig(level=logging.DEBUG)
   else:
     logging.basicConfig(level=logging.INFO)

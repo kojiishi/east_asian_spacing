@@ -9,6 +9,7 @@ from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 
 from EastAsianSpacingBuilder import EastAsianSpacingBuilder
+from GlyphSet import GlyphSet
 
 class Builder(object):
   def __init__(self):
@@ -87,7 +88,7 @@ if __name__ == '__main__':
   if args.verbose:
     if args.verbose >= 2:
       if args.verbose >= 3:
-        EastAsianSpacingBuilder.show_glyph_images = True
+        GlyphSet.show_dump_images()
       logging.basicConfig(level=logging.DEBUG)
     else:
       logging.basicConfig(level=logging.INFO)
