@@ -46,12 +46,12 @@ class EastAsianSpacingBuilder(object):
       middle.unite(colon_jan)
       left.unite(colon_zhs)
     else:
-      # Add to middle if they have vertical alternatte glyphs.
-      # In vertical flow, Colon/semicolon are upright in Chinese. In Japanese,
-      # it may or may not be upright.
-      colon_jan_hor = GlyphSet(colon, self, language="JAN", script="hani",
-                               is_vertical=False)
-      colon_jan.subtract(colon_jan_hor)
+      # In vertical flow, add colon/semicolon to middle if they have vertical
+      # alternate glyphs. In Chinese, they are upright. In Japanese, they may or
+      # may not be upright. Vertical alternate glyphs indicate they are rotated.
+      colon_jan_horizontal = GlyphSet(colon, self, language="JAN", script="hani",
+                                      is_vertical=False)
+      colon_jan.subtract(colon_jan_horizontal)
       middle.unite(colon_jan)
 
     if not self.is_vertical:
