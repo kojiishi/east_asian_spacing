@@ -31,25 +31,33 @@ class EastAsianSpacingBuilder(object):
                                 language="JAN", script="hani")
     period_comma_zht = GlyphSet(period_comma, self,
                                 language="ZHT", script="hani")
-    # TODO: Check the font supports both glyphs?
+    assert period_comma_jan.isdisjoint(period_comma_zht)
     left.unite(period_comma_jan)
-    # TODO: Should ZHT be added to center?
+    # ZHT-variants (placed at middle) belong to middle.
+    # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
     middle.unite(period_comma_zht)
 
-    # Fullwidth colon, semicolon, exclamation mark, and question mark are on
-    # left in ZHS but centered in other languages.
-    colon_exclam_question = [0xFF01, 0xFF1A, 0xFF1F]
     if not self.is_vertical:
-      # Add U+FF1B FULLWIDTH SEMICOLON only for horizontal because it is upright
-      # in vertical flow in Chinese, or may be so even in Japanese.
-      colon_exclam_question.append(0xFF1B)
-    colon_exclam_question_jan = GlyphSet(colon_exclam_question, self,
-                                         language="JAN", script="hani")
-    colon_exclam_question_zhs = GlyphSet(colon_exclam_question, self,
-                                         language="ZHS", script="hani")
-    # TODO: Check the font supports both glyphs?
-    middle.unite(colon_exclam_question_jan)
-    # TODO: Not sure if ZHS should be added to the left-half group.
+      # Add FULLWIDTH COLON/SEMICOLON only for horizontal flow because they are
+      # upright in vertical flow in Chinese, or may be so even in Japanese.
+      # TODO: Check the existence of `vert` glyphs?
+      colon_jan = GlyphSet([0xFF1A, 0xFF1B], self,
+                           language="JAN", script="hani")
+      colon_zhs = GlyphSet([0xFF1A, 0xFF1B], self,
+                           language="ZHS", script="hani")
+      assert colon_jan.isdisjoint(colon_zhs)
+      middle.unite(colon_jan)
+      left.unite(colon_zhs)
+
+      # Fullwidth exclamation mark and question mark are on left in ZHS but
+      # centered in other languages.
+      exclam_question = [0xFF01, 0xFF1F]
+      exclam_question_jan = GlyphSet(exclam_question, self,
+                                     language="JAN", script="hani")
+      exclam_question_zhs = GlyphSet(exclam_question, self,
+                                     language="ZHS", script="hani")
+      assert exclam_question_jan.isdisjoint(exclam_question_zhs)
+      left.unite(exclam_question_zhs)
 
     font = self.font
     if not font:

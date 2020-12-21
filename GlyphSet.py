@@ -21,6 +21,11 @@ class GlyphSet(object):
     assert isinstance(self.glyph_ids, set)
     return (font.getGlyphName(glyph_id) for glyph_id in self.glyph_ids)
 
+  def isdisjoint(self, other):
+    assert isinstance(self.glyph_ids, set)
+    assert isinstance(other.glyph_ids, set)
+    return self.glyph_ids.isdisjoint(other.glyph_ids)
+
   def unite(self, other):
     assert isinstance(self.glyph_ids, set)
     assert isinstance(other.glyph_ids, set)
@@ -49,7 +54,7 @@ class GlyphSet(object):
   def dump(self, text):
     args = ["hb-view", "--font-size=64"]
     # Add '|' so that the height of `hb-view` dump becomes consistent.
-    self.append_hb_args(args, text[:] + [ord('|')])
+    self.append_hb_args(args, [ord('|')] + text[:] + [ord('|')])
     subprocess.run(args)
 
   def append_hb_args(self, args, text):
