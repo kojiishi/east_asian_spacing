@@ -14,6 +14,8 @@ class GlyphSet(object):
     assert isinstance(self.is_vertical, bool)
     self.language = language
     self.script = script
+    if isinstance(text, str):
+      text = list(ord(c) for c in text)
     self.glyph_ids = set(self.get_glyph_ids(text))
     if GlyphSet.dump_images:
       self.dump(text)
@@ -60,7 +62,7 @@ class GlyphSet(object):
   def dump(self, text):
     args = ["hb-view", "--font-size=64"]
     # Add '|' so that the height of `hb-view` dump becomes consistent.
-    self.append_hb_args(args, [ord('|')] + text[:] + [ord('|')])
+    self.append_hb_args(args, [ord('|')] + text + [ord('|')])
     subprocess.run(args)
 
   def append_hb_args(self, args, text):
@@ -89,23 +91,21 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("font_path")
   parser.add_argument("text", nargs="?")
-  parser.add_argument("--language", )
-  parser.add_argument("--script", )
+  parser.add_argument("-l", "--language")
+  parser.add_argument("-s", "--script")
   parser.add_argument("--vertical", dest="is_vertical", action="store_true")
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",
                       action="count", default=0)
   args = parser.parse_args()
+  GlyphSet.show_dump_images()
   if args.verbose:
-    if args.verbose >= 2:
-      GlyphSet.show_dump_images()
     logging.basicConfig(level=logging.DEBUG)
   else:
     logging.basicConfig(level=logging.INFO)
   if args.text:
-    text = list(ord(c) for c in args.text)
-    glyphs = GlyphSet(text, args, language=args.language, script=args.script)
-    print(glyphs.glyph_ids)
+    glyphs = GlyphSet(args.text, args, language=args.language, script=args.script)
+    print("glyph_id=", glyphs.glyph_ids)
   else:
     # Print samples.
     GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], args)

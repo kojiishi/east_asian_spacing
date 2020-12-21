@@ -11,7 +11,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 from EastAsianSpacingBuilder import EastAsianSpacingBuilder
 from GlyphSet import GlyphSet
 
-class Builder(object):
+class FontBuilder(object):
   def __init__(self):
     self.font = None
     self.font_collection = None
@@ -60,12 +60,12 @@ class Builder(object):
 
     features = table.FeatureList.FeatureRecord
     feature_index = len(features)
+    logging.info("Adding Feature '%s' at index %d", feature_tag, feature_index)
     feature_record = otTables.FeatureRecord()
     feature_record.FeatureTag = feature_tag
     feature_record.Feature = otTables.Feature()
     feature_record.Feature.LookupListIndex = [lookup_index]
     feature_record.Feature.LookupCount = 1
-    logging.info("Adding Feature '%s' at index %d", feature_tag, feature_index)
     features.append(feature_record)
 
     scripts = table.ScriptList.ScriptRecord
@@ -92,7 +92,7 @@ if __name__ == '__main__':
       logging.basicConfig(level=logging.DEBUG)
     else:
       logging.basicConfig(level=logging.INFO)
-  builder = Builder()
+  builder = FontBuilder()
   builder.load(args.file)
   builder.build()
   builder.save()
