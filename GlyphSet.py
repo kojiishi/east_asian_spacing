@@ -5,15 +5,12 @@ import json
 import logging
 import subprocess
 
+from Font import Font
+
 class GlyphSet(object):
-  def __init__(self, text, config, language = None, script = None,
-               is_vertical = None):
-    assert isinstance(config.font_path, str)
-    self.font_path = config.font_path
-    self.face_index = config.face_index
-    self.units_per_em = config.units_per_em
-    self.is_vertical = is_vertical if is_vertical is not None else config.is_vertical
-    assert isinstance(self.is_vertical, bool)
+  def __init__(self, text, font, language=None, script=None):
+    assert isinstance(font.path, str)
+    self.font = font
     self.language = language
     self.script = script
     if isinstance(text, str):
@@ -22,9 +19,10 @@ class GlyphSet(object):
     if GlyphSet.dump_images:
       self.dump(text)
 
-  def get_glyph_names(self, font):
+  def get_glyph_names(self):
     assert isinstance(self.glyph_ids, set)
-    return (font.getGlyphName(glyph_id) for glyph_id in self.glyph_ids)
+    ttfont = self.font.ttfont
+    return (ttfont.getGlyphName(glyph_id) for glyph_id in self.glyph_ids)
 
   def isdisjoint(self, other):
     assert isinstance(self.glyph_ids, set)
@@ -43,7 +41,7 @@ class GlyphSet(object):
 
   def get_glyph_ids(self, text):
     args = ["hb-shape", "--output-format=json", "--no-glyph-names"]
-    self.append_hb_args(args, text)
+    self.append_hb_args(text, args)
     logging.debug("subprocess.run: %s", args)
     result = subprocess.run(args, stdout=subprocess.PIPE)
     with io.BytesIO(result.stdout) as file:
@@ -51,9 +49,10 @@ class GlyphSet(object):
     logging.debug("result = %s", glyphs)
 
     # East Asian spacing applies only to fullwidth glyphs.
-    units_per_em = self.units_per_em
+    font = self.font
+    units_per_em = font.units_per_em
     if isinstance(units_per_em, int):
-      if self.is_vertical:
+      if font.is_vertical:
         glyphs = filter(lambda glyph: glyph["ay"] == -units_per_em, glyphs)
       else:
         glyphs = filter(lambda glyph: glyph["ax"] == units_per_em, glyphs)
@@ -67,13 +66,14 @@ class GlyphSet(object):
   def dump(self, text):
     args = ["hb-view", "--font-size=64"]
     # Add '|' so that the height of `hb-view` dump becomes consistent.
-    self.append_hb_args(args, [ord('|')] + text + [ord('|')])
+    self.append_hb_args([ord('|')] + text + [ord('|')], args)
     subprocess.run(args)
 
-  def append_hb_args(self, args, text):
-    args.append("--font-file=" + self.font_path)
-    if self.face_index is not None:
-      args.append("--face-index=" + str(self.face_index))
+  def append_hb_args(self, text, args):
+    font = self.font
+    args.append("--font-file=" + font.path)
+    if font.face_index is not None:
+      args.append("--face-index=" + str(font.face_index))
     if self.language:
       args.append("--language=x-hbot" + self.language)
     if self.script:
@@ -81,7 +81,7 @@ class GlyphSet(object):
     # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
     # Enable "fwid" feature to get fullwidth glyphs.
     features = ["fwid"]
-    if self.is_vertical:
+    if font.is_vertical:
       args.append("--direction=ttb")
       features.append("vert")
     args.append("--features=" + ",".join(features))
@@ -96,7 +96,7 @@ class GlyphSet(object):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument("font_path")
+  parser.add_argument("path")
   parser.add_argument("--face-index")
   parser.add_argument("text", nargs="?")
   parser.add_argument("-l", "--language")
@@ -112,19 +112,20 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
   else:
     logging.basicConfig(level=logging.INFO)
+  font = Font(args)
   if args.text:
-    glyphs = GlyphSet(args.text, args, language=args.language, script=args.script)
+    glyphs = GlyphSet(args.text, font, language=args.language, script=args.script)
     print("glyph_id=", glyphs.glyph_ids)
   else:
     # Print samples.
-    GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], args)
-    GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], args)
-    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F], args)
+    GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], font)
+    GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], font)
+    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F], font)
     GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-            args, language="JAN", script="hani")
+            font, language="JAN", script="hani")
     GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-            args, language="ZHS", script="hani")
+            font, language="ZHS", script="hani")
     GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-            args, language="ZHH", script="hani")
+            font, language="ZHH", script="hani")
     GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-            args, language="ZHT", script="hani")
+            font, language="ZHT", script="hani")

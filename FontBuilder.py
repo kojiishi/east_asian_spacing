@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os.path
 import re
 import sys
 
@@ -9,52 +8,43 @@ from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 
 from EastAsianSpacingBuilder import EastAsianSpacingBuilder
+from Font import Font
 from GlyphSet import GlyphSet
 
 class FontBuilder(object):
   def __init__(self):
     self.font = None
-    self.font_collection = None
-    self.face_index = None
 
   def load(self, font_path):
-    logging.info("Reading font file: \"%s\"", font_path)
-    self.font_path = font_path
-    self.font_path_ext = os.path.splitext(font_path)[1]
-    if self.font_path_ext == ".ttc":
-      self.font_collection = TTCollection(font_path)
-      logging.info("%d fonts found in the collection", len(self.font_collection.fonts))
-    else:
-      self.font = TTFont(font_path)
+    self.font = Font(font_path)
 
   def save(self):
-    out_path = "out" + self.font_path_ext
-    logging.info("Saving to: \"%s\"", out_path)
-    if self.font_collection:
-      self.font_collection.save(out_path)
-    else:
-      self.font.save(out_path)
+    self.font.save()
 
   def build(self):
-    if self.font_collection:
-      face_index = 0
-      for font in self.font_collection.fonts:
-        logging.info("Adding features to face %d", face_index)
-        self.add_feature_to_font(font, self.font_path, face_index)
-        face_index += 1
+    font = self.font
+    if font.ttcollection:
+      num_fonts = len(font.ttcollection.fonts)
+      for face_index in range(num_fonts):
+        font.set_face_index(face_index)
+        logging.info("Adding features to face %d/%d", face_index + 1, num_fonts)
+        self.add_features_to_font(font)
     else:
-      self.add_feature_to_font(self.font, self.font_path)
+      self.add_features_to_font(font)
 
-  def add_feature_to_font(self, font, font_path, face_index = None):
-    spacing_builder = EastAsianSpacingBuilder(font, font_path, face_index)
+  def add_features_to_font(self, font):
+    assert not font.is_vertical
+    spacing_builder = EastAsianSpacingBuilder(font)
     lookup = spacing_builder.build()
-    GPOS = font.get('GPOS')
+    GPOS = font.ttfont.get('GPOS')
     table = GPOS.table
     self.add_feature_to_table(table, 'chws', lookup)
-    spacing_builder = EastAsianSpacingBuilder(font, font_path, face_index,
-                                              is_vertical = True)
+
+    font.is_vertical = True
+    spacing_builder = EastAsianSpacingBuilder(font)
     lookup = spacing_builder.build()
     self.add_feature_to_table(table, 'vchw', lookup)
+    font.is_vertical = False
 
   def add_feature_to_table(self, table, feature_tag, lookup):
     lookups = table.LookupList.Lookup
