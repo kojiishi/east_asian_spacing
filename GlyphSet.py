@@ -10,6 +10,8 @@ class GlyphSet(object):
                is_vertical = None):
     assert isinstance(config.font_path, str)
     self.font_path = config.font_path
+    self.face_index = config.face_index
+    self.units_per_em = config.units_per_em
     self.is_vertical = is_vertical if is_vertical is not None else config.is_vertical
     assert isinstance(self.is_vertical, bool)
     self.language = language
@@ -49,13 +51,16 @@ class GlyphSet(object):
     logging.debug("result = %s", glyphs)
 
     # East Asian spacing applies only to fullwidth glyphs.
-    if self.is_vertical:
-      glyphs = filter(lambda glyph: glyph["ay"] == -1000, glyphs)
-    else:
-      glyphs = filter(lambda glyph: glyph["ax"] == 1000, glyphs)
-    glyph_ids = (glyph["g"] for glyph in glyphs)
+    units_per_em = self.units_per_em
+    if isinstance(units_per_em, int):
+      if self.is_vertical:
+        glyphs = filter(lambda glyph: glyph["ay"] == -units_per_em, glyphs)
+      else:
+        glyphs = filter(lambda glyph: glyph["ax"] == units_per_em, glyphs)
+
     # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
     # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
+    glyph_ids = (glyph["g"] for glyph in glyphs)
     glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
     return glyph_ids
 
@@ -67,6 +72,8 @@ class GlyphSet(object):
 
   def append_hb_args(self, args, text):
     args.append("--font-file=" + self.font_path)
+    if self.face_index is not None:
+      args.append("--face-index=" + str(self.face_index))
     if self.language:
       args.append("--language=x-hbot" + self.language)
     if self.script:
@@ -90,9 +97,11 @@ class GlyphSet(object):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("font_path")
+  parser.add_argument("--face-index")
   parser.add_argument("text", nargs="?")
   parser.add_argument("-l", "--language")
   parser.add_argument("-s", "--script")
+  parser.add_argument("--units-per-em", type=int)
   parser.add_argument("--vertical", dest="is_vertical", action="store_true")
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",

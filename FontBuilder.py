@@ -15,6 +15,7 @@ class FontBuilder(object):
   def __init__(self):
     self.font = None
     self.font_collection = None
+    self.face_index = None
 
   def load(self, font_path):
     logging.info("Reading font file: \"%s\"", font_path)
@@ -36,23 +37,26 @@ class FontBuilder(object):
 
   def build(self):
     if self.font_collection:
+      face_index = 0
       for font in self.font_collection.fonts:
-        self.add(font)
+        logging.info("Adding features to face %d", face_index)
+        self.add_feature_to_font(font, self.font_path, face_index)
+        face_index += 1
     else:
-      self.add(self.font)
+      self.add_feature_to_font(self.font, self.font_path)
 
-  def add(self, font):
-    spacing_builder = EastAsianSpacingBuilder(self.font, self.font_path)
+  def add_feature_to_font(self, font, font_path, face_index = None):
+    spacing_builder = EastAsianSpacingBuilder(font, font_path, face_index)
     lookup = spacing_builder.build()
     GPOS = font.get('GPOS')
     table = GPOS.table
-    self.add_feature(table, 'chws', lookup)
-    spacing_builder = EastAsianSpacingBuilder(self.font, self.font_path,
+    self.add_feature_to_table(table, 'chws', lookup)
+    spacing_builder = EastAsianSpacingBuilder(font, font_path, face_index,
                                               is_vertical = True)
     lookup = spacing_builder.build()
-    self.add_feature(table, 'vchw', lookup)
+    self.add_feature_to_table(table, 'vchw', lookup)
 
-  def add_feature(self, table, feature_tag, lookup):
+  def add_feature_to_table(self, table, feature_tag, lookup):
     lookups = table.LookupList.Lookup
     lookup_index = len(lookups)
     logging.info("Adding Lookup at index %d", lookup_index)

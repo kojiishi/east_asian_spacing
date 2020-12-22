@@ -10,10 +10,12 @@ from fontTools.otlLib.builder import PairPosBuilder
 from GlyphSet import GlyphSet
 
 class EastAsianSpacingBuilder(object):
-  def __init__(self, font, font_path, is_vertical = False):
+  def __init__(self, font, font_path, face_index = None, is_vertical = False):
     self.font = font
     self.font_path = font_path
+    self.face_index = face_index
     self.is_vertical = is_vertical
+    self.units_per_em = font.get('head').unitsPerEm
 
   def build(self):
     opening = [0x2018, 0x201C, 0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014,
@@ -71,12 +73,16 @@ class EastAsianSpacingBuilder(object):
     left = tuple(left.get_glyph_names(font))
     right = tuple(right.get_glyph_names(font))
     middle = tuple(middle.get_glyph_names(font))
+    assert isinstance(self.units_per_em, int)
+    half_em = int(self.units_per_em / 2)
     if self.is_vertical:
-      left_half_value = buildValue({"YAdvance": -500})
-      right_half_value = buildValue({"YPlacement": 500, "YAdvance": -500})
+      left_half_value = buildValue({"YAdvance": -half_em})
+      right_half_value = buildValue({"YPlacement": half_em,
+                                     "YAdvance": -half_em})
     else:
-      left_half_value = buildValue({"XAdvance": -500})
-      right_half_value = buildValue({"XPlacement": -500, "XAdvance": -500})
+      left_half_value = buildValue({"XAdvance": -half_em})
+      right_half_value = buildValue({"XPlacement": -half_em,
+                                     "XAdvance": -half_em})
     pair_pos_builder = PairPosBuilder(self.font, None)
     pair_pos_builder.addClassPair(None, left, left_half_value,
                                   left + middle + right, None)
