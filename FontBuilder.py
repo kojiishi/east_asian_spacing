@@ -12,15 +12,8 @@ from Font import Font
 from GlyphSet import GlyphSet
 
 class FontBuilder(object):
-  def __init__(self):
-    self.font = None
-
-  def load(self, font_path):
-    self.font = Font(font_path)
-    self.font.language = self.language
-
-  def save(self):
-    self.font.save()
+  def __init__(self, font):
+    self.font = font
 
   def build(self):
     font = self.font
@@ -90,8 +83,8 @@ if __name__ == '__main__':
       logging.basicConfig(level=logging.DEBUG)
     else:
       logging.basicConfig(level=logging.INFO)
-  builder = FontBuilder()
-  builder.language = args.language
-  builder.load(args.file)
+  font = Font(args.file)
+  font.language = args.language
+  builder = FontBuilder(font)
   builder.build()
-  builder.save()
+  font.save()

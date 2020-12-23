@@ -6,6 +6,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 
 class Font(object):
   def __init__(self, args):
+    self.language = None
     if isinstance(args, str):
       self.load(args)
       self.is_vertical = False
@@ -14,7 +15,6 @@ class Font(object):
     self.is_vertical = args.is_vertical
     if hasattr(args, "face_index") and args.face_index is not None:
       self.set_face_index(args.face_index)
-    self.language = None
 
   def load(self, path):
     logging.info("Reading font file: \"%s\"", path)
