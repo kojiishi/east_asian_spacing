@@ -29,6 +29,9 @@ class GlyphSet(object):
     assert isinstance(other.glyph_ids, set)
     return self.glyph_ids.isdisjoint(other.glyph_ids)
 
+  def clear(self):
+    self.glyph_ids = set()
+
   def unite(self, other):
     assert isinstance(self.glyph_ids, set)
     assert isinstance(other.glyph_ids, set)
@@ -64,7 +67,7 @@ class GlyphSet(object):
     return glyph_ids
 
   def dump(self, text):
-    args = ["hb-view", "--font-size=64"]
+    args = ["hb-view", "--font-size=128"]
     # Add '|' so that the height of `hb-view` dump becomes consistent.
     self.append_hb_args([ord('|')] + text + [ord('|')], args)
     subprocess.run(args)

@@ -26,21 +26,36 @@ class EastAsianSpacingBuilder(object):
     middle = GlyphSet([0x3000, 0x30FB], font)
 
     # Fullwidth period/comma are centered in ZHT but on left in other languages.
+    # ZHT-variants (placed at middle) belong to middle.
+    # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
     period_comma = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
     period_comma_jan = GlyphSet(period_comma, font,
                                 language="JAN", script="hani")
     period_comma_zht = GlyphSet(period_comma, font,
                                 language="ZHT", script="hani")
-    assert period_comma_jan.isdisjoint(period_comma_zht)
+    if period_comma_jan.glyph_ids == period_comma_zht.glyph_ids:
+      assert font.language is not None
+      if font.language == "ZHT":
+        period_comma_jan.clear()
+      else:
+        period_comma_zht.clear()
+    else:
+      assert period_comma_jan.isdisjoint(period_comma_zht)
     left.unite(period_comma_jan)
-    # ZHT-variants (placed at middle) belong to middle.
-    # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
     middle.unite(period_comma_zht)
 
+    # Colon/semicolon are at middle for Japanese, left in Chinese.
     colon = [0xFF1A, 0xFF1B]
     colon_jan = GlyphSet(colon, font, language="JAN", script="hani")
     colon_zhs = GlyphSet(colon, font, language="ZHS", script="hani")
-    assert colon_jan.isdisjoint(colon_zhs)
+    if colon_jan.glyph_ids == colon_zhs.glyph_ids:
+      assert font.language is not None
+      if font.language == "ZHS":
+        colon_jan.clear()
+      else:
+        colon_zhs.clear()
+    else:
+      assert colon_jan.isdisjoint(colon_zhs)
     if font.is_vertical:
       # In vertical flow, add colon/semicolon to middle if they have vertical
       # alternate glyphs. In Chinese, they are upright. In Japanese, they may or
@@ -52,7 +67,6 @@ class EastAsianSpacingBuilder(object):
       middle.unite(colon_jan)
       font.is_vertical = True
     else:
-      # Colon/semicolon are at middle for Japanese, left in Chinese.
       middle.unite(colon_jan)
       left.unite(colon_zhs)
 
@@ -64,7 +78,14 @@ class EastAsianSpacingBuilder(object):
                                      language="JAN", script="hani")
       exclam_question_zhs = GlyphSet(exclam_question, font,
                                      language="ZHS", script="hani")
-      assert exclam_question_jan.isdisjoint(exclam_question_zhs)
+      if exclam_question_jan.glyph_ids == exclam_question_zhs.glyph_ids:
+        assert font.language is not None
+        if font.language == "ZHS":
+          exclam_question_jan.clear()
+        else:
+          exclam_question_zhs.clear()
+      else:
+        assert exclam_question_jan.isdisjoint(exclam_question_zhs)
       left.unite(exclam_question_zhs)
 
     left = tuple(left.get_glyph_names())

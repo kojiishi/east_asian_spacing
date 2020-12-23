@@ -14,6 +14,7 @@ class Font(object):
     self.is_vertical = args.is_vertical
     if hasattr(args, "face_index") and args.face_index is not None:
       self.set_face_index(args.face_index)
+    self.language = None
 
   def load(self, path):
     logging.info("Reading font file: \"%s\"", path)

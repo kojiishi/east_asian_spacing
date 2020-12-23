@@ -17,6 +17,7 @@ class FontBuilder(object):
 
   def load(self, font_path):
     self.font = Font(font_path)
+    self.font.language = self.language
 
   def save(self):
     self.font.save()
@@ -75,6 +76,9 @@ class FontBuilder(object):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("file")
+  parser.add_argument("-l", "--language",
+                      help="language if the font is language-specific"
+                           " (not pan-East Asian)")
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",
                       action="count", default=0)
@@ -87,6 +91,7 @@ if __name__ == '__main__':
     else:
       logging.basicConfig(level=logging.INFO)
   builder = FontBuilder()
+  builder.language = args.language
   builder.load(args.file)
   builder.build()
   builder.save()
