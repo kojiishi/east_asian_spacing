@@ -17,8 +17,8 @@ class FontBuilder(object):
 
   def build(self):
     font = self.font
-    if font.ttcollection:
-      num_fonts = len(font.ttcollection.fonts)
+    num_fonts = len(font.faces)
+    if num_fonts > 0:
       for face_index in range(num_fonts):
         font.set_face_index(face_index)
         logging.info("Adding features to face %d/%d", face_index + 1, num_fonts)

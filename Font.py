@@ -42,6 +42,12 @@ class Font(object):
     self.ttfont = font
     self.units_per_em_ = None
 
+  @property
+  def faces(self):
+    if self.ttcollection:
+      return self.ttcollection.fonts
+    return ()
+
   def set_face_index(self, face_index):
     self.face_index = face_index
     self.set_ttfont(self.ttcollection.fonts[face_index])
