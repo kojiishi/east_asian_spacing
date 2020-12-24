@@ -99,4 +99,5 @@ class Font(object):
       "\n".join("  {} {}".format(
         t[0],
         "(default)" if t[1] is None else t[1])
-        for t in set(self.script_and_langsys_tags)))
+        for t in sorted(set(self.script_and_langsys_tags),
+                        key=lambda t: t[0]+("" if t[1] is None else t[1]))))
