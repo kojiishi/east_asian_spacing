@@ -21,7 +21,8 @@ class FontBuilder(object):
     if num_fonts > 0:
       for face_index in range(num_fonts):
         font.set_face_index(face_index)
-        logging.info("Adding features to face %d/%d", face_index + 1, num_fonts)
+        logging.info("Adding features to face {}/{} '{}'".format(
+            face_index + 1, num_fonts, font))
         self.add_features_to_font(font)
     else:
       self.add_features_to_font(font)

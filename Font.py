@@ -42,13 +42,22 @@ class Font(object):
 
   @staticmethod
   def before_save(ttfont):
-    # Unload 'CFF ' so that `save()` copies instead of re-compile.
-    if ttfont.isLoaded("CFF "):
-      del ttfont.tables["CFF "]
+    # `TTFont.save()` compiles all loaded tables. Unload tables we know we did
+    # not modify, so that it copies instead of re-compile.
+    for key in ("CFF ", "name"):
+      if ttfont.isLoaded(key):
+        del ttfont.tables[key]
 
   def set_ttfont(self, font):
     self.ttfont = font
     self.units_per_em_ = None
+
+  def debug_name(self):
+    name = self.ttfont.get("name")
+    return name.getDebugName(1)
+
+  def __str__(self):
+    return self.debug_name()
 
   @property
   def faces(self):
