@@ -78,8 +78,9 @@ class Font(object):
 
   def raise_require_language(self):
     raise AssertionError(
-        "Need to specify the language for this font." +
-        " This font has following scripts:\n" +
-        "\n".join("  {} {}".format(t[0],
-            "(default)" if t[1] is None else t[1])
-            for t in set(self.script_and_langsys_tags)))
+      "Need to specify the language for this font. " +
+      "This font has following scripts:\n" +
+      "\n".join("  {} {}".format(
+        t[0],
+        "(default)" if t[1] is None else t[1])
+        for t in set(self.script_and_langsys_tags)))
