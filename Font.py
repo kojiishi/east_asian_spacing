@@ -37,7 +37,14 @@ class Font(object):
     if self.ttcollection:
       self.ttcollection.save(out_path)
       return
+    Font.before_save(self.ttfont)
     self.ttfont.save(out_path)
+
+  @staticmethod
+  def before_save(ttfont):
+    # Unload 'CFF ' so that `save()` copies instead of re-compile.
+    if ttfont.isLoaded("CFF "):
+      del ttfont.tables["CFF "]
 
   def set_ttfont(self, font):
     self.ttfont = font
