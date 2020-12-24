@@ -40,7 +40,7 @@ class EastAsianSpacingBuilder(object):
     period_comma_zht = GlyphSet(period_comma, font,
                                 language="ZHT", script="hani")
     if period_comma_jan.glyph_ids == period_comma_zht.glyph_ids:
-      assert font.language is not None
+      if font.language is None: font.raise_require_language()
       if font.language == "ZHT":
         period_comma_jan.clear()
       else:
@@ -55,7 +55,7 @@ class EastAsianSpacingBuilder(object):
     colon_jan = GlyphSet(colon, font, language="JAN", script="hani")
     colon_zhs = GlyphSet(colon, font, language="ZHS", script="hani")
     if colon_jan.glyph_ids == colon_zhs.glyph_ids:
-      assert font.language is not None
+      if font.language is None: font.raise_require_language()
       if font.language == "ZHS":
         colon_jan.clear()
       else:
@@ -85,7 +85,7 @@ class EastAsianSpacingBuilder(object):
       exclam_question_zhs = GlyphSet(exclam_question, font,
                                      language="ZHS", script="hani")
       if exclam_question_jan.glyph_ids == exclam_question_zhs.glyph_ids:
-        assert font.language is not None
+        if font.language is None: font.raise_require_language()
         if font.language == "ZHS":
           exclam_question_jan.clear()
         else:

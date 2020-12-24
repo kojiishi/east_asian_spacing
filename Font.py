@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os.path
 
@@ -57,3 +58,28 @@ class Font(object):
     if self.units_per_em_ is None:
       self.units_per_em_ = self.ttfont.get('head').unitsPerEm
     return self.units_per_em_
+
+  @property
+  def script_and_langsys_tags(self):
+    gsub = self.ttfont.get('GSUB')
+    gsub_list = Font.script_and_langsys_tags_for_table(gsub.table)
+    gpos = self.ttfont.get('GPOS')
+    gpos_list = Font.script_and_langsys_tags_for_table(gpos.table)
+    return itertools.chain(gsub_list, gpos_list)
+
+  @staticmethod
+  def script_and_langsys_tags_for_table(table):
+    scripts = table.ScriptList.ScriptRecord
+    for script_record in scripts:
+      script_tag = script_record.ScriptTag
+      yield (script_tag, None)
+      for lang_sys in script_record.Script.LangSysRecord:
+        yield (script_tag, lang_sys.LangSysTag)
+
+  def raise_require_language(self):
+    raise AssertionError(
+        "Need to specify the language for this font." +
+        " This font has following scripts:\n" +
+        "\n".join("  {} {}".format(t[0],
+            "(default)" if t[1] is None else t[1])
+            for t in set(self.script_and_langsys_tags)))
