@@ -8,9 +8,18 @@ from fontTools.ttLib.ttCollection import TTCollection
 class Font(object):
   def __init__(self, args):
     self.language = None
+    self.vertical_font_ = None
     if isinstance(args, str):
       self.load(args)
       self.is_vertical = False
+      return
+    if isinstance(args, Font):
+      self.face_index = args.face_index
+      self.is_vertical = args.is_vertical
+      self.language = args.language
+      self.path = args.path
+      self.ttfont = args.ttfont
+      self.units_per_em_ = args.units_per_em_
       return
     self.load(args.path)
     self.is_vertical = args.is_vertical
@@ -35,6 +44,8 @@ class Font(object):
     out_path = "out" + self.path_ext
     logging.info("Saving to: \"%s\"", out_path)
     if self.ttcollection:
+      for font in self.ttcollection.fonts:
+        Font.before_save(font)
       self.ttcollection.save(out_path)
       return
     Font.before_save(self.ttfont)
@@ -51,6 +62,8 @@ class Font(object):
   def set_ttfont(self, font):
     self.ttfont = font
     self.units_per_em_ = None
+    if self.vertical_font_:
+      self.vertical_font_.set_ttfont(font)
 
   def debug_name(self):
     name = self.ttfont.get("name")
@@ -101,3 +114,14 @@ class Font(object):
         "(default)" if t[1] is None else t[1])
         for t in sorted(set(self.script_and_langsys_tags),
                         key=lambda t: t[0]+("" if t[1] is None else t[1]))))
+
+  @property
+  def vertical_font(self):
+    assert not self.is_vertical
+    if self.vertical_font_:
+      return self.vertical_font_
+    font = Font(self)
+    font.is_vertical = True
+    font.horizontal_font = self
+    self.vertical_font_ = font
+    return font

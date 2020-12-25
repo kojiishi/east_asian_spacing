@@ -7,7 +7,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 
-from EastAsianSpacingBuilder import EastAsianSpacingBuilder
+from EastAsianSpacing import EastAsianSpacing
 from Font import Font
 from GlyphSet import GlyphSet
 
@@ -29,17 +29,15 @@ class FontBuilder(object):
 
   def add_features_to_font(self, font):
     assert not font.is_vertical
-    spacing_builder = EastAsianSpacingBuilder(font)
-    lookup = spacing_builder.build()
+    spacing = EastAsianSpacing(font)
+    lookup = spacing.build_lookup()
     GPOS = font.ttfont.get('GPOS')
     table = GPOS.table
     self.add_feature_to_table(table, 'chws', lookup)
 
-    font.is_vertical = True
-    spacing_builder = EastAsianSpacingBuilder(font)
-    lookup = spacing_builder.build()
+    spacing = EastAsianSpacing(font.vertical_font)
+    lookup = spacing.build_lookup()
     self.add_feature_to_table(table, 'vchw', lookup)
-    font.is_vertical = False
 
   def add_feature_to_table(self, table, feature_tag, lookup):
     lookups = table.LookupList.Lookup

@@ -19,7 +19,11 @@ class GlyphSet(object):
     if GlyphSet.dump_images:
       self.dump(text)
 
-  def get_glyph_names(self):
+  def __bool__(self):
+    return len(self.glyph_ids) > 0
+
+  @property
+  def glyph_names(self):
     assert isinstance(self.glyph_ids, set)
     ttfont = self.font.ttfont
     return (ttfont.getGlyphName(glyph_id) for glyph_id in self.glyph_ids)
@@ -30,7 +34,7 @@ class GlyphSet(object):
     return self.glyph_ids.isdisjoint(other.glyph_ids)
 
   def clear(self):
-    self.glyph_ids = set()
+    self.glyph_ids.clear()
 
   def unite(self, other):
     assert isinstance(self.glyph_ids, set)

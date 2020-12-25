@@ -10,11 +10,19 @@ from fontTools.otlLib.builder import PairPosBuilder
 from Font import Font
 from GlyphSet import GlyphSet
 
-class EastAsianSpacingBuilder(object):
+class EastAsianSpacing(object):
   def __init__(self, font):
     self.font = font
+    self.add_all()
 
-  def build(self):
+  def add_all(self):
+    self.add_opening_closing()
+    self.add_period_comma()
+    self.add_colon_semicolon()
+    self.add_exclam_question()
+    self.add_to_cache()
+
+  def add_opening_closing(self):
     font = self.font
     opening = [0x2018, 0x201C,
                0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014, 0x3016, 0x3018,
@@ -24,79 +32,123 @@ class EastAsianSpacingBuilder(object):
     closing = [0x2019, 0x201D,
                0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 0x3019,
                0x301B,
-               # U+301E in may be at unpexpected position (Meiryo vert.)
+               # U+301E may be at unpexpected position (e.g., Meiryo vertical)
                0x301F,
                0xFF09, 0xFF3D, 0xFF5D, 0xFF60]
-    left = GlyphSet(closing, font)
-    right = GlyphSet(opening, font)
-    middle = GlyphSet([0x3000, 0x30FB], font)
+    self.left = GlyphSet(closing, font)
+    self.right = GlyphSet(opening, font)
+    self.middle = GlyphSet([0x3000, 0x30FB], font)
 
+  def add_period_comma(self):
     # Fullwidth period/comma are centered in ZHT but on left in other languages.
     # ZHT-variants (placed at middle) belong to middle.
     # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
-    period_comma = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
-    period_comma_jan = GlyphSet(period_comma, font,
-                                language="JAN", script="hani")
-    period_comma_zht = GlyphSet(period_comma, font,
-                                language="ZHT", script="hani")
-    if period_comma_jan.glyph_ids == period_comma_zht.glyph_ids:
+    font = self.font
+    text = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
+    ja = GlyphSet(text, font, language="JAN", script="hani")
+    zht = GlyphSet(text, font, language="ZHT", script="hani")
+    assert GlyphSet(text, font, language="ZHS", script="hani").glyph_ids == ja.glyph_ids
+    if ja.glyph_ids == zht.glyph_ids:
       if font.language is None: font.raise_require_language()
       if font.language == "ZHT":
-        period_comma_jan.clear()
+        ja.clear()
       else:
-        period_comma_zht.clear()
+        zht.clear()
     else:
-      assert period_comma_jan.isdisjoint(period_comma_zht)
-    left.unite(period_comma_jan)
-    middle.unite(period_comma_zht)
+      assert ja.isdisjoint(zht)
+    self.left.unite(ja)
+    self.middle.unite(zht)
 
-    # Colon/semicolon are at middle for Japanese, left in Chinese.
-    colon = [0xFF1A, 0xFF1B]
-    colon_jan = GlyphSet(colon, font, language="JAN", script="hani")
-    colon_zhs = GlyphSet(colon, font, language="ZHS", script="hani")
-    if colon_jan.glyph_ids == colon_zhs.glyph_ids:
+  def add_colon_semicolon(self):
+    # Colon/semicolon are at middle for Japanese, left in ZHS.
+    font = self.font
+    text = [0xFF1A, 0xFF1B]
+    ja = GlyphSet(text, font, language="JAN", script="hani")
+    zhs = GlyphSet(text, font, language="ZHS", script="hani")
+    assert font.is_vertical or GlyphSet(text, font, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
+    self.add_from_cache(ja)
+    self.add_from_cache(zhs)
+    if not ja and not zhs:
+      return
+    if ja.glyph_ids == zhs.glyph_ids:
       if font.language is None: font.raise_require_language()
       if font.language == "ZHS":
-        colon_jan.clear()
+        ja.clear()
       else:
-        colon_zhs.clear()
+        zhs.clear()
     else:
-      assert colon_jan.isdisjoint(colon_zhs)
+      assert ja.isdisjoint(zhs)
     if font.is_vertical:
       # In vertical flow, add colon/semicolon to middle if they have vertical
       # alternate glyphs. In Chinese, they are upright. In Japanese, they may or
       # may not be upright. Vertical alternate glyphs indicate they are rotated.
-      font.is_vertical = False
-      colon_jan_horizontal = GlyphSet(colon, font,
-                                      language="JAN", script="hani")
-      colon_jan.subtract(colon_jan_horizontal)
-      middle.unite(colon_jan)
-      font.is_vertical = True
-    else:
-      middle.unite(colon_jan)
-      left.unite(colon_zhs)
+      ja_horizontal = GlyphSet(text, font.horizontal_font,
+                               language="JAN", script="hani")
+      ja.subtract(ja_horizontal)
+      self.middle.unite(ja)
+      return
+    self.middle.unite(ja)
+    self.left.unite(zhs)
 
-    if not font.is_vertical:
-      # Fullwidth exclamation mark and question mark are on left in ZHS but
-      # centered in other languages.
-      exclam_question = [0xFF01, 0xFF1F]
-      exclam_question_jan = GlyphSet(exclam_question, font,
-                                     language="JAN", script="hani")
-      exclam_question_zhs = GlyphSet(exclam_question, font,
-                                     language="ZHS", script="hani")
-      if exclam_question_jan.glyph_ids == exclam_question_zhs.glyph_ids:
-        if font.language is None: font.raise_require_language()
-        if font.language == "ZHS":
-          exclam_question_jan.clear()
-        else:
-          exclam_question_zhs.clear()
+  def add_exclam_question(self):
+    font = self.font
+    if font.is_vertical:
+      return
+    # Fullwidth exclamation mark and question mark are on left only in ZHS.
+    text = [0xFF01, 0xFF1F]
+    ja = GlyphSet(text, font, language="JAN", script="hani")
+    zhs = GlyphSet(text, font, language="ZHS", script="hani")
+    assert GlyphSet(text, font, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
+    if ja.glyph_ids == zhs.glyph_ids:
+      if font.language is None: font.raise_require_language()
+      if font.language == "ZHS":
+        ja.clear()
       else:
-        assert exclam_question_jan.isdisjoint(exclam_question_zhs)
-      left.unite(exclam_question_zhs)
+        zhs.clear()
+    else:
+      assert ja.isdisjoint(zhs)
+    self.left.unite(zhs)
 
-    left = tuple(left.get_glyph_names())
-    right = tuple(right.get_glyph_names())
-    middle = tuple(middle.get_glyph_names())
+  def get_cache(self, create=False):
+    font = self.font
+    if hasattr(font, "east_asian_spacing_"):
+      return font.east_asian_spacing_
+    if create:
+      cache = dict()
+      font.east_asian_spacing_ = cache
+      return cache
+    return None
+
+  def add_to_cache(self):
+    cache = self.get_cache(create=True)
+    self.add_to_cache_for(self.left, "L", cache)
+    self.add_to_cache_for(self.middle, "M", cache)
+    self.add_to_cache_for(self.right, "R", cache)
+
+  def add_to_cache_for(self, glyphs, value, cache):
+    for glyph_id in glyphs.glyph_ids:
+      assert cache.get(glyph_id, value) == value
+      cache[glyph_id] = value
+
+  def add_from_cache(self, glyphs):
+    cache = self.get_cache()
+    if cache is None:
+      return
+    not_cached = set()
+    glyph_ids_by_value = {None: not_cached,
+                          "L": self.left.glyph_ids,
+                          "M": self.middle.glyph_ids,
+                          "R": self.right.glyph_ids}
+    for glyph_id in glyphs.glyph_ids:
+      value = cache.get(glyph_id, None)
+      glyph_ids_by_value[value].add(glyph_id)
+    glyphs.glyph_ids = not_cached
+
+  def build_lookup(self):
+    font = self.font
+    left = tuple(self.left.glyph_names)
+    right = tuple(self.right.glyph_names)
+    middle = tuple(self.middle.glyph_names)
     half_em = int(font.units_per_em / 2)
     assert half_em > 0
     if font.is_vertical:
@@ -132,5 +184,7 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(level=logging.INFO)
   font = Font(args)
-  builder = EastAsianSpacingBuilder(font)
-  builder.build()
+  spacing = EastAsianSpacing(font)
+  print("left:", sorted(spacing.left.glyph_ids))
+  print("right:", sorted(spacing.right.glyph_ids))
+  print("middle:", sorted(spacing.middle.glyph_ids))
