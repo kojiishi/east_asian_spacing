@@ -29,12 +29,15 @@ class EastAsianSpacing(object):
                0x301A,
                0x301D,
                0xFF08, 0xFF3B, 0xFF5B, 0xFF5F]
-    closing = [0x2019, 0x201D,
+    closing = [0x201D,
                0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 0x3019,
                0x301B,
-               # U+301E may be at unpexpected position (e.g., Meiryo vertical)
-               0x301F,
+               0x301E, 0x301F,
                0xFF09, 0xFF3D, 0xFF5D, 0xFF60]
+    if font.is_vertical and font.debug_name.startswith("Meiryo"):
+      opening.append(0x2019)
+    else:
+      closing.append(0x2019)
     self.left = GlyphSet(closing, font)
     self.right = GlyphSet(opening, font)
     self.middle = GlyphSet([0x3000, 0x30FB], font)

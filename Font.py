@@ -65,12 +65,13 @@ class Font(object):
     if self.vertical_font_:
       self.vertical_font_.set_ttfont(font)
 
+  @property
   def debug_name(self):
     name = self.ttfont.get("name")
     return name.getDebugName(1)
 
   def __str__(self):
-    return self.debug_name()
+    return self.debug_name
 
   @property
   def faces(self):
