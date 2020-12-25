@@ -41,6 +41,11 @@ class EastAsianSpacing(object):
     self.left = GlyphSet(closing, font)
     self.right = GlyphSet(opening, font)
     self.middle = GlyphSet([0x3000, 0x30FB], font)
+    if font.is_vertical:
+      # YuGothic doesn't have 'vert' glyphs for U+301A/301B.
+      horizontal = GlyphSet([0x301A, 0x301B], font.horizontal_font)
+      self.left.subtract(horizontal)
+      self.right.subtract(horizontal)
 
   def add_period_comma(self):
     # Fullwidth period/comma are centered in ZHT but on left in other languages.
