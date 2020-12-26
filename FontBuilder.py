@@ -57,12 +57,12 @@ class FontBuilder(object):
 
     scripts = table.ScriptList.ScriptRecord
     for script_record in scripts:
-      logging.info("Adding Feature index %d to script '%s' DefaultLangSys",
-                   feature_index, script_record.ScriptTag)
+      logging.debug("Adding Feature index %d to script '%s' DefaultLangSys",
+                    feature_index, script_record.ScriptTag)
       script_record.Script.DefaultLangSys.FeatureIndex.append(feature_index)
       for lang_sys in script_record.Script.LangSysRecord:
-        logging.info("Adding Feature index %d to script '%s' LangSys '%s'",
-                     feature_index, script_record.ScriptTag, lang_sys.LangSysTag)
+        logging.debug("Adding Feature index %d to script '%s' LangSys '%s'",
+                      feature_index, script_record.ScriptTag, lang_sys.LangSysTag)
         lang_sys.LangSys.FeatureIndex.append(feature_index)
 
 if __name__ == '__main__':
