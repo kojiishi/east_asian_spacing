@@ -33,7 +33,8 @@ class EastAsianSpacing(object):
 
   def add_opening_closing(self):
     font = self.font
-    opening = [0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014, 0x3016, 0x3018,
+    opening = [0x2018, 0x201C,
+               0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014, 0x3016, 0x3018,
                0x301A,
                0x301D,
                0xFF08, 0xFF3B, 0xFF5B, 0xFF5F]
@@ -42,10 +43,6 @@ class EastAsianSpacing(object):
                0x301B,
                0x301E, 0x301F,
                0xFF09, 0xFF3D, 0xFF5D, 0xFF60]
-    if font.is_vertical and font.debug_name.startswith("Yu Gothic"):
-      closing.extend([0x2018, 0x201C])
-    else:
-      opening.extend([0x2018, 0x201C])
     if font.is_vertical and font.debug_name.startswith("Meiryo"):
       opening.append(0x2019)
     else:
@@ -54,8 +51,10 @@ class EastAsianSpacing(object):
     self.right = GlyphSet(opening, font)
     self.middle = GlyphSet([0x3000, 0x30FB], font)
     if font.is_vertical:
-      # YuGothic doesn't have 'vert' glyphs for U+301A/301B.
-      horizontal = GlyphSet([0x301A, 0x301B], font.horizontal_font)
+      # Left/right in vertical should apply only if they have `vert` glyphs.
+      # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
+      horizontal = GlyphSet([0x2018, 0x2019, 0x201C, 0x201D, 0x301A, 0x301B],
+                            font.horizontal_font)
       self.left.subtract(horizontal)
       self.right.subtract(horizontal)
 
