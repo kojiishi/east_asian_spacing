@@ -38,23 +38,31 @@ class EastAsianSpacing(object):
                0x301A,
                0x301D,
                0xFF08, 0xFF3B, 0xFF5B, 0xFF5F]
-    closing = [0x201D,
-               0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 0x3019,
+    closing = [0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 0x3019,
                0x301B,
                0x301E, 0x301F,
                0xFF09, 0xFF3D, 0xFF5D, 0xFF60]
-    if font.is_vertical and font.debug_name.startswith("Meiryo"):
-      opening.append(0x2019)
+    if font.is_vertical:
+      debug_name = font.debug_name
+      if debug_name.startswith("Meiryo"):
+        opening.append(0x2019)
+        closing.append(0x201D)
+      elif debug_name.startswith("Microsoft JhengHei"):
+        opening.append(0x2019)
+        opening.append(0x201D)
+      else:
+        closing.append(0x2019)
+        closing.append(0x201D)
     else:
       closing.append(0x2019)
+      closing.append(0x201D)
     self.left = GlyphSet(closing, font)
     self.right = GlyphSet(opening, font)
     self.middle = GlyphSet([0x3000, 0x30FB], font)
     if font.is_vertical:
       # Left/right in vertical should apply only if they have `vert` glyphs.
       # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
-      horizontal = GlyphSet([0x2018, 0x2019, 0x201C, 0x201D, 0x301A, 0x301B],
-                            font.horizontal_font)
+      horizontal = GlyphSet(opening + closing, font.horizontal_font)
       self.left.subtract(horizontal)
       self.right.subtract(horizontal)
 
@@ -99,12 +107,14 @@ class EastAsianSpacing(object):
       assert ja.isdisjoint(zhs)
     if font.is_vertical:
       # In vertical flow, add colon/semicolon to middle if they have vertical
-      # alternate glyphs. In Chinese, they are upright. In Japanese, they may or
+      # alternate glyphs. In ZHS, they are upright. In Japanese, they may or
       # may not be upright. Vertical alternate glyphs indicate they are rotated.
-      ja_horizontal = GlyphSet(text, font.horizontal_font,
-                               language="JAN", script="hani")
-      ja.subtract(ja_horizontal)
-      self.middle.unite(ja)
+      # In ZHT, they may be upright even when there are vertical glyphs.
+      if font.language is None or font.language == "JAN":
+        ja_horizontal = GlyphSet(text, font.horizontal_font,
+                                language="JAN", script="hani")
+        ja.subtract(ja_horizontal)
+        self.middle.unite(ja)
       return
     self.middle.unite(ja)
     self.left.unite(zhs)
