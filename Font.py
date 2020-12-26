@@ -40,8 +40,9 @@ class Font(object):
     self.face_index = None
     self.set_ttfont(TTFont(path))
 
-  def save(self):
-    out_path = "out" + self.path_ext
+  def save(self, out_path=None):
+    if not out_path:
+      out_path = "out" + self.path_ext
     logging.info("Saving to: \"%s\"", out_path)
     if self.ttcollection:
       for font in self.ttcollection.fonts:

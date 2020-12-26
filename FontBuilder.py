@@ -1,4 +1,5 @@
 import argparse
+import itertools
 import logging
 import re
 import sys
@@ -15,6 +16,14 @@ class FontBuilder(object):
   def __init__(self, font):
     self.font = font
 
+  @property
+  def spacings(self):
+    return (self.spacing, self.vertical_spacing)
+
+  @property
+  def glyph_ids(self):
+    return itertools.chain(*(spacing.glyph_ids for spacing in self.spacings))
+
   def build(self):
     font = self.font
     num_fonts = len(font.faces)
@@ -29,14 +38,14 @@ class FontBuilder(object):
 
   def add_features_to_font(self, font):
     assert not font.is_vertical
-    spacing = EastAsianSpacing(font)
-    lookup = spacing.build_lookup()
+    self.spacing = EastAsianSpacing(font)
+    lookup = self.spacing.build_lookup()
     GPOS = font.ttfont.get('GPOS')
     table = GPOS.table
     self.add_feature_to_table(table, 'chws', lookup)
 
-    spacing = EastAsianSpacing(font.vertical_font)
-    lookup = spacing.build_lookup()
+    self.vertical_spacing = EastAsianSpacing(font.vertical_font)
+    lookup = self.vertical_spacing.build_lookup()
     self.add_feature_to_table(table, 'vchw', lookup)
 
   def add_feature_to_table(self, table, feature_tag, lookup):
@@ -68,9 +77,13 @@ class FontBuilder(object):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("file")
+  parser.add_argument("--gids-file",
+                      type=argparse.FileType("w"),
+                      help="Outputs glyph IDs for `pyftsubset`")
   parser.add_argument("-l", "--language",
                       help="language if the font is language-specific"
-                           " (not pan-East Asian)")
+                           " (not a pan-East Asian font)")
+  parser.add_argument("-o", "--output")
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",
                       action="count", default=0)
@@ -86,4 +99,8 @@ if __name__ == '__main__':
   font.language = args.language
   builder = FontBuilder(font)
   builder.build()
-  font.save()
+  if args.gids_file:
+    logging.info("Saving glyph IDs")
+    glyph_ids = sorted(set(builder.glyph_ids))
+    args.gids_file.write(",".join(str(g) for g in glyph_ids) + "\n")
+  font.save(args.output)

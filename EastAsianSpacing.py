@@ -1,5 +1,6 @@
 import argparse
 import io
+import itertools
 import json
 import logging
 import subprocess
@@ -14,6 +15,14 @@ class EastAsianSpacing(object):
   def __init__(self, font):
     self.font = font
     self.add_all()
+
+  @property
+  def glyph_sets(self):
+    return (self.left, self.middle, self.right)
+
+  @property
+  def glyph_ids(self):
+    return itertools.chain(*(glyphs.glyph_ids for glyphs in self.glyph_sets))
 
   def add_all(self):
     self.add_opening_closing()
