@@ -4,6 +4,7 @@ import logging
 import re
 import sys
 
+from fontTools.ttLib import newTable
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
@@ -40,13 +41,42 @@ class FontBuilder(object):
     assert not font.is_vertical
     self.spacing = EastAsianSpacing(font)
     lookup = self.spacing.build_lookup()
-    GPOS = font.ttfont.get('GPOS')
-    table = GPOS.table
+    gpos = font.ttfont.get('GPOS')
+    if gpos:
+      table = gpos.table
+    else:
+      table = self.add_gpos_table(font.ttfont)
     self.add_feature_to_table(table, 'chws', lookup)
 
     self.vertical_spacing = EastAsianSpacing(font.vertical_font)
     lookup = self.vertical_spacing.build_lookup()
     self.add_feature_to_table(table, 'vchw', lookup)
+
+  def add_gpos_table(self, ttfont):
+    assert ttfont.get('GPOS') is None
+    table = otTables.GPOS()
+    table.Version = 0x00010000
+    table.ScriptList = otTables.ScriptList()
+    table.ScriptList.ScriptRecord = [self.create_script_record()]
+    table.FeatureList = otTables.FeatureList()
+    table.FeatureList.FeatureRecord = []
+    table.LookupList = otTables.LookupList()
+    table.LookupList.Lookup = []
+    gpos = ttfont['GPOS'] = newTable('GPOS')
+    gpos.table = table
+    return table
+
+  def create_script_record(self):
+    lang_sys = otTables.LangSys()
+    lang_sys.ReqFeatureIndex = 0xFFFF # No required features
+    lang_sys.FeatureIndex = []
+    script = otTables.Script()
+    script.DefaultLangSys = lang_sys
+    script.LangSysRecord = []
+    script_record = otTables.ScriptRecord()
+    script_record.ScriptTag = "DFLT"
+    script_record.Script = script
+    return script_record
 
   def add_feature_to_table(self, table, feature_tag, lookup):
     lookups = table.LookupList.Lookup

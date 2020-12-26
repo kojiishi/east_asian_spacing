@@ -92,11 +92,15 @@ class Font(object):
 
   @property
   def script_and_langsys_tags(self):
+    list = ()
     gsub = self.ttfont.get('GSUB')
-    gsub_list = Font.script_and_langsys_tags_for_table(gsub.table)
+    if gsub:
+      list = Font.script_and_langsys_tags_for_table(gsub.table)
     gpos = self.ttfont.get('GPOS')
-    gpos_list = Font.script_and_langsys_tags_for_table(gpos.table)
-    return itertools.chain(gsub_list, gpos_list)
+    if gpos:
+      list = itertools.chain(list,
+                             Font.script_and_langsys_tags_for_table(gpos.table))
+    return list
 
   @staticmethod
   def script_and_langsys_tags_for_table(table):
