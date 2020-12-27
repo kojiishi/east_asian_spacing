@@ -39,18 +39,17 @@ class FontBuilder(object):
 
   def add_features_to_font(self, font):
     assert not font.is_vertical
-    self.spacing = EastAsianSpacing(font)
-    lookup = self.spacing.build_lookup()
     gpos = font.ttfont.get('GPOS')
     if gpos:
       table = gpos.table
     else:
       table = self.add_gpos_table(font.ttfont)
-    self.add_feature_to_table(table, 'chws', lookup)
+
+    self.spacing = EastAsianSpacing(font)
+    self.add_feature_to_table(table, 'chws', self.spacing)
 
     self.vertical_spacing = EastAsianSpacing(font.vertical_font)
-    lookup = self.vertical_spacing.build_lookup()
-    self.add_feature_to_table(table, 'vchw', lookup)
+    self.add_feature_to_table(table, 'vchw', self.vertical_spacing)
 
   def add_gpos_table(self, ttfont):
     assert ttfont.get('GPOS') is None
@@ -78,20 +77,19 @@ class FontBuilder(object):
     script_record.Script = script
     return script_record
 
-  def add_feature_to_table(self, table, feature_tag, lookup):
+  def add_feature_to_table(self, table, feature_tag, spacing):
     lookups = table.LookupList.Lookup
-    lookup_index = len(lookups)
-    logging.info("Adding Lookup at index %d", lookup_index)
-    lookups.append(lookup)
+    lookup_indices = spacing.build_lookup(lookups)
 
     features = table.FeatureList.FeatureRecord
     feature_index = len(features)
-    logging.info("Adding Feature '%s' at index %d", feature_tag, feature_index)
+    logging.info("Adding Feature '%s' at index %d for lookup %s", feature_tag,
+                 feature_index, lookup_indices)
     feature_record = otTables.FeatureRecord()
     feature_record.FeatureTag = feature_tag
     feature_record.Feature = otTables.Feature()
-    feature_record.Feature.LookupListIndex = [lookup_index]
-    feature_record.Feature.LookupCount = 1
+    feature_record.Feature.LookupListIndex = lookup_indices
+    feature_record.Feature.LookupCount = len(lookup_indices)
     features.append(feature_record)
 
     scripts = table.ScriptList.ScriptRecord
@@ -101,7 +99,8 @@ class FontBuilder(object):
       script_record.Script.DefaultLangSys.FeatureIndex.append(feature_index)
       for lang_sys in script_record.Script.LangSysRecord:
         logging.debug("Adding Feature index %d to script '%s' LangSys '%s'",
-                      feature_index, script_record.ScriptTag, lang_sys.LangSysTag)
+                      feature_index, script_record.ScriptTag,
+                      lang_sys.LangSysTag)
         lang_sys.LangSys.FeatureIndex.append(feature_index)
 
 if __name__ == '__main__':

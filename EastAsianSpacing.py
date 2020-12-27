@@ -6,7 +6,10 @@ import logging
 import subprocess
 
 from fontTools.otlLib.builder import buildValue
+from fontTools.otlLib.builder import ChainContextPosBuilder
+from fontTools.otlLib.builder import ChainContextualRule
 from fontTools.otlLib.builder import PairPosBuilder
+from fontTools.otlLib.builder import SinglePosBuilder
 
 from Font import Font
 from GlyphSet import GlyphSet
@@ -173,7 +176,7 @@ class EastAsianSpacing(object):
       glyph_ids_by_value[value].add(glyph_id)
     glyphs.glyph_ids = not_cached
 
-  def build_lookup(self):
+  def build_lookup(self, lookups):
     font = self.font
     left = tuple(self.left.glyph_names)
     right = tuple(self.right.glyph_names)
@@ -188,14 +191,41 @@ class EastAsianSpacing(object):
       left_half_value = buildValue({"XAdvance": -half_em})
       right_half_value = buildValue({"XPlacement": -half_em,
                                      "XAdvance": -half_em})
-    pair_pos_builder = PairPosBuilder(font.ttfont, None)
+    lookup_indices = []
+
+    # Build lookup for adjusting the left glyph, using type 2 pair positioning.
+    ttfont = font.ttfont
+    pair_pos_builder = PairPosBuilder(ttfont, None)
     pair_pos_builder.addClassPair(None, left, left_half_value,
                                   left + middle + right, None)
-    pair_pos_builder.addClassPair(None, middle + right, None,
-                                  right, right_half_value)
     lookup = pair_pos_builder.build()
     assert lookup
-    return lookup
+    lookup_indices.append(len(lookups))
+    lookups.append(lookup)
+
+    # Build lookup for adjusting the right glyph. We need to adjust the position
+    # and the advance of the right glyph, but with type 2, no positioning
+    # adjustment should be applied to the second glyph. Use type 8 instead.
+    # https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
+    lookup_builder = SinglePosBuilder(ttfont, None)
+    for glyph_name in right:
+      lookup_builder.mapping[glyph_name] = right_half_value
+    lookup = lookup_builder.build()
+    assert lookup
+    lookup.lookup_index = len(lookups)
+    lookups.append(lookup)
+
+    chain_context_pos_builder = ChainContextPosBuilder(ttfont, None)
+    chain_context_pos_builder.rules.append(
+        ChainContextualRule([middle + right], [right], [], [[lookup]]))
+    lookup = chain_context_pos_builder.build()
+    assert lookup
+    lookup_indices.append(len(lookups))
+    lookups.append(lookup)
+
+    logging.info("Adding Lookup at index %s", lookup_indices)
+    assert len(lookup_indices)
+    return lookup_indices
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
