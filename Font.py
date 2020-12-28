@@ -90,6 +90,15 @@ class Font(object):
       self.units_per_em_ = self.ttfont.get('head').unitsPerEm
     return self.units_per_em_
 
+  def has_gsub_feature(self, feature_tag):
+    gsub = self.ttfont.get("GSUB")
+    if not gsub:
+      return False
+    for feature_record in gsub.table.FeatureList.FeatureRecord:
+      if feature_record.FeatureTag == feature_tag:
+        return True
+    return False
+
   @property
   def script_and_langsys_tags(self):
     list = ()
