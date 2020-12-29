@@ -48,8 +48,9 @@ class FontBuilder(object):
     self.spacing = EastAsianSpacing(font)
     self.add_feature_to_table(table, 'chws', self.spacing)
 
-    if font.has_gsub_feature("vert"):
-      self.vertical_spacing = EastAsianSpacing(font.vertical_font)
+    vertical_font = font.vertical_font
+    if vertical_font:
+      self.vertical_spacing = EastAsianSpacing(vertical_font)
       self.add_feature_to_table(table, 'vchw', self.vertical_spacing)
 
   def add_gpos_table(self, ttfont):

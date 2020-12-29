@@ -120,6 +120,8 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(level=logging.INFO)
   font = Font(args)
+  if args.is_vertical:
+    font = font.vertical_font
   if args.text:
     glyphs = GlyphSet(args.text, font, language=args.language, script=args.script)
     print("glyph_id=", glyphs.glyph_ids)

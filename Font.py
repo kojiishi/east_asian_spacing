@@ -1,30 +1,31 @@
+import argparse
 import itertools
 import logging
 import os.path
+import sys
 
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.ttCollection import TTCollection
 
 class Font(object):
   def __init__(self, args):
+    self.is_vertical_ = False
     self.language = None
-    self.vertical_font_ = None
     if isinstance(args, str):
       self.load(args)
-      self.is_vertical = False
       return
     if isinstance(args, Font):
       self.face_index = args.face_index
-      self.is_vertical = args.is_vertical
+      self.is_vertical_ = args.is_vertical_
       self.language = args.language
       self.path = args.path
       self.ttfont = args.ttfont
       self.units_per_em_ = args.units_per_em_
       return
     self.load(args.path)
-    self.is_vertical = args.is_vertical
-    if hasattr(args, "face_index") and args.face_index is not None:
-      self.set_face_index(args.face_index)
+    face_index = getattr(args, "face_index", None)
+    if face_index is not None:
+      self.set_face_index(face_index)
 
   def load(self, path):
     logging.info("Reading font file: \"%s\"", path)
@@ -56,15 +57,27 @@ class Font(object):
   def before_save(ttfont):
     # `TTFont.save()` compiles all loaded tables. Unload tables we know we did
     # not modify, so that it copies instead of re-compile.
-    for key in ("CFF ", "name"):
+    for key in ("CFF ", "GSUB", "name"):
       if ttfont.isLoaded(key):
         del ttfont.tables[key]
+
+  @property
+  def faces(self):
+    if self.ttcollection:
+      return self.ttcollection.fonts
+    return ()
 
   def set_ttfont(self, font):
     self.ttfont = font
     self.units_per_em_ = None
-    if self.vertical_font_:
-      self.vertical_font_.set_ttfont(font)
+    vertical_font = getattr(self, "vertical_font_", None)
+    if vertical_font:
+      vertical_font.set_ttfont(font)
+      vertical_font.face_index = self.face_index
+
+  def set_face_index(self, face_index):
+    self.face_index = face_index
+    self.set_ttfont(self.ttcollection.fonts[face_index])
 
   @property
   def debug_name(self):
@@ -75,41 +88,21 @@ class Font(object):
     return self.debug_name
 
   @property
-  def faces(self):
-    if self.ttcollection:
-      return self.ttcollection.fonts
-    return ()
-
-  def set_face_index(self, face_index):
-    self.face_index = face_index
-    self.set_ttfont(self.ttcollection.fonts[face_index])
-
-  @property
   def units_per_em(self):
     if self.units_per_em_ is None:
       self.units_per_em_ = self.ttfont.get('head').unitsPerEm
     return self.units_per_em_
 
-  def has_gsub_feature(self, feature_tag):
-    gsub = self.ttfont.get("GSUB")
-    if not gsub:
-      return False
-    for feature_record in gsub.table.FeatureList.FeatureRecord:
-      if feature_record.FeatureTag == feature_tag:
-        return True
-    return False
-
   @property
-  def script_and_langsys_tags(self):
-    list = ()
-    gsub = self.ttfont.get('GSUB')
-    if gsub:
-      list = Font.script_and_langsys_tags_for_table(gsub.table)
-    gpos = self.ttfont.get('GPOS')
-    if gpos:
-      list = itertools.chain(list,
-                             Font.script_and_langsys_tags_for_table(gpos.table))
-    return list
+  def script_and_langsys_tags(self, tags=("GSUB", "GPOS")):
+    result = ()
+    for tag in tags:
+      table = self.ttfont.get(tag)
+      if not table:
+        continue
+      tag_result = Font.script_and_langsys_tags_for_table(table.table)
+      result = itertools.chain(result, tag_result)
+    return result
 
   @staticmethod
   def script_and_langsys_tags_for_table(table):
@@ -130,13 +123,47 @@ class Font(object):
         for t in sorted(set(self.script_and_langsys_tags),
                         key=lambda t: t[0]+("" if t[1] is None else t[1]))))
 
+  def has_gsub_feature(self, feature_tag):
+    gsub = self.ttfont.get("GSUB")
+    if not gsub:
+      return False
+    for feature_record in gsub.table.FeatureList.FeatureRecord:
+      if feature_record.FeatureTag == feature_tag:
+        return True
+    return False
+
+  @property
+  def is_vertical(self):
+    return self.is_vertical_
+
   @property
   def vertical_font(self):
     assert not self.is_vertical
-    if self.vertical_font_:
+    if hasattr(self, "vertical_font_"):
       return self.vertical_font_
-    font = Font(self)
-    font.is_vertical = True
-    font.horizontal_font = self
-    self.vertical_font_ = font
-    return font
+    if self.has_gsub_feature("vert"):
+      font = Font(self)
+      font.is_vertical_ = True
+      font.horizontal_font = self
+      self.vertical_font_ = font
+      return font
+    self.vertical_font_ = None
+    return None
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument("path")
+  parser.add_argument("--face-index", type=int)
+  args = parser.parse_args()
+  font = Font(args)
+  print("debug_name:", font.debug_name)
+  for tag in ("GSUB", "GPOS"):
+    tttable = font.ttfont.get(tag)
+    if not tttable:
+      continue
+    table = tttable.table
+    print(tag + ":",
+          ", ".join(set(feature_record.FeatureTag for feature_record in
+                        table.FeatureList.FeatureRecord)))
+    print("  " + "\n  ".join(str(i) for i in
+                             font.script_and_langsys_tags_for_table(table)))

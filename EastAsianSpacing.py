@@ -230,7 +230,7 @@ class EastAsianSpacing(object):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("path")
-  parser.add_argument("--face-index")
+  parser.add_argument("--face-index", type=int)
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",
                       action="count", default=0)
@@ -243,6 +243,8 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(level=logging.INFO)
   font = Font(args)
+  if args.is_vertical:
+    font = font.vertical_font
   spacing = EastAsianSpacing(font)
   print("left:", sorted(spacing.left.glyph_ids))
   print("right:", sorted(spacing.right.glyph_ids))
