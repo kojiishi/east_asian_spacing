@@ -13,7 +13,7 @@ from EastAsianSpacing import EastAsianSpacing
 from Font import Font
 from GlyphSet import GlyphSet
 
-class FontBuilder(object):
+class Builder(object):
   def __init__(self, font):
     self.font = font
 
@@ -128,7 +128,7 @@ if __name__ == '__main__':
       logging.basicConfig(level=logging.INFO)
   font = Font(args.file)
   font.language = args.language
-  builder = FontBuilder(font)
+  builder = Builder(font)
   builder.build()
   if args.gids_file:
     logging.info("Saving glyph IDs")

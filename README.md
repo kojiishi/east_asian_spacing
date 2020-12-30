@@ -35,7 +35,7 @@ Installation on Linux:
 ### Usage
 
 ```sh
-% python3 FontBuilder.py input-font-file -o output-font-file -v
+% python3 Builder.py input-font-file -o output-font-file -v
 ```
 
 ## Data Comparisons
