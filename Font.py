@@ -4,7 +4,9 @@ import logging
 import os.path
 import sys
 
+from fontTools.ttLib import newTable
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 
 class Font(object):
@@ -79,9 +81,12 @@ class Font(object):
     self.face_index = face_index
     self.set_ttfont(self.ttcollection.fonts[face_index])
 
+  def tttable(self, name):
+    return self.ttfont.get(name)
+
   @property
   def debug_name(self):
-    name = self.ttfont.get("name")
+    name = self.tttable("name")
     return name.getDebugName(1)
 
   def __str__(self):
@@ -90,14 +95,14 @@ class Font(object):
   @property
   def units_per_em(self):
     if self.units_per_em_ is None:
-      self.units_per_em_ = self.ttfont.get('head').unitsPerEm
+      self.units_per_em_ = self.tttable('head').unitsPerEm
     return self.units_per_em_
 
   @property
   def script_and_langsys_tags(self, tags=("GSUB", "GPOS")):
     result = ()
     for tag in tags:
-      table = self.ttfont.get(tag)
+      table = self.tttable(tag)
       if not table:
         continue
       tag_result = Font.script_and_langsys_tags_for_table(table.table)
@@ -124,7 +129,7 @@ class Font(object):
                         key=lambda t: t[0]+("" if t[1] is None else t[1]))))
 
   def has_gsub_feature(self, feature_tag):
-    gsub = self.ttfont.get("GSUB")
+    gsub = self.tttable("GSUB")
     if not gsub:
       return False
     for feature_record in gsub.table.FeatureList.FeatureRecord:
@@ -149,6 +154,34 @@ class Font(object):
       return font
     self.vertical_font_ = None
     return None
+
+  def add_gpos_table(self):
+    logging.info("Adding GPOS table")
+    ttfont = self.ttfont
+    assert ttfont.get('GPOS') is None
+    table = otTables.GPOS()
+    table.Version = 0x00010000
+    table.ScriptList = otTables.ScriptList()
+    table.ScriptList.ScriptRecord = [self.create_script_record()]
+    table.FeatureList = otTables.FeatureList()
+    table.FeatureList.FeatureRecord = []
+    table.LookupList = otTables.LookupList()
+    table.LookupList.Lookup = []
+    gpos = ttfont['GPOS'] = newTable('GPOS')
+    gpos.table = table
+    return gpos
+
+  def create_script_record(self):
+    lang_sys = otTables.LangSys()
+    lang_sys.ReqFeatureIndex = 0xFFFF # No required features
+    lang_sys.FeatureIndex = []
+    script = otTables.Script()
+    script.DefaultLangSys = lang_sys
+    script.LangSysRecord = []
+    script_record = otTables.ScriptRecord()
+    script_record.ScriptTag = "DFLT"
+    script_record.Script = script
+    return script_record
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()

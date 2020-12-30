@@ -10,6 +10,7 @@ from fontTools.otlLib.builder import ChainContextPosBuilder
 from fontTools.otlLib.builder import ChainContextualRule
 from fontTools.otlLib.builder import PairPosBuilder
 from fontTools.otlLib.builder import SinglePosBuilder
+from fontTools.ttLib.tables import otTables
 
 from Font import Font
 from GlyphSet import GlyphSet
@@ -175,6 +176,32 @@ class EastAsianSpacing(object):
       value = cache.get(glyph_id, None)
       glyph_ids_by_value[value].add(glyph_id)
     glyphs.glyph_ids = not_cached
+
+  def add_feature_to_table(self, table, feature_tag):
+    lookups = table.LookupList.Lookup
+    lookup_indices = self.build_lookup(lookups)
+
+    features = table.FeatureList.FeatureRecord
+    feature_index = len(features)
+    logging.info("Adding Feature '%s' at index %d for lookup %s", feature_tag,
+                 feature_index, lookup_indices)
+    feature_record = otTables.FeatureRecord()
+    feature_record.FeatureTag = feature_tag
+    feature_record.Feature = otTables.Feature()
+    feature_record.Feature.LookupListIndex = lookup_indices
+    feature_record.Feature.LookupCount = len(lookup_indices)
+    features.append(feature_record)
+
+    scripts = table.ScriptList.ScriptRecord
+    for script_record in scripts:
+      logging.debug("Adding Feature index %d to script '%s' DefaultLangSys",
+                    feature_index, script_record.ScriptTag)
+      script_record.Script.DefaultLangSys.FeatureIndex.append(feature_index)
+      for lang_sys in script_record.Script.LangSysRecord:
+        logging.debug("Adding Feature index %d to script '%s' LangSys '%s'",
+                      feature_index, script_record.ScriptTag,
+                      lang_sys.LangSysTag)
+        lang_sys.LangSys.FeatureIndex.append(feature_index)
 
   def build_lookup(self, lookups):
     font = self.font

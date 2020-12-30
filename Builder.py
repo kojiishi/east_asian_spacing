@@ -4,7 +4,6 @@ import logging
 import re
 import sys
 
-from fontTools.ttLib import newTable
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
@@ -39,71 +38,19 @@ class Builder(object):
 
   def add_features_to_font(self, font):
     assert not font.is_vertical
-    gpos = font.ttfont.get('GPOS')
-    if gpos:
-      table = gpos.table
-    else:
-      table = self.add_gpos_table(font.ttfont)
+    gpos = font.tttable('GPOS')
+    if not gpos:
+      gpos = font.add_gpos_table()
+    table = gpos.table
+    assert table
 
     self.spacing = EastAsianSpacing(font)
-    self.add_feature_to_table(table, 'chws', self.spacing)
+    self.spacing.add_feature_to_table(table, 'chws')
 
     vertical_font = font.vertical_font
     if vertical_font:
       self.vertical_spacing = EastAsianSpacing(vertical_font)
-      self.add_feature_to_table(table, 'vchw', self.vertical_spacing)
-
-  def add_gpos_table(self, ttfont):
-    assert ttfont.get('GPOS') is None
-    table = otTables.GPOS()
-    table.Version = 0x00010000
-    table.ScriptList = otTables.ScriptList()
-    table.ScriptList.ScriptRecord = [self.create_script_record()]
-    table.FeatureList = otTables.FeatureList()
-    table.FeatureList.FeatureRecord = []
-    table.LookupList = otTables.LookupList()
-    table.LookupList.Lookup = []
-    gpos = ttfont['GPOS'] = newTable('GPOS')
-    gpos.table = table
-    return table
-
-  def create_script_record(self):
-    lang_sys = otTables.LangSys()
-    lang_sys.ReqFeatureIndex = 0xFFFF # No required features
-    lang_sys.FeatureIndex = []
-    script = otTables.Script()
-    script.DefaultLangSys = lang_sys
-    script.LangSysRecord = []
-    script_record = otTables.ScriptRecord()
-    script_record.ScriptTag = "DFLT"
-    script_record.Script = script
-    return script_record
-
-  def add_feature_to_table(self, table, feature_tag, spacing):
-    lookups = table.LookupList.Lookup
-    lookup_indices = spacing.build_lookup(lookups)
-
-    features = table.FeatureList.FeatureRecord
-    feature_index = len(features)
-    logging.info("Adding Feature '%s' at index %d for lookup %s", feature_tag,
-                 feature_index, lookup_indices)
-    feature_record = otTables.FeatureRecord()
-    feature_record.FeatureTag = feature_tag
-    feature_record.Feature = otTables.Feature()
-    feature_record.Feature.LookupListIndex = lookup_indices
-    feature_record.Feature.LookupCount = len(lookup_indices)
-    features.append(feature_record)
-
-    scripts = table.ScriptList.ScriptRecord
-    for script_record in scripts:
-      logging.debug("Adding Feature index %d to script '%s' DefaultLangSys",
-                    feature_index, script_record.ScriptTag)
-      script_record.Script.DefaultLangSys.FeatureIndex.append(feature_index)
-      for lang_sys in script_record.Script.LangSysRecord:
-        logging.debug("Adding Feature index %d to script '%s' LangSys '%s'",
-                      feature_index, script_record.ScriptTag,
-                      lang_sys.LangSysTag)
-        lang_sys.LangSys.FeatureIndex.append(feature_index)
+      self.vertical_spacing.add_feature_to_table(table, 'vchw')
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
