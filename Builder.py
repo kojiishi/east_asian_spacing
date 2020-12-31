@@ -36,17 +36,21 @@ class Builder(object):
       return os.path.join(output_path, output_name)
     return output_path
 
-  def build(self):
+  def build(self, face_indices=None):
     font = self.font
     num_fonts = len(font.faces)
     if num_fonts > 0:
-      for face_index in range(num_fonts):
+      if face_indices is None:
+        face_indices = range(num_fonts)
+      elif isinstance(face_indices, str):
+        face_indices = (int(i) for i in face_indices.split(","))
+      for face_index in face_indices:
         font.set_face_index(face_index)
-        logging.info("Adding features to face {}/{} '{}' lang={}".format(
+        logging.info("Face {}/{} '{}' lang={}".format(
             face_index + 1, num_fonts, font, font.language))
         self.add_features_to_font(font)
-    else:
-      self.add_features_to_font(font)
+      return
+    self.add_features_to_font(font)
 
   def add_features_to_font(self, font):
     assert not font.is_vertical
@@ -67,6 +71,9 @@ class Builder(object):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("path")
+  parser.add_argument("--face-index",
+                      help="For collection, specify the face index, or "
+                      "a list of face indices")
   parser.add_argument("--gids-file",
                       type=argparse.FileType("w"),
                       help="Outputs glyph IDs for `pyftsubset`")
@@ -88,7 +95,7 @@ if __name__ == '__main__':
   font = Font(args.path)
   font.language = args.language
   builder = Builder(font)
-  builder.build()
+  builder.build(args.face_index)
   font.save(Builder.calc_output_path(args.path, args.output))
   if args.gids_file:
     logging.info("Saving glyph IDs")
