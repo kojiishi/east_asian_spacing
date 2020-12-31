@@ -64,10 +64,20 @@ class Font(object):
         del ttfont.tables[key]
 
   @property
+  def is_collection(self):
+    return self.ttcollection is not None
+
+  @property
   def faces(self):
     if self.ttcollection:
       return self.ttcollection.fonts
     return ()
+
+  @property
+  def ttfonts(self):
+    if self.ttcollection:
+      return self.ttcollection.fonts
+    return (self.ttfont)
 
   def set_ttfont(self, font):
     self.ttfont = font
