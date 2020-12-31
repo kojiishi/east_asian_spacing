@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import logging
+import os
 import re
 import sys
 
@@ -24,14 +25,25 @@ class Builder(object):
   def glyph_ids(self):
     return itertools.chain(*(spacing.glyph_ids for spacing in self.spacings))
 
+  @staticmethod
+  def calc_output_path(input_path, output_path):
+    if not output_path:
+      path_without_ext, ext = os.path.splitext(input_path)
+      return path_without_ext + "-chws" + ext
+    if os.path.isdir(output_path):
+      base_name = os.path.basename(input_path)
+      output_name = Builder.calc_output_path(base_name, None)
+      return os.path.join(output_path, output_name)
+    return output_path
+
   def build(self):
     font = self.font
     num_fonts = len(font.faces)
     if num_fonts > 0:
       for face_index in range(num_fonts):
         font.set_face_index(face_index)
-        logging.info("Adding features to face {}/{} '{}'".format(
-            face_index + 1, num_fonts, font))
+        logging.info("Adding features to face {}/{} '{}' lang={}".format(
+            face_index + 1, num_fonts, font, font.language))
         self.add_features_to_font(font)
     else:
       self.add_features_to_font(font)
@@ -54,7 +66,7 @@ class Builder(object):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument("file")
+  parser.add_argument("path")
   parser.add_argument("--gids-file",
                       type=argparse.FileType("w"),
                       help="Outputs glyph IDs for `pyftsubset`")
@@ -73,12 +85,12 @@ if __name__ == '__main__':
       logging.basicConfig(level=logging.DEBUG)
     else:
       logging.basicConfig(level=logging.INFO)
-  font = Font(args.file)
+  font = Font(args.path)
   font.language = args.language
   builder = Builder(font)
   builder.build()
+  font.save(Builder.calc_output_path(args.path, args.output))
   if args.gids_file:
     logging.info("Saving glyph IDs")
     glyph_ids = sorted(set(builder.glyph_ids))
     args.gids_file.write(",".join(str(g) for g in glyph_ids) + "\n")
-  font.save(args.output)
