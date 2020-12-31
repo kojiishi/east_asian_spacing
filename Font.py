@@ -12,14 +12,14 @@ from fontTools.ttLib.ttCollection import TTCollection
 class Font(object):
   def __init__(self, args):
     self.is_vertical_ = False
-    self.language = None
+    self.language_ = None
     if isinstance(args, str):
       self.load(args)
       return
     if isinstance(args, Font):
       self.face_index = args.face_index
       self.is_vertical_ = args.is_vertical_
-      self.language = args.language
+      self.language_ = args.language_
       self.path = args.path
       self.ttfont = args.ttfont
       self.units_per_em_ = args.units_per_em_
@@ -91,6 +91,24 @@ class Font(object):
 
   def __str__(self):
     return self.debug_name
+
+  known_debug_names = {
+    "Noto Serif CJK KR": "KOR",
+    "Noto Serif CJK SC": "ZHS",
+  }
+
+  @property
+  def language(self):
+    if self.language_:
+      return self.language_
+    known = self.known_debug_names.get(self.debug_name, None)
+    if known:
+      return known
+    return None
+
+  @language.setter
+  def language(self, language):
+    self.language_ = language
 
   @property
   def units_per_em(self):
