@@ -8,16 +8,19 @@ import subprocess
 from Font import Font
 
 class GlyphSet(object):
-  def __init__(self, text, font, language=None, script=None):
+  def __init__(self, font, text=None, language=None, script=None):
     assert isinstance(font.path, str)
     self.font = font
     self.language = language
     self.script = script
-    if isinstance(text, str):
-      text = list(ord(c) for c in text)
-    self.glyph_ids = set(self.get_glyph_ids(text))
-    if GlyphSet.dump_images:
-      self.dump(text)
+    if text:
+      if isinstance(text, str):
+        text = list(ord(c) for c in text)
+      self.glyph_ids = set(self.get_glyph_ids(text))
+      if GlyphSet.dump_images:
+        self.dump(text)
+    else:
+      self.glyph_ids = set()
 
   def __bool__(self):
     return len(self.glyph_ids) > 0

@@ -63,22 +63,6 @@ class Font(object):
       if ttfont.isLoaded(key):
         del ttfont.tables[key]
 
-  @property
-  def is_collection(self):
-    return self.ttcollection is not None
-
-  @property
-  def faces(self):
-    if self.ttcollection:
-      return self.ttcollection.fonts
-    return ()
-
-  @property
-  def ttfonts(self):
-    if self.ttcollection:
-      return self.ttcollection.fonts
-    return (self.ttfont)
-
   def set_ttfont(self, font):
     self.ttfont = font
     self.units_per_em_ = None
@@ -87,9 +71,21 @@ class Font(object):
       vertical_font.set_ttfont(font)
       vertical_font.face_index = self.face_index
 
+  @property
+  def num_fonts_in_collection(self):
+    if self.ttcollection:
+      return len(self.ttcollection.fonts)
+    return 0
+
   def set_face_index(self, face_index):
     self.face_index = face_index
     self.set_ttfont(self.ttcollection.fonts[face_index])
+
+  @property
+  def ttfonts(self):
+    if self.ttcollection:
+      return self.ttcollection.fonts
+    return (self.ttfont)
 
   def tttable(self, name):
     return self.ttfont.get(name)

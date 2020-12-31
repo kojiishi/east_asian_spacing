@@ -18,7 +18,10 @@ from GlyphSet import GlyphSet
 class EastAsianSpacing(object):
   def __init__(self, font):
     self.font = font
-    self.add_all()
+    self.left = GlyphSet(font)
+    self.right = GlyphSet(font)
+    self.middle = GlyphSet(font)
+    self.add_glyphs()
 
   @property
   def glyph_sets(self):
@@ -28,7 +31,7 @@ class EastAsianSpacing(object):
   def glyph_ids(self):
     return itertools.chain(*(glyphs.glyph_ids for glyphs in self.glyph_sets))
 
-  def add_all(self):
+  def add_glyphs(self):
     self.add_opening_closing()
     self.add_period_comma()
     self.add_colon_semicolon()
@@ -60,13 +63,13 @@ class EastAsianSpacing(object):
     else:
       closing.append(0x2019)
       closing.append(0x201D)
-    self.left = GlyphSet(closing, font)
-    self.right = GlyphSet(opening, font)
-    self.middle = GlyphSet([0x3000, 0x30FB], font)
+    self.left.unite(GlyphSet(font, closing))
+    self.right.unite(GlyphSet(font, opening))
+    self.middle.unite(GlyphSet(font, [0x3000, 0x30FB]))
     if font.is_vertical:
       # Left/right in vertical should apply only if they have `vert` glyphs.
       # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
-      horizontal = GlyphSet(opening + closing, font.horizontal_font)
+      horizontal = GlyphSet(font.horizontal_font, opening + closing)
       self.left.subtract(horizontal)
       self.right.subtract(horizontal)
 
@@ -76,9 +79,9 @@ class EastAsianSpacing(object):
     # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
     font = self.font
     text = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
-    ja = GlyphSet(text, font, language="JAN", script="hani")
-    zht = GlyphSet(text, font, language="ZHT", script="hani")
-    assert GlyphSet(text, font, language="ZHS", script="hani").glyph_ids == ja.glyph_ids
+    ja = GlyphSet(font, text, language="JAN", script="hani")
+    zht = GlyphSet(font, text, language="ZHT", script="hani")
+    assert GlyphSet(font, text, language="ZHS", script="hani").glyph_ids == ja.glyph_ids
     if ja.glyph_ids == zht.glyph_ids:
       if font.language is None: font.raise_require_language()
       if font.language == "ZHT":
@@ -94,9 +97,9 @@ class EastAsianSpacing(object):
     # Colon/semicolon are at middle for Japanese, left in ZHS.
     font = self.font
     text = [0xFF1A, 0xFF1B]
-    ja = GlyphSet(text, font, language="JAN", script="hani")
-    zhs = GlyphSet(text, font, language="ZHS", script="hani")
-    assert font.is_vertical or GlyphSet(text, font, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
+    ja = GlyphSet(font, text, language="JAN", script="hani")
+    zhs = GlyphSet(font, text, language="ZHS", script="hani")
+    assert font.is_vertical or GlyphSet(font, text, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
     self.add_from_cache(ja)
     self.add_from_cache(zhs)
     if not ja and not zhs:
@@ -115,7 +118,7 @@ class EastAsianSpacing(object):
       # may not be upright. Vertical alternate glyphs indicate they are rotated.
       # In ZHT, they may be upright even when there are vertical glyphs.
       if font.language is None or font.language == "JAN":
-        ja_horizontal = GlyphSet(text, font.horizontal_font,
+        ja_horizontal = GlyphSet(font.horizontal_font, text,
                                 language="JAN", script="hani")
         ja.subtract(ja_horizontal)
         self.middle.unite(ja)
@@ -129,9 +132,9 @@ class EastAsianSpacing(object):
       return
     # Fullwidth exclamation mark and question mark are on left only in ZHS.
     text = [0xFF01, 0xFF1F]
-    ja = GlyphSet(text, font, language="JAN", script="hani")
-    zhs = GlyphSet(text, font, language="ZHS", script="hani")
-    assert GlyphSet(text, font, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
+    ja = GlyphSet(font, text, language="JAN", script="hani")
+    zhs = GlyphSet(font, text, language="ZHS", script="hani")
+    assert GlyphSet(font, text, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
     if ja.glyph_ids == zhs.glyph_ids:
       if font.language is None: font.raise_require_language()
       if font.language == "ZHS":

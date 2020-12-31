@@ -38,7 +38,7 @@ class Builder(object):
 
   def build(self, face_indices=None):
     font = self.font
-    num_fonts = len(font.faces)
+    num_fonts = font.num_fonts_in_collection
     if num_fonts > 0:
       if face_indices is None:
         face_indices = range(num_fonts)
