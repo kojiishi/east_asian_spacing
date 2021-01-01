@@ -51,9 +51,12 @@ class Font(object):
       for font in self.ttcollection.fonts:
         Font.before_save(font)
       self.ttcollection.save(out_path)
-      return
-    Font.before_save(self.ttfont)
-    self.ttfont.save(out_path)
+    else:
+      Font.before_save(self.ttfont)
+      self.ttfont.save(out_path)
+    logging.info("File sizes: %d -> %d Delta: %d",
+                 os.path.getsize(self.path), os.path.getsize(out_path),
+                 os.path.getsize(out_path) - os.path.getsize(self.path))
 
   @staticmethod
   def before_save(ttfont):
@@ -89,6 +92,12 @@ class Font(object):
 
   def tttable(self, name):
     return self.ttfont.get(name)
+
+  def reader_offset(self, tag):
+    entry = self.ttfont.reader.tables.get(tag)
+    if entry:
+      return entry.offset
+    return None
 
   @property
   def debug_name(self):

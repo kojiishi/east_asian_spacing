@@ -21,11 +21,30 @@ class EastAsianSpacing(object):
     self.left = GlyphSet(font)
     self.right = GlyphSet(font)
     self.middle = GlyphSet(font)
+    self.vertical_spacing = None
+
+    if not font.is_vertical:
+      vertical_font = font.vertical_font
+      if vertical_font:
+        self.vertical_spacing = EastAsianSpacing(vertical_font)
+
     self.add_glyphs()
 
   @property
-  def glyph_sets(self):
+  def spacings(self):
+    if self.vertical_spacing:
+      return (self, self.vertical_spacing)
+    return (self)
+
+  @property
+  def glyph_sets_for_self(self):
     return (self.left, self.middle, self.right)
+
+  @property
+  def glyph_sets(self):
+    glyph_sets = itertools.chain(*(spacing.glyph_sets_for_self
+                                   for spacing in self.spacings))
+    return glyph_sets
 
   @property
   def glyph_ids(self):
@@ -37,6 +56,9 @@ class EastAsianSpacing(object):
     self.add_colon_semicolon()
     self.add_exclam_question()
     self.add_to_cache()
+
+    if self.vertical_spacing:
+      self.vertical_spacing.add_glyphs()
 
   def add_opening_closing(self):
     font = self.font
@@ -180,7 +202,21 @@ class EastAsianSpacing(object):
       glyph_ids_by_value[value].add(glyph_id)
     glyphs.glyph_ids = not_cached
 
-  def add_feature_to_table(self, table, feature_tag):
+  def add_to_font(self):
+    font = self.font
+    assert not font.is_vertical
+    gpos = font.tttable('GPOS')
+    if not gpos:
+      gpos = font.add_gpos_table()
+    table = gpos.table
+    assert table
+
+    self.add_to_table(table, 'chws')
+
+    if self.vertical_spacing:
+      self.vertical_spacing.add_to_table(table, 'vchw')
+
+  def add_to_table(self, table, feature_tag):
     lookups = table.LookupList.Lookup
     lookup_indices = self.build_lookup(lookups)
 
@@ -211,6 +247,8 @@ class EastAsianSpacing(object):
     left = tuple(self.left.glyph_names)
     right = tuple(self.right.glyph_names)
     middle = tuple(self.middle.glyph_names)
+    logging.info("Adding Lookups for %d left, %d right, %d middle glyphs",
+                 len(left), len(right), len(middle))
     half_em = int(font.units_per_em / 2)
     assert half_em > 0
     if font.is_vertical:
@@ -253,7 +291,6 @@ class EastAsianSpacing(object):
     lookup_indices.append(len(lookups))
     lookups.append(lookup)
 
-    logging.info("Adding Lookup at index %s", lookup_indices)
     assert len(lookup_indices)
     return lookup_indices
 
