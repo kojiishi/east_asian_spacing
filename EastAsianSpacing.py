@@ -37,18 +37,16 @@ class EastAsianSpacing(object):
     return (self)
 
   @property
-  def glyph_sets_for_self(self):
-    return (self.left, self.middle, self.right)
-
-  @property
   def glyph_sets(self):
-    glyph_sets = itertools.chain(*(spacing.glyph_sets_for_self
-                                   for spacing in self.spacings))
-    return glyph_sets
+    return (self.left, self.middle, self.right)
 
   @property
   def glyph_ids(self):
     return itertools.chain(*(glyphs.glyph_ids for glyphs in self.glyph_sets))
+
+  @staticmethod
+  def glyph_ids_from_spacings(spacings):
+    return itertools.chain(*(spacing.glyph_ids for spacing in spacings))
 
   def add_glyphs(self):
     self.add_opening_closing()

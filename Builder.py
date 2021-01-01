@@ -17,10 +17,6 @@ class Builder(object):
   def __init__(self, font):
     self.font = font
 
-  @property
-  def glyph_ids(self):
-    return itertools.chain(*(spacing.glyph_ids for spacing in self.spacings))
-
   @staticmethod
   def calc_output_path(input_path, output_path):
     if not output_path:
@@ -78,6 +74,28 @@ class Builder(object):
 
     self.spacings = (i[0] for i in spacing_by_offset.values())
 
+  @property
+  def glyph_ids(self):
+    return EastAsianSpacing.glyph_ids_from_spacings(self.spacings)
+
+  @property
+  def vertical_glyph_ids(self):
+    vertical_spacings = (spacing.vertical_spacing for spacing in self.spacings)
+    vertical_spacings = filter(lambda spacing: spacing, vertical_spacings)
+    return EastAsianSpacing.glyph_ids_from_spacings(vertical_spacings)
+
+  def save_glyph_ids(self, file):
+    logging.info("Saving glyph IDs to %s", file)
+    glyph_ids = set(self.glyph_ids)
+    file.write("\n".join(str(g) for g in sorted(glyph_ids)))
+
+    vertical_glyph_ids = set(self.vertical_glyph_ids)
+    vertical_glyph_ids = vertical_glyph_ids.difference(glyph_ids)
+    if len(vertical_glyph_ids):
+      file.write("\n# Vertical-only glyphs\n")
+      file.write("\n".join(str(g) for g in sorted(vertical_glyph_ids)))
+    file.write("\n")
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("path")
@@ -108,6 +126,4 @@ if __name__ == '__main__':
   output = Builder.calc_output_path(args.path, args.output)
   font.save(output)
   if args.gids_file:
-    logging.info("Saving glyph IDs")
-    glyph_ids = sorted(set(builder.glyph_ids))
-    args.gids_file.write(",".join(str(g) for g in glyph_ids) + "\n")
+    builder.save_glyph_ids(args.gids_file)
