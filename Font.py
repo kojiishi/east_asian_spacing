@@ -88,7 +88,7 @@ class Font(object):
   def ttfonts(self):
     if self.ttcollection:
       return self.ttcollection.fonts
-    return (self.ttfont)
+    return (self.ttfont,)
 
   def tttable(self, name):
     return self.ttfont.get(name)
