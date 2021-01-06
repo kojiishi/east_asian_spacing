@@ -28,17 +28,18 @@ class Builder(object):
       return os.path.join(output_path, output_name)
     return output_path
 
-  def build(self, face_indices=None):
+  def build(self, language=None, face_indices=None):
     font = self.font
     num_fonts = font.num_fonts_in_collection
     if num_fonts > 0:
-      self.build_collection(face_indices)
+      self.build_collection(language=language, face_indices=face_indices)
       return
+    font.language = language
     spacing = EastAsianSpacing(font)
     spacing.add_to_font()
     self.spacings = (spacing,)
 
-  def build_collection(self, face_indices=None):
+  def build_collection(self, language=None, face_indices=None):
     font = self.font
     num_fonts = font.num_fonts_in_collection
     assert num_fonts >= 2
@@ -46,12 +47,22 @@ class Builder(object):
       face_indices = range(num_fonts)
     elif isinstance(face_indices, str):
       face_indices = (int(i) for i in face_indices.split(","))
+    if language:
+      languages = language.split(",")
+      if len(languages) == 1:
+        indices_and_languages = itertools.zip_longest(face_indices, (),
+                                                      fillvalue=language)
+      else:
+        indices_and_languages = itertools.zip_longest(face_indices, languages)
+    else:
+      indices_and_languages = itertools.zip_longest(face_indices, ())
 
     # A font collection can share tables. When GPOS is shared in the original
     # font, make sure we add the same data so that the new GPOS is also shared.
     spacing_by_offset = {}
-    for face_index in face_indices:
+    for face_index, language in indices_and_languages:
       font.set_face_index(face_index)
+      font.language = language
       logging.info("Face {}/{} '{}' lang={}".format(
           face_index + 1, num_fonts, font, font.language))
       reader_offset = font.reader_offset("GPOS")
@@ -106,7 +117,10 @@ if __name__ == '__main__':
                       type=argparse.FileType("w"),
                       help="Outputs glyph IDs for `pyftsubset`")
   parser.add_argument("-l", "--language",
-                      help="language if the font is language-specific")
+                      help="language if the font is language-specific. "
+                           "For a font collection (TTC), "
+                           "a comma separated list can specify different "
+                           "language for each font in the colletion.")
   parser.add_argument("-o", "--output")
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",
@@ -120,9 +134,8 @@ if __name__ == '__main__':
     else:
       logging.basicConfig(level=logging.INFO)
   font = Font(args.path)
-  font.language = args.language
   builder = Builder(font)
-  builder.build(args.face_index)
+  builder.build(language=args.language, face_indices=args.face_index)
   output = Builder.calc_output_path(args.path, args.output)
   font.save(output)
   if args.gids_file:

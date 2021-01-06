@@ -124,6 +124,9 @@ class Font(object):
   @language.setter
   def language(self, language):
     self.language_ = language
+    assert not self.is_vertical
+    if hasattr(self, "vertical_font_"):
+      self.vertical_font_.language_ = language
 
   @property
   def units_per_em(self):

@@ -103,7 +103,7 @@ class EastAsianSpacing(object):
     zht = GlyphSet(font, text, language="ZHT", script="hani")
     assert GlyphSet(font, text, language="ZHS", script="hani").glyph_ids == ja.glyph_ids
     if ja.glyph_ids == zht.glyph_ids:
-      if font.language is None: font.raise_require_language()
+      if not font.language: font.raise_require_language()
       if font.language == "ZHT":
         ja.clear()
       else:
@@ -125,7 +125,7 @@ class EastAsianSpacing(object):
     if not ja and not zhs:
       return
     if ja.glyph_ids == zhs.glyph_ids:
-      if font.language is None: font.raise_require_language()
+      if not font.language: font.raise_require_language()
       if font.language == "ZHS":
         ja.clear()
       else:
@@ -156,7 +156,7 @@ class EastAsianSpacing(object):
     zhs = GlyphSet(font, text, language="ZHS", script="hani")
     assert GlyphSet(font, text, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
     if ja.glyph_ids == zhs.glyph_ids:
-      if font.language is None: font.raise_require_language()
+      if not font.language: font.raise_require_language()
       if font.language == "ZHS":
         ja.clear()
       else:
