@@ -17,7 +17,7 @@ View the [test HTML].
 
 ## Add the feature to your fonts
 
-### Prerequisite
+### Prerequisites
 
 * Python3
 * [fonttools]

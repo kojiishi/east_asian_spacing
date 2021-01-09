@@ -17,33 +17,47 @@ class Dump(object):
       tags = reader.keys()
       for tag in tags:
         entry = reader.tables[tag]
-        list.append([entry.offset, entry.length, tag, [face_index]])
+        list.append({
+          "tag": tag,
+          "offset": entry.offset,
+          "size": entry.length,
+          "indices": [face_index]})
 
     # For font collections (TTC), shared tables appear multiple times.
     # Merge them to an item that has a list of face indices.
     merged = []
     last = None
     next_offset = 0
-    for item in sorted(list, key=lambda i: i[0]):
-      if last and item[0] == last[0]:
-        assert item[1] == last[1]
-        assert item[2] == last[2]
-        last[3].append(item[3][0])
+    for item in sorted(list, key=lambda i: i["offset"]):
+      if last and item["offset"] == last["offset"]:
+        assert item["size"] == last["size"]
+        assert item["tag"] == last["tag"]
+        assert len(item["indices"]) == 1
+        last["indices"].append(item["indices"][0])
         continue
-      item.append(item[0] - next_offset)
+      item["gap"] = item["offset"] - next_offset
       merged.append(item)
       last = item
-      next_offset = item[0] + item[1]
+      next_offset = item["offset"] + item["size"]
 
-    print("{0:8} Tag  {1:10} {2:5}".format("Offset", "Size", "Gap"))
+    if args.order_by_name:
+      merged = sorted(merged, key=lambda i: i["tag"])
+      header_format = "Tag  {1:10} {2:5}"
+      row_format = "{tag} {size:10,d} {gap:5,d} {indices}"
+    else:
+      header_format = "{0:8} Tag  {1:10} {2:5}"
+      row_format = "{offset:08X} {tag} {size:10,d} {gap:5,d} {indices}"
+    print(header_format.format("Offset", "Size", "Gap"))
+    for item in merged:
+      print(row_format.format(**item))
+      tag = item["tag"]
+      if args.features and (tag == "GPOS" or tag == "GSUB"):
+        Dump.dump_features(font, item["indices"][0], tag)
+
     sum_data = sum_gap = 0
     for item in merged:
-      print("{0:08X} {2} {1:10,d} {4:5,d} {3}".format(*item))
-      sum_data += item[1]
-      sum_gap += item[4]
-      tag = item[2]
-      if args.features and (tag == "GPOS" or tag == "GSUB"):
-        Dump.dump_features(font, item[3][0], tag)
+      sum_data += item["size"]
+      sum_gap += item["gap"]
     print("Total: {:,}, Data: {:,}, Gap: {:,}, Tables: {}".format(
           sum_data + sum_gap, sum_data, sum_gap, len(merged)))
 
@@ -75,10 +89,11 @@ class Dump(object):
   def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs="+")
-    parser.add_argument("--features", action="store_true")
+    parser.add_argument("-f", "--features", action="store_true")
+    parser.add_argument("-n", "--order-by-name", action="store_true")
     args = parser.parse_args()
     for path in args.path:
-      print(os.path.basename(path))
+      print("File:", os.path.basename(path))
       font = Font(path)
       Dump.dump_tables(font, args)
       print()
