@@ -42,8 +42,8 @@ class Dump(object):
 
     if args.order_by_name:
       merged = sorted(merged, key=lambda i: i["tag"])
-      header_format = "Tag  {1:10} {2:5}"
-      row_format = "{tag} {size:10,d} {gap:5,d} {indices}"
+      header_format = "Tag  {1:10}"
+      row_format = "{tag} {size:10,d} {indices}"
     else:
       header_format = "{0:8} Tag  {1:10} {2:5}"
       row_format = "{offset:08X} {tag} {size:10,d} {gap:5,d} {indices}"
@@ -58,7 +58,7 @@ class Dump(object):
     for item in merged:
       sum_data += item["size"]
       sum_gap += item["gap"]
-    print("Total: {:,}, Data: {:,}, Gap: {:,}, Tables: {}".format(
+    print("Total: {0:,}\nData: {1:,}\nGap: {2:,}\nTables: {3}".format(
           sum_data + sum_gap, sum_data, sum_gap, len(merged)))
 
   @staticmethod
@@ -92,11 +92,12 @@ class Dump(object):
     parser.add_argument("-f", "--features", action="store_true")
     parser.add_argument("-n", "--order-by-name", action="store_true")
     args = parser.parse_args()
-    for path in args.path:
+    for i, path in enumerate(args.path):
+      if i:
+        print()
       print("File:", os.path.basename(path))
       font = Font(path)
       Dump.dump_tables(font, args)
-      print()
 
 if __name__ == '__main__':
   Dump.main()

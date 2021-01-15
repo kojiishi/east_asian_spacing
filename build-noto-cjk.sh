@@ -29,32 +29,7 @@ if [[ "$BUILD" != "N" ]]; then
   build-all $*
 fi
 
-# Create tablelists.
-tablelist() {
-  (set -x; python3 Dump.py $*)
-}
-tablelist -n >${OUTDIR}tablelist.txt \
-  ${SRCDIR}NotoSansCJK-Regular.ttc \
-  ${SRCDIR}NotoSerifCJK-Regular.ttc
-tablelist -n >${OUTDIR}tablelist-chws.txt \
-  ${OUTDIR}NotoSansCJK-Regular-chws.ttc \
-  ${OUTDIR}NotoSerifCJK-Regular-chws.ttc
-
-# Diff TTX dumps.
-ttxdiff() {
-  (set -x; ttx -x CFF -y $2 -o $TTXDIR$1-$2.ttx $SRCDIR$1.ttc)
-  (set -x; ttx -x CFF -y $2 -o $TTXDIR$1-chws-$2.ttx $OUTDIR$1-chws.ttc)
-  (set -x; diff -u $TTXDIR$1-$2.ttx $TTXDIR$1-chws-$2.ttx > $TTXDIR$1-$2.diff)
-}
-ttxdiff-all() {
-  mkdir -p $TTXDIR
-  for i in {0..8}; do
-    ttxdiff NotoSansCJK-Regular $i
-  done
-  for i in {0..3}; do
-    ttxdiff NotoSerifCJK-Regular $i
-  done
-}
-if [[ -n "$TTXDIR" ]]; then
-  ttxdiff-all
-fi
+./diff-ref.sh ${SRCDIR}NotoSansCJK-Regular.ttc \
+              ${OUTDIR}NotoSansCJK-Regular-chws.ttc
+./diff-ref.sh ${SRCDIR}NotoSerifCJK-Regular.ttc \
+              ${OUTDIR}NotoSerifCJK-Regular-chws.ttc
