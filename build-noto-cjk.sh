@@ -1,7 +1,7 @@
 #!/bin/bash
 # SRCDIR=${SRCDIR:-noto-cjk-chws/}
-SRCDIR=${SRCDIR:-./}
-OUTDIR=${OUTDIR:-$SRCDIR}
+SRCDIR=${SRCDIR:-fonts/}
+OUTDIR=${OUTDIR:-build/}
 # TTXDIR=${TTXDIR:-${OUTDIR}ttx/}
 
 # Make sure directory names end with a slash to make joining easier.
@@ -29,7 +29,7 @@ if [[ "$BUILD" != "N" ]]; then
   build-all $*
 fi
 
-./diff-ref.sh ${SRCDIR}NotoSansCJK-Regular.ttc \
-              ${OUTDIR}NotoSansCJK-Regular-chws.ttc
-./diff-ref.sh ${SRCDIR}NotoSerifCJK-Regular.ttc \
-              ${OUTDIR}NotoSerifCJK-Regular-chws.ttc
+./diff-ref.sh ${OUTDIR}NotoSansCJK-Regular-chws.ttc \
+              ${SRCDIR}NotoSansCJK-Regular.ttc
+./diff-ref.sh ${OUTDIR}NotoSerifCJK-Regular-chws.ttc \
+              ${SRCDIR}NotoSerifCJK-Regular.ttc

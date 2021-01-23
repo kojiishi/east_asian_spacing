@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: $0 source target
+# Usage: $0 target [source]
 #
 # This script checks differences in fonts by doing following steps:
 # 1. Creates table lists and TTX dumps for source and target.
@@ -24,12 +24,24 @@ REFDIR=$(ensure-end-slash $REFDIR)
 mkdir -p $OUTDIR
 mkdir -p $DIFFDIR
 
-SRCNAME=$1
-SRCBASENAME=$(basename $SRCNAME)
-SRCOUTNAME=$OUTDIR$SRCBASENAME
-DSTNAME=$2
+DSTNAME=$1
 DSTBASENAME=$(basename $DSTNAME)
 DSTOUTNAME=$OUTDIR$DSTBASENAME
+
+SRCNAME=$2
+if [[ -z "$SRCNAME" ]]; then
+  SRCBASENAME=${DSTBASENAME/-chws/}
+  for DIR in $(dirname $DSTNAME) fonts .; do
+    SRCNAME=$DIR/$SRCBASENAME
+    if [[ $DSTNAME != $SRCNAME && -f $SRCNAME ]]; then
+      break
+    fi
+  done
+else
+  SRCBASENAME=$(basename $SRCNAME)
+fi
+SRCOUTNAME=$OUTDIR$SRCBASENAME
+
 DIFFOUTNAME=$DIFFDIR$DSTBASENAME
 CHECKNAMES=()
 
