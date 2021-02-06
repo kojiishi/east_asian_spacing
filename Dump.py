@@ -6,61 +6,73 @@ import os
 from Font import Font
 
 class Dump(object):
-  @staticmethod
-  def dump_tables(font, args):
-    # Similar to `ttx -l` command, implemented in `ttList()`,
-    # but print in the offset order to check the size differences.
-    list = []
-    for face_index, ttf in enumerate(font.ttfonts):
-      name = ttf.get("name")
-      print("Font {0}: \"{1}\"".format(face_index, name.getDebugName(1)))
-      reader = ttf.reader
-      tags = reader.keys()
-      for tag in tags:
-        entry = reader.tables[tag]
-        list.append({
-          "tag": tag,
-          "offset": entry.offset,
-          "size": entry.length,
-          "indices": [face_index]})
+  def __init__(self, font):
+    self.font = font
 
-    # For font collections (TTC), shared tables appear multiple times.
-    # Merge them to an item that has a list of face indices.
-    merged = []
-    last = None
-    next_offset = 0
-    for item in sorted(list, key=lambda i: i["offset"]):
-      if last and item["offset"] == last["offset"]:
-        assert item["size"] == last["size"]
-        assert item["tag"] == last["tag"]
-        assert len(item["indices"]) == 1
-        last["indices"].append(item["indices"][0])
-        continue
-      item["gap"] = item["offset"] - next_offset
-      merged.append(item)
-      last = item
-      next_offset = item["offset"] + item["size"]
+  def dump_tables(self, args):
+    """Similar to `ttx -l` command, implemented in `ttList()`,
+    but print in the offset order to check the size differences."""
+    font = self.font
+    rows = []
+    for face_index, ttfont in enumerate(font.ttfonts):
+      name = ttfont.get("name")
+      print("Font {0}: \"{1}\"".format(face_index, name.getDebugName(1)))
+      rows.extend(self.table_entry_rows_from_ttfont(ttfont, face_index))
+
+    rows = self.merge_indices(rows)
 
     if args.order_by_name:
-      merged = sorted(merged, key=lambda i: i["tag"])
+      rows = sorted(rows, key=lambda row: row["tag"])
       header_format = "Tag  {1:10}"
       row_format = "{tag} {size:10,d} {indices}"
     else:
       header_format = "{0:8} Tag  {1:10} {2:5}"
       row_format = "{offset:08X} {tag} {size:10,d} {gap:5,d} {indices}"
     print(header_format.format("Offset", "Size", "Gap"))
-    for item in merged:
-      print(row_format.format(**item))
-      tag = item["tag"]
+    for row in rows:
+      print(row_format.format(**row))
+      tag = row["tag"]
       if args.features and (tag == "GPOS" or tag == "GSUB"):
-        Dump.dump_features(font, item["indices"][0], tag)
+        self.dump_features(font, row["indices"][0], tag)
 
     sum_data = sum_gap = 0
-    for item in merged:
-      sum_data += item["size"]
-      sum_gap += item["gap"]
+    for row in rows:
+      sum_data += row["size"]
+      sum_gap += row["gap"]
     print("Total: {0:,}\nData: {1:,}\nGap: {2:,}\nTables: {3}".format(
-          sum_data + sum_gap, sum_data, sum_gap, len(merged)))
+          sum_data + sum_gap, sum_data, sum_gap, len(rows)))
+
+  @staticmethod
+  def table_entry_rows_from_ttfont(ttfont, index):
+    reader = ttfont.reader
+    tags = reader.keys()
+    for tag in tags:
+      entry = reader.tables[tag]
+      yield {
+        "tag": tag,
+        "offset": entry.offset,
+        "size": entry.length,
+        "indices": [index]}
+
+  @staticmethod
+  def merge_indices(rows):
+    """For font collections (TTC), shared tables appear multiple times.
+    Merge them to a row that has a list of face indices."""
+    merged = []
+    last = None
+    next_offset = 0
+    for row in sorted(rows, key=lambda row: row["offset"]):
+      assert len(row["indices"]) == 1
+      if last and row["offset"] == last["offset"]:
+        assert row["size"] == last["size"]
+        assert row["tag"] == last["tag"]
+        last["indices"].append(row["indices"][0])
+        continue
+      row["gap"] = row["offset"] - next_offset
+      merged.append(row)
+      last = row
+      next_offset = row["offset"] + row["size"]
+    return merged
 
   @staticmethod
   def dump_features(font, face_index, tag):
@@ -98,7 +110,7 @@ class Dump(object):
         print()
       print("File:", os.path.basename(path))
       font = Font(path)
-      Dump.dump_tables(font, args)
+      Dump(font).dump_tables(args)
 
 if __name__ == '__main__':
   Dump.main()
