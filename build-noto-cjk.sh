@@ -29,7 +29,7 @@ if [[ "$BUILD" != "N" ]]; then
   build-all $*
 fi
 
-./diff-ref.sh ${OUTDIR}NotoSansCJK-Regular-chws.ttc \
+./diff-ref.sh ${OUTDIR}NotoSansCJK-Regular.ttc \
               ${SRCDIR}NotoSansCJK-Regular.ttc
-./diff-ref.sh ${OUTDIR}NotoSerifCJK-Regular-chws.ttc \
+./diff-ref.sh ${OUTDIR}NotoSerifCJK-Regular.ttc \
               ${SRCDIR}NotoSerifCJK-Regular.ttc

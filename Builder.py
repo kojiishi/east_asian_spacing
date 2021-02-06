@@ -16,16 +16,28 @@ from GlyphSet import GlyphSet
 
 class Builder(object):
   def __init__(self, font):
+    if not isinstance(font, Font):
+      font = Font(font)
     self.font = font
 
+  def save(self, output_path=None, suffix=None):
+    font = self.font
+    output_path = self.calc_output_path(font.path, output_path, suffix)
+    font.save(output_path)
+
   @staticmethod
-  def calc_output_path(input_path, output_path):
+  def calc_output_path(input_path, output_path, suffix=None):
     if not output_path:
+      assert input_path
       path_without_ext, ext = os.path.splitext(input_path)
-      return path_without_ext + "-chws" + ext
+      suffix = suffix if suffix is not None else "-chws"
+      return path_without_ext + suffix + ext
     if os.path.isdir(output_path):
-      base_name = os.path.basename(input_path)
-      output_name = Builder.calc_output_path(base_name, None)
+      assert input_path
+      output_name = os.path.basename(input_path)
+      if suffix is not None:
+        path_without_ext, ext = os.path.splitext(output_name)
+        output_name = path_without_ext + suffix + ext
       return os.path.join(output_path, output_name)
     return output_path
 
@@ -123,6 +135,10 @@ if __name__ == '__main__':
                            "a comma separated list can specify different "
                            "language for each font in the colletion.")
   parser.add_argument("-o", "--output")
+  parser.add_argument("-s", "--suffix",
+                      help="Suffix to add to the output file name. "
+                           "When both `-o` and this option are ommited, "
+                           "`-chws` is used.")
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",
                       action="count", default=0)
@@ -134,10 +150,8 @@ if __name__ == '__main__':
       logging.basicConfig(level=logging.DEBUG)
     else:
       logging.basicConfig(level=logging.INFO)
-  font = Font(args.path)
-  builder = Builder(font)
+  builder = Builder(args.path)
   builder.build(language=args.language, face_indices=args.face_index)
-  output = Builder.calc_output_path(args.path, args.output)
-  font.save(output)
+  builder.save(args.output, args.suffix)
   if args.gids_file:
     builder.save_glyph_ids(args.gids_file)

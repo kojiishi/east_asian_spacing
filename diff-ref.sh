@@ -20,45 +20,51 @@ ensure-end-slash() {
   fi
 }
 OUTDIR=$(ensure-end-slash $OUTDIR)
+SRCOUTDIR=${OUTDIR}src/
 REFDIR=$(ensure-end-slash $REFDIR)
 mkdir -p $OUTDIR
+mkdir -p $SRCOUTDIR
 mkdir -p $DIFFDIR
 
-DSTNAME=$1
-DSTBASENAME=$(basename $DSTNAME)
-DSTOUTNAME=$OUTDIR$DSTBASENAME
+DSTPATH=$1
+DSTBASENAME=$(basename $DSTPATH)
+DSTOUTPATH=$OUTDIR$DSTBASENAME
 
-SRCNAME=$2
-if [[ -z "$SRCNAME" ]]; then
+SRCPATH=$2
+if [[ -z "$SRCPATH" ]]; then
   SRCBASENAME=${DSTBASENAME/-chws/}
-  for DIR in $(dirname $DSTNAME) fonts .; do
-    SRCNAME=$DIR/$SRCBASENAME
-    if [[ $DSTNAME != $SRCNAME && -f $SRCNAME ]]; then
+  for SRCDIR in $(dirname $DSTPATH) fonts .; do
+    SRCPATH=$SRCDIR/$SRCBASENAME
+    if [[ $DSTPATH != $SRCPATH && -f $SRCPATH ]]; then
       break
     fi
   done
+elif [[ -d "$SRCPATH" ]]; then
+  SRCDIR=$(ensure-end-slash $SRCPATH)
+  SRCBASENAME=${DSTBASENAME/-chws/}
+  SRCPATH=$SRCDIR$SRCBASENAME
 else
-  SRCBASENAME=$(basename $SRCNAME)
+  SRCBASENAME=$(basename $SRCPATH)
 fi
-SRCOUTNAME=$OUTDIR$SRCBASENAME
+SRCOUTPATH=$SRCOUTDIR$SRCBASENAME
 
-DIFFOUTNAME=$DIFFDIR$DSTBASENAME
-CHECKNAMES=()
+DIFFOUTPATH=$DIFFDIR$SRCBASENAME
+CHECKPATHS=()
 
 # Create tablelists.
 tablelist() {
   (set -x; python3 Dump.py -n $1) | \
     grep -v '^File: ' >$2
 }
-SRCTABLELISTNAME=$SRCOUTNAME-tablelist.txt
-tablelist $SRCNAME $SRCTABLELISTNAME 
-DSTTABLELISTNAME=$DSTOUTNAME-tablelist.txt
-tablelist $DSTNAME $DSTTABLELISTNAME 
-DIFFTABLELISTNAME=$DIFFOUTNAME-tablelist.diff
+SRCTABLELISTPATH=$SRCOUTPATH-tablelist.txt
+tablelist $SRCPATH $SRCTABLELISTPATH 
+DSTTABLELISTPATH=$DSTOUTPATH-tablelist.txt
+tablelist $DSTPATH $DSTTABLELISTPATH 
+DIFFTABLELISTPATH=$DIFFOUTPATH-tablelist.diff
 # Ignore first 2 lines (diff -u header).
-(set -x; diff -u $SRCTABLELISTNAME $DSTTABLELISTNAME) | \
-  tail -n +3 >$DIFFTABLELISTNAME
-CHECKNAMES+=($DIFFTABLELISTNAME)
+(set -x; diff -u $SRCTABLELISTPATH $DSTTABLELISTPATH) | \
+  tail -n +3 >$DIFFTABLELISTPATH
+CHECKPATHS+=($DIFFTABLELISTPATH)
 
 # Create TTX.
 dump-ttx() {
@@ -69,29 +75,29 @@ dump-ttx() {
     grep -v '<modified value=' >$2
 }
 
-TTC=$(grep '^Font [0-9][0-9]*:' $SRCTABLELISTNAME | wc -l)
+TTC=$(grep '^Font [0-9][0-9]*:' $SRCTABLELISTPATH | wc -l)
 for i in $(seq 0 $(expr $TTC - 1)); do
   # Source doesn't change often, dump only if it does not exist.
-  SRCTTXNAME=$SRCOUTNAME-$i.ttx
-  if [[ ! -f $SRCTTXNAME ]]; then
-    dump-ttx $SRCNAME $SRCTTXNAME $i
+  SRCTTXPATH=$SRCOUTPATH-$i.ttx
+  if [[ ! -f $SRCTTXPATH ]]; then
+    dump-ttx $SRCPATH $SRCTTXPATH $i
   fi
-  DSTTTXNAME=$DSTOUTNAME-$i.ttx
-  dump-ttx $DSTNAME $DSTTTXNAME $i
-  DIFFTTXNAME=$DIFFOUTNAME-$i.diff
+  DSTTTXPATH=$DSTOUTPATH-$i.ttx
+  dump-ttx $DSTPATH $DSTTTXPATH $i
+  DIFFTTXPATH=$DIFFOUTPATH-$i.ttx.diff
   # Ignore first 2 lines (diff -u header) and line numbers.
-  (set -x; diff -u $SRCTTXNAME $DSTTTXNAME) | \
-    tail -n +3 | sed -e 's/^@@ -.*/@@/' >$DIFFTTXNAME
-  CHECKNAMES+=($DIFFTTXNAME)
+  (set -x; diff -u $SRCTTXPATH $DSTTTXPATH) | \
+    tail -n +3 | sed -e 's/^@@ -.*/@@/' >$DIFFTTXPATH
+  CHECKPATHS+=($DIFFTTXPATH)
 done
 
 # Diff all files with reference files.
-echo "Produced ${#CHECKNAMES[@]} diff files, comparing with references."
-for CHECKNAME in ${CHECKNAMES[@]}; do
-  REFDIFFNAME=$REFDIR$(basename $CHECKNAME)
+echo "Produced ${#CHECKPATHS[@]} diff files, comparing with references."
+for CHECKPATH in ${CHECKPATHS[@]}; do
+  REFDIFFNAME=$REFDIR$(basename $CHECKPATH)
   if [[ -f $REFDIFFNAME ]]; then
-    (set -x; diff -u $REFDIFFNAME $CHECKNAME)
+    (set -x; diff -u $REFDIFFNAME $CHECKPATH)
   else
-    echo "No reference file for $CHECKNAME in $REFDIR"
+    echo "No reference file for $CHECKPATH in $REFDIR"
   fi
 done
