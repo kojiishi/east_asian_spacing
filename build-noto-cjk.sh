@@ -1,8 +1,21 @@
 #!/bin/bash
-# SRCDIR=${SRCDIR:-noto-cjk-chws/}
+#
+# Usages:
+# % build-noto-cjk.sh
+# Uses source files in `fonts` directory.
+#
+# % SRCDIR=noto-cjk/chromeos/noto-cjk-20190409 build-noto-cjk.sh
+# Uses the source files in the specified directory.
+#
+# % BUILD=N build-noto-cjk.sh
+# Skip building.
+#
+# % DIFF=N build-noto-cjk.sh
+# Skip diffing.
+#
 SRCDIR=${SRCDIR:-fonts/}
 OUTDIR=${OUTDIR:-build/}
-# TTXDIR=${TTXDIR:-${OUTDIR}ttx/}
+WEIGHTS=${WEIGHTS:-Regular Bold Light}
 
 # Make sure directory names end with a slash to make joining easier.
 ensure-end-slash() {
@@ -14,22 +27,32 @@ ensure-end-slash() {
 }
 SRCDIR=$(ensure-end-slash $SRCDIR)
 OUTDIR=$(ensure-end-slash $OUTDIR)
-TTXDIR=$(ensure-end-slash $TTXDIR)
+
+OUTFILES=()
 
 # Build fonts.
 build() {
-  (set -x; python3 Builder.py -o $OUTDIR $*)
+  SRCFILE=$1
+  shift
+  if [[ ! -f "$SRCFILE" ]]; then return; fi
+  OUTFILE=$OUTDIR$(basename $SRCFILE)
+  OUTFILES+=($OUTFILE)
+  if [[ "$BUILD" == "N" ]]; then return; fi
+  (set -x; python3 Builder.py -o $OUTDIR $SRCFILE $*)
 }
+
 build-all() {
   mkdir -p $OUTDIR
-  build ${SRCDIR}NotoSansCJK-Regular.ttc --face-index=0,1,2,3,4 $*
-  build ${SRCDIR}NotoSerifCJK-Regular.ttc --language=,KOR,ZHS $*
+  for WEIGHT in $WEIGHTS; do
+    build ${SRCDIR}NotoSansCJK-$WEIGHT.ttc --face-index=0,1,2,3,4 $*
+    build ${SRCDIR}NotoSerifCJK-$WEIGHT.ttc --language=,KOR,ZHS $*
+  done
 }
-if [[ "$BUILD" != "N" ]]; then
-  build-all $*
-fi
 
-./diff-ref.sh ${OUTDIR}NotoSansCJK-Regular.ttc \
-              ${SRCDIR}NotoSansCJK-Regular.ttc
-./diff-ref.sh ${OUTDIR}NotoSerifCJK-Regular.ttc \
-              ${SRCDIR}NotoSerifCJK-Regular.ttc
+build-all $*
+
+echo "OUTFILES=${#OUTFILES[@]} (${OUTFILES[@]})"
+
+if [[ "$DIFF" != "N" ]]; then
+  ./diff-ref.sh $SRCDIR ${OUTFILES[@]}
+fi
