@@ -100,26 +100,19 @@ class Font(object):
       return entry.offset
     return None
 
-  @property
-  def debug_name(self):
+  def debug_name(self, name_id):
+    # name_id:
+    # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-id-examples
     name = self.tttable("name")
-    return name.getDebugName(1)
+    return name.getDebugName(name_id)
 
   def __str__(self):
-    return self.debug_name
-
-  known_debug_names = {
-    "Noto Serif CJK KR": "KOR",
-    "Noto Serif CJK SC": "ZHS",
-  }
+    return self.debug_name(4)
 
   @property
   def language(self):
     if self.language_:
       return self.language_
-    known = self.known_debug_names.get(self.debug_name, None)
-    if known:
-      return known
     return None
 
   @language.setter

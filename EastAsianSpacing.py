@@ -71,7 +71,7 @@ class EastAsianSpacing(object):
                0x301E, 0x301F,
                0xFF09, 0xFF3D, 0xFF5D, 0xFF60]
     if font.is_vertical:
-      debug_name = font.debug_name
+      debug_name = font.debug_name(1)
       if debug_name.startswith("Meiryo"):
         opening.append(0x2019)
         closing.append(0x201D)
