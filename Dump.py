@@ -16,7 +16,14 @@ class Dump(object):
     rows = []
     for face_index, ttfont in enumerate(font.ttfonts):
       name = ttfont.get("name")
-      print("Font {0}: \"{1}\"".format(face_index, name.getDebugName(1)))
+      print(f'Font {face_index}: '
+            # 1. The name the user sees. Times New Roman
+            f'"{name.getDebugName(1)}" '
+            # 2. The name of the style. Bold
+            f'"{name.getDebugName(2)}" '
+            # 6. The name the font will be known by on a PostScript printer.
+            # TimesNewRoman-Bold
+            f'PS="{name.getDebugName(6)}"')
       rows.extend(self.table_entry_rows_from_ttfont(ttfont, face_index))
 
     rows = self.merge_indices(rows)
