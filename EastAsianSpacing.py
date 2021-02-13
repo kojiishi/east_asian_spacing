@@ -166,26 +166,33 @@ class EastAsianSpacing(object):
       assert ja.isdisjoint(zhs)
     self.left.unite(zhs)
 
+  class GlyphTypeCache(object):
+    def __init__(self):
+      self.type_by_glyph_id = dict()
+
+    def add(self, glyphs, value):
+      for glyph_id in glyphs.glyph_ids:
+        assert self.type_by_glyph_id.get(glyph_id, value) == value
+        self.type_by_glyph_id[glyph_id] = value
+
+    def type_from_glyph_id(self, glyph_id):
+      return self.type_by_glyph_id.get(glyph_id, None)
+
   def get_cache(self, create=False):
     font = self.font
     if hasattr(font, "east_asian_spacing_"):
       return font.east_asian_spacing_
-    if create:
-      cache = dict()
-      font.east_asian_spacing_ = cache
-      return cache
-    return None
+    if not create:
+      return None
+    cache = EastAsianSpacing.GlyphTypeCache()
+    font.east_asian_spacing_ = cache
+    return cache
 
   def add_to_cache(self):
     cache = self.get_cache(create=True)
-    self.add_to_cache_for(self.left, "L", cache)
-    self.add_to_cache_for(self.middle, "M", cache)
-    self.add_to_cache_for(self.right, "R", cache)
-
-  def add_to_cache_for(self, glyphs, value, cache):
-    for glyph_id in glyphs.glyph_ids:
-      assert cache.get(glyph_id, value) == value
-      cache[glyph_id] = value
+    cache.add(self.left, "L")
+    cache.add(self.middle, "M")
+    cache.add(self.right, "R")
 
   def add_from_cache(self, glyphs):
     cache = self.get_cache()
@@ -197,7 +204,7 @@ class EastAsianSpacing(object):
                           "M": self.middle.glyph_ids,
                           "R": self.right.glyph_ids}
     for glyph_id in glyphs.glyph_ids:
-      value = cache.get(glyph_id, None)
+      value = cache.type_from_glyph_id(glyph_id)
       glyph_ids_by_value[value].add(glyph_id)
     glyphs.glyph_ids = not_cached
 
