@@ -127,18 +127,20 @@ if __name__ == '__main__':
   if args.is_vertical:
     font = font.vertical_font
   if args.text:
-    glyphs = GlyphSet(args.text, font, language=args.language, script=args.script)
+    glyphs = GlyphSet(font, args.text, language=args.language, script=args.script)
     print("glyph_id=", glyphs.glyph_ids)
   else:
     # Print samples.
-    GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], font)
-    GlyphSet([0x2018, 0x2019, 0x201C, 0x201D], font)
-    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F], font)
-    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-            font, language="JAN", script="hani")
-    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-            font, language="ZHS", script="hani")
-    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-            font, language="ZHH", script="hani")
-    GlyphSet([0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-            font, language="ZHT", script="hani")
+    GlyphSet(font, [0x2018, 0x2019, 0x201C, 0x201D])
+    GlyphSet(font, [0x2018, 0x2019, 0x201C, 0x201D])
+    GlyphSet(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F])
+    GlyphSet(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+             language="JAN", script="hani")
+    GlyphSet(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+             language="ZHS", script="hani")
+    GlyphSet(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+             language="ZHH", script="hani")
+    GlyphSet(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+             language="ZHT", script="hani")
+    GlyphSet(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+             language="KOR", script="hani")
