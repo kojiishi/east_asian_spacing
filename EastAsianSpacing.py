@@ -103,14 +103,17 @@ class EastAsianSpacing(object):
     ja = GlyphSet(font, text, language="JAN", script="hani")
     zht = GlyphSet(font, text, language="ZHT", script="hani")
     assert GlyphSet(font, text, language="ZHS", script="hani").glyph_ids == ja.glyph_ids
+    assert GlyphSet(font, text, language="KOR", script="hani").glyph_ids == ja.glyph_ids
+    # Some fonts do not support ZHH, in that case, it may be the same as JAN.
+    # For example, NotoSansCJK supports ZHH but NotoSerifCJK does not.
+    # assert GlyphSet(font, text, language="ZHH", script="hani").glyph_ids == zht.glyph_ids
     if ja.glyph_ids == zht.glyph_ids:
       if not font.language: font.raise_require_language()
-      if font.language == "ZHT":
+      if font.language == "ZHT" or font.language_ == "ZHH":
         ja.clear()
       else:
         zht.clear()
-    else:
-      assert ja.isdisjoint(zht)
+    assert ja.isdisjoint(zht)
     self.left.unite(ja)
     self.middle.unite(zht)
 
@@ -121,6 +124,7 @@ class EastAsianSpacing(object):
     ja = GlyphSet(font, text, language="JAN", script="hani")
     zhs = GlyphSet(font, text, language="ZHS", script="hani")
     assert font.is_vertical or GlyphSet(font, text, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
+    assert font.is_vertical or GlyphSet(font, text, language="KOR", script="hani").glyph_ids == ja.glyph_ids
     self.add_from_cache(ja)
     self.add_from_cache(zhs)
     if not ja and not zhs:
@@ -131,8 +135,7 @@ class EastAsianSpacing(object):
         ja.clear()
       else:
         zhs.clear()
-    else:
-      assert ja.isdisjoint(zhs)
+    assert ja.isdisjoint(zhs)
     if font.is_vertical:
       # In vertical flow, add colon/semicolon to middle if they have vertical
       # alternate glyphs. In ZHS, they are upright. In Japanese, they may or
@@ -156,14 +159,14 @@ class EastAsianSpacing(object):
     ja = GlyphSet(font, text, language="JAN", script="hani")
     zhs = GlyphSet(font, text, language="ZHS", script="hani")
     assert GlyphSet(font, text, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
+    assert GlyphSet(font, text, language="KOR", script="hani").glyph_ids == ja.glyph_ids
     if ja.glyph_ids == zhs.glyph_ids:
       if not font.language: font.raise_require_language()
       if font.language == "ZHS":
         ja.clear()
       else:
         zhs.clear()
-    else:
-      assert ja.isdisjoint(zhs)
+    assert ja.isdisjoint(zhs)
     self.left.unite(zhs)
 
   class GlyphTypeCache(object):
