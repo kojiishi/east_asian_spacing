@@ -45,21 +45,21 @@ else
 fi
 
 tablelist() {
-  (set -x; python3 Dump.py -n $1) | \
-    grep -v '^File: ' >$2
+  (set -x; python3 Dump.py -n "$1") | \
+    grep -v '^File: ' >"$2"
 }
 
 dump-ttx() {
   # Exclude CFF, post, and/or glyp tables for faster executions.
   # EXCLUDE=CFF
-  (set -x; ttx -y $3 -x "$EXCLUDE" -o - $1) | \
+  (set -x; ttx -y $3 -x "$EXCLUDE" -o - "$1") | \
     grep -v '<checkSumAdjustment value=' | \
-    grep -v '<modified value=' >$2
+    grep -v '<modified value=' >"$2"
 }
 
 CHECKPATHS=()
 for DSTPATH in "$@"; do
-  DSTBASENAME=$(basename $DSTPATH)
+  DSTBASENAME=$(basename "$DSTPATH")
   DSTOUTPATH=$DSTOUTDIR$DSTBASENAME
 
   if [[ -n "$SRCDIR" ]]; then
@@ -73,28 +73,28 @@ for DSTPATH in "$@"; do
 
   # Create tablelists.
   SRCTABLELISTPATH=$SRCOUTPATH-tablelist.txt
-  tablelist $SRCPATH $SRCTABLELISTPATH
+  tablelist "$SRCPATH" "$SRCTABLELISTPATH"
   DSTTABLELISTPATH=$DSTOUTPATH-tablelist.txt
-  tablelist $DSTPATH $DSTTABLELISTPATH
+  tablelist "$DSTPATH" "$DSTTABLELISTPATH"
   DIFFTABLELISTPATH=$DIFFOUTPATH-tablelist.diff
   # Ignore first 2 lines (diff -u header).
-  (set -x; diff -u $SRCTABLELISTPATH $DSTTABLELISTPATH) | \
-    tail -n +3 >$DIFFTABLELISTPATH
-  CHECKPATHS+=($DIFFTABLELISTPATH)
+  (set -x; diff -u "$SRCTABLELISTPATH" "$DSTTABLELISTPATH") | \
+    tail -n +3 >"$DIFFTABLELISTPATH"
+  CHECKPATHS+=("$DIFFTABLELISTPATH")
 
   # Create TTX.
   # TTX takes long for large fonts. Run them in parallel.
-  TTC=$(grep '^Font [0-9][0-9]*:' $SRCTABLELISTPATH | wc -l)
+  TTC=$(grep '^Font [0-9][0-9]*:' "$SRCTABLELISTPATH" | wc -l)
   for i in $(seq 0 $(expr $TTC - 1)); do
     SRCTTXPATH=$SRCOUTPATH-$i.ttx
     DSTTTXPATH=$DSTOUTPATH-$i.ttx
     DIFFTTXPATH=$DIFFOUTPATH-$i.ttx.diff
     (
-      dump-ttx $DSTPATH $DSTTTXPATH $i &
+      dump-ttx "$DSTPATH" "$DSTTTXPATH" $i &
       TTXJOBS=($!)
       # Source doesn't change often, dump only if it does not exist.
       #if [[ ! -f $SRCTTXPATH ]]; then
-        dump-ttx $SRCPATH $SRCTTXPATH $i &
+        dump-ttx "$SRCPATH" "$SRCTTXPATH" $i &
         TTXJOBS+=($!)
       #fi
       echo "Waiting for ${#TTXJOBS[@]} TTX jobs (${TTXJOBS[@]})"
@@ -102,10 +102,10 @@ for DSTPATH in "$@"; do
 
       # Create diff of the 2 TTX files.
       # Ignore first 2 lines (diff -u header) and line numbers.
-      (set -x; diff -u $SRCTTXPATH $DSTTTXPATH) | \
-        tail -n +3 | sed -e 's/^@@ -.*/@@/' >$DIFFTTXPATH
+      (set -x; diff -u "$SRCTTXPATH" "$DSTTTXPATH") | \
+        tail -n +3 | sed -e 's/^@@ -.*/@@/' >"$DIFFTTXPATH"
     ) &
-    CHECKPATHS+=($DIFFTTXPATH)
+    CHECKPATHS+=("$DIFFTTXPATH")
   done
 done
 
@@ -120,7 +120,7 @@ echo "Produced ${#CHECKPATHS[@]} diff files, comparing with references."
 for CHECKPATH in ${CHECKPATHS[@]}; do
   REFDIFFNAME=$REFDIR$(basename $CHECKPATH)
   if [[ -f $REFDIFFNAME ]]; then
-    (set -x; diff -u $REFDIFFNAME $CHECKPATH)
+    (set -x; diff -u "$REFDIFFNAME" "$CHECKPATH")
   else
     echo "No reference file for $CHECKPATH in $REFDIR"
   fi
