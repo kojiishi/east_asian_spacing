@@ -1,0 +1,31 @@
+[[package]]
+name = "fonttools"
+version = "4.20.0"
+description = "Tools to manipulate font files"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+all = ["fs (>=2.2.0,<3)", "lxml (>=4.0,<5)", "zopfli (>=0.1.4)", "lz4 (>=1.7.4.2)", "matplotlib", "sympy", "skia-pathops (>=0.5.0)", "brotlicffi (>=0.8.0)", "scipy", "brotli (>=1.0.1)", "munkres", "unicodedata2 (>=13.0.0)", "xattr"]
+graphite = ["lz4 (>=1.7.4.2)"]
+interpolatable = ["scipy", "munkres"]
+lxml = ["lxml (>=4.0,<5)"]
+pathops = ["skia-pathops (>=0.5.0)"]
+plot = ["matplotlib"]
+symfont = ["sympy"]
+type1 = ["xattr"]
+ufo = ["fs (>=2.2.0,<3)"]
+unicode = ["unicodedata2 (>=13.0.0)"]
+woff = ["zopfli (>=0.1.4)", "brotlicffi (>=0.8.0)", "brotli (>=1.0.1)"]
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.8"
+content-hash = "59879f3351f5974a7a139c2b63b443bfb3702233c74418c4b56a112e9bbc8c87"
+
+[metadata.files]
+fonttools = [
+    {file = "fonttools-4.20.0-py3-none-any.whl", hash = "sha256:decdb2ff74f8ab69f0afb6898eeb0dd0b30e8764ee68e4cc35c0e1831621719d"},
+    {file = "fonttools-4.20.0.zip", hash = "sha256:afd051129dd546f81534c1d08b4fc118c0307d614f6fc5145d2e3e76bcfb7513"},
+]
