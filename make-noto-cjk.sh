@@ -1,16 +1,16 @@
 #!/bin/bash
 #
 # Usages:
-# % build-noto-cjk.sh
+# % make-noto-cjk.sh
 # Uses source files in `fonts` directory.
 #
-# % SRCDIR=noto-cjk/chromeos/noto-cjk-20190409 build-noto-cjk.sh
+# % SRCDIR=noto-cjk/chromeos/noto-cjk-20190409 make-noto-cjk.sh
 # Uses the source files in the specified directory.
 #
-# % BUILD=N build-noto-cjk.sh
+# % BUILD=N make-noto-cjk.sh
 # Skip building.
 #
-# % DIFF=N build-noto-cjk.sh
+# % DIFF=N make-noto-cjk.sh
 # Skip diffing.
 #
 SRCDIR=${SRCDIR:-fonts/}

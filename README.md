@@ -1,4 +1,4 @@
-# Contextual Spacing
+# East Asian Contextual Spacing
 
 This directory contains tools for
 the OpenType [Contextual Half-width Spacing] feature
@@ -93,4 +93,4 @@ of [CSS Text 4] and
 [data comparison report]: https://colab.research.google.com/github/kojiishi/contextual-spacing/blob/master/contextual_spacing_analysis.ipynb
 [Adobe CJK Type blog article]: https://blogs.adobe.com/CCJKType/2018/04/contextual-spacing.html
 [CSS Text 4]: https://drafts.csswg.org/css-text-4/#text-spacing-classes
-[feature file]:http://blogs.adobe.com/CCJKType/files/2018/04/features.txt
+[feature file]: http://blogs.adobe.com/CCJKType/files/2018/04/features.txt
