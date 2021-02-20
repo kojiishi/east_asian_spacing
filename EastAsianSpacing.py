@@ -14,7 +14,9 @@ from fontTools.otlLib.builder import SinglePosBuilder
 from fontTools.ttLib.tables import otTables
 
 from Font import Font
-from GlyphSet import GlyphSet
+from TextRun import GlyphSet
+from TextRun import TextRun
+from TextRun import show_dump_images
 
 class EastAsianSpacing(object):
   def __init__(self, font):
@@ -47,17 +49,17 @@ class EastAsianSpacing(object):
   def glyph_ids_from_spacings(spacings):
     return itertools.chain(*(spacing.glyph_ids for spacing in spacings))
 
-  def save_glyph_ids(self, file, prefix=''):
-    self._save_glyph_ids(self.left, prefix + 'left', file)
-    self._save_glyph_ids(self.right, prefix + 'right', file)
-    self._save_glyph_ids(self.middle, prefix + 'middle', file)
+  def save_glyph_ids(self, output, prefix=''):
+    self._save_glyph_ids(self.left, prefix + 'left', output)
+    self._save_glyph_ids(self.right, prefix + 'right', output)
+    self._save_glyph_ids(self.middle, prefix + 'middle', output)
     if self.vertical_spacing:
-      self.vertical_spacing.save_glyph_ids(file, 'vertical.' + prefix)
+      self.vertical_spacing.save_glyph_ids(output, 'vertical.' + prefix)
 
-  def _save_glyph_ids(self, glyphs, name, file):
-    file.write(f'# {name}\n')
-    file.write('\n'.join(str(g) for g in sorted(glyphs.glyph_ids)))
-    file.write(f'\n')
+  def _save_glyph_ids(self, glyphs, name, output):
+    output.write(f'# {name}\n')
+    output.write('\n'.join(str(g) for g in sorted(glyphs.glyph_ids)))
+    output.write('\n')
 
   def unite(self, other):
     self.left.unite(other.left)
@@ -113,13 +115,13 @@ class EastAsianSpacing(object):
     else:
       closing.append(0x2019)
       closing.append(0x201D)
-    self.left.unite(GlyphSet(font, closing))
-    self.right.unite(GlyphSet(font, opening))
-    self.middle.unite(GlyphSet(font, [0x3000, 0x30FB]))
+    self.left.unite(TextRun(font, closing).glyph_set())
+    self.right.unite(TextRun(font, opening).glyph_set())
+    self.middle.unite(TextRun(font, [0x3000, 0x30FB]).glyph_set())
     if font.is_vertical:
       # Left/right in vertical should apply only if they have `vert` glyphs.
       # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
-      horizontal = GlyphSet(font.horizontal_font, opening + closing)
+      horizontal = TextRun(font.horizontal_font, opening + closing).glyph_set()
       self.left.subtract(horizontal)
       self.right.subtract(horizontal)
     self.assert_glyphs_are_disjoint()
@@ -130,14 +132,14 @@ class EastAsianSpacing(object):
     # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
     font = self.font
     text = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
-    ja = GlyphSet(font, text, language="JAN", script="hani")
-    zht = GlyphSet(font, text, language="ZHT", script="hani")
-    assert GlyphSet(font, text, language="ZHS", script="hani").glyph_ids == ja.glyph_ids
-    assert GlyphSet(font, text, language="KOR", script="hani").glyph_ids == ja.glyph_ids
+    ja = TextRun(font, text, language="JAN", script="hani").glyph_set()
+    zht = TextRun(font, text, language="ZHT", script="hani").glyph_set()
+    assert TextRun(font, text, language="ZHS", script="hani").glyph_set() == ja
+    assert TextRun(font, text, language="KOR", script="hani").glyph_set() == ja
     # Some fonts do not support ZHH, in that case, it may be the same as JAN.
     # For example, NotoSansCJK supports ZHH but NotoSerifCJK does not.
-    # assert GlyphSet(font, text, language="ZHH", script="hani").glyph_ids == zht.glyph_ids
-    if ja.glyph_ids == zht.glyph_ids:
+    # assert TextRun(font, text, language="ZHH", script="hani").glyph_set() == zht
+    if ja == zht:
       if not font.language: font.raise_require_language()
       if font.language == "ZHT" or font.language_ == "ZHH":
         ja.clear()
@@ -152,15 +154,15 @@ class EastAsianSpacing(object):
     # Colon/semicolon are at middle for Japanese, left in ZHS.
     font = self.font
     text = [0xFF1A, 0xFF1B]
-    ja = GlyphSet(font, text, language="JAN", script="hani")
-    zhs = GlyphSet(font, text, language="ZHS", script="hani")
-    assert font.is_vertical or GlyphSet(font, text, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
-    assert font.is_vertical or GlyphSet(font, text, language="KOR", script="hani").glyph_ids == ja.glyph_ids
+    ja = TextRun(font, text, language="JAN", script="hani").glyph_set()
+    zhs = TextRun(font, text, language="ZHS", script="hani").glyph_set()
+    assert font.is_vertical or TextRun(font, text, language="ZHT", script="hani").glyph_set() == ja
+    assert font.is_vertical or TextRun(font, text, language="KOR", script="hani").glyph_set() == ja
     self.add_from_cache(ja)
     self.add_from_cache(zhs)
     if not ja and not zhs:
       return
-    if ja.glyph_ids == zhs.glyph_ids:
+    if ja == zhs:
       if not font.language: font.raise_require_language()
       if font.language == "ZHS":
         ja.clear()
@@ -173,8 +175,8 @@ class EastAsianSpacing(object):
       # may not be upright. Vertical alternate glyphs indicate they are rotated.
       # In ZHT, they may be upright even when there are vertical glyphs.
       if font.language is None or font.language == "JAN":
-        ja_horizontal = GlyphSet(font.horizontal_font, text,
-                                language="JAN", script="hani")
+        ja_horizontal = TextRun(font.horizontal_font, text,
+                               language="JAN", script="hani").glyph_set()
         ja.subtract(ja_horizontal)
         self.middle.unite(ja)
       return
@@ -188,11 +190,11 @@ class EastAsianSpacing(object):
       return
     # Fullwidth exclamation mark and question mark are on left only in ZHS.
     text = [0xFF01, 0xFF1F]
-    ja = GlyphSet(font, text, language="JAN", script="hani")
-    zhs = GlyphSet(font, text, language="ZHS", script="hani")
-    assert GlyphSet(font, text, language="ZHT", script="hani").glyph_ids == ja.glyph_ids
-    assert GlyphSet(font, text, language="KOR", script="hani").glyph_ids == ja.glyph_ids
-    if ja.glyph_ids == zhs.glyph_ids:
+    ja = TextRun(font, text, language="JAN", script="hani").glyph_set()
+    zhs = TextRun(font, text, language="ZHS", script="hani").glyph_set()
+    assert TextRun(font, text, language="ZHT", script="hani").glyph_set() == ja
+    assert TextRun(font, text, language="KOR", script="hani").glyph_set() == ja
+    if ja == zhs:
       if not font.language: font.raise_require_language()
       if font.language == "ZHS":
         ja.clear()
@@ -349,7 +351,7 @@ if __name__ == '__main__':
   args = parser.parse_args()
   if args.verbose:
     if args.verbose >= 2:
-      GlyphSet.show_dump_images()
+      show_dump_images()
     logging.basicConfig(level=logging.DEBUG)
   else:
     logging.basicConfig(level=logging.INFO)

@@ -12,7 +12,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 
 from EastAsianSpacing import EastAsianSpacing
 from Font import Font
-from GlyphSet import GlyphSet
+from TextRun import show_dump_images
 
 class Builder(object):
   def __init__(self, font):
@@ -143,7 +143,7 @@ if __name__ == '__main__':
   if args.verbose:
     if args.verbose >= 2:
       if args.verbose >= 3:
-        GlyphSet.show_dump_images()
+        show_dump_images()
       logging.basicConfig(level=logging.DEBUG)
     else:
       logging.basicConfig(level=logging.INFO)
