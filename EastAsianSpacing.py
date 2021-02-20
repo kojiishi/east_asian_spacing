@@ -29,8 +29,6 @@ class EastAsianSpacing(object):
       if vertical_font:
         self.vertical_spacing = EastAsianSpacing(vertical_font)
 
-    self.add_glyphs()
-
   @property
   def spacings(self):
     if self.vertical_spacing:
@@ -49,12 +47,43 @@ class EastAsianSpacing(object):
   def glyph_ids_from_spacings(spacings):
     return itertools.chain(*(spacing.glyph_ids for spacing in spacings))
 
+  def save_glyph_ids(self, file, prefix=''):
+    self._save_glyph_ids(self.left, prefix + 'left', file)
+    self._save_glyph_ids(self.right, prefix + 'right', file)
+    self._save_glyph_ids(self.middle, prefix + 'middle', file)
+    if self.vertical_spacing:
+      self.vertical_spacing.save_glyph_ids(file, 'vertical.' + prefix)
+
+  def _save_glyph_ids(self, glyphs, name, file):
+    file.write(f'# {name}\n')
+    file.write('\n'.join(str(g) for g in sorted(glyphs.glyph_ids)))
+    file.write(f'\n')
+
+  def unite(self, other):
+    self.left.unite(other.left)
+    self.middle.unite(other.middle)
+    self.right.unite(other.right)
+    if self.vertical_spacing and other.vertical_spacing:
+      self.vertical_spacing.unite(other.vertical_spacing)
+
+  def assert_has_glyphs(self):
+    assert self.left
+    assert self.middle
+    assert self.right
+
+  def assert_glyphs_are_disjoint(self):
+    assert self.left.isdisjoint(self.middle)
+    assert self.left.isdisjoint(self.right)
+    assert self.middle.isdisjoint(self.right)
+
   def add_glyphs(self):
     self.add_opening_closing()
     self.add_period_comma()
     self.add_colon_semicolon()
     self.add_exclam_question()
     self.add_to_cache()
+    self.assert_has_glyphs()
+    self.assert_glyphs_are_disjoint()
 
     if self.vertical_spacing:
       self.vertical_spacing.add_glyphs()
@@ -93,6 +122,7 @@ class EastAsianSpacing(object):
       horizontal = GlyphSet(font.horizontal_font, opening + closing)
       self.left.subtract(horizontal)
       self.right.subtract(horizontal)
+    self.assert_glyphs_are_disjoint()
 
   def add_period_comma(self):
     # Fullwidth period/comma are centered in ZHT but on left in other languages.
@@ -116,6 +146,7 @@ class EastAsianSpacing(object):
     assert ja.isdisjoint(zht)
     self.left.unite(ja)
     self.middle.unite(zht)
+    self.assert_glyphs_are_disjoint()
 
   def add_colon_semicolon(self):
     # Colon/semicolon are at middle for Japanese, left in ZHS.
@@ -149,6 +180,7 @@ class EastAsianSpacing(object):
       return
     self.middle.unite(ja)
     self.left.unite(zhs)
+    self.assert_glyphs_are_disjoint()
 
   def add_exclam_question(self):
     font = self.font
@@ -168,6 +200,7 @@ class EastAsianSpacing(object):
         zhs.clear()
     assert ja.isdisjoint(zhs)
     self.left.unite(zhs)
+    self.assert_glyphs_are_disjoint()
 
   class GlyphTypeCache(object):
     def __init__(self):
@@ -226,6 +259,8 @@ class EastAsianSpacing(object):
       self.vertical_spacing.add_to_table(table, 'vchw')
 
   def add_to_table(self, table, feature_tag):
+    self.assert_has_glyphs()
+    self.assert_glyphs_are_disjoint()
     lookups = table.LookupList.Lookup
     lookup_indices = self.build_lookup(lookups)
 
@@ -322,6 +357,7 @@ if __name__ == '__main__':
   if args.is_vertical:
     font = font.vertical_font
   spacing = EastAsianSpacing(font)
+  spacing.add_glyphs()
   print("left:", sorted(spacing.left.glyph_ids))
   print("right:", sorted(spacing.right.glyph_ids))
   print("middle:", sorted(spacing.middle.glyph_ids))

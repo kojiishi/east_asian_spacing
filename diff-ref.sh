@@ -82,6 +82,12 @@ for DSTPATH in "$@"; do
     tail -n +3 >"$DIFFTABLELISTPATH"
   CHECKPATHS+=("$DIFFTABLELISTPATH")
 
+  # Check if glyph id file exists.
+  GIDSPATH=${DSTOUTPATH}-gids.txt
+  if [[ -f "$GIDSPATH" ]]; then
+    CHECKPATHS+=("$GIDSPATH")
+  fi
+
   # Create TTX.
   # TTX takes long for large fonts. Run them in parallel.
   TTC=$(grep '^Font [0-9][0-9]*:' "$SRCTABLELISTPATH" | wc -l)

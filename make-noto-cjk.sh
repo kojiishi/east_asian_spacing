@@ -27,6 +27,8 @@ ensure-end-slash() {
 }
 SRCDIR=$(ensure-end-slash $SRCDIR)
 OUTDIR=$(ensure-end-slash $OUTDIR)
+GIDSDIR=${GIDSDIR:-${OUTDIR}chws/}
+GIDSDIR=$(ensure-end-slash $GIDSDIR)
 
 OUTFILES=()
 
@@ -35,14 +37,19 @@ build() {
   SRCFILE=$1
   shift
   if [[ ! -f "$SRCFILE" ]]; then return; fi
-  OUTFILE=$OUTDIR$(basename $SRCFILE)
+  BASENAME=$(basename $SRCFILE)
+  OUTFILE=$OUTDIR$BASENAME
   OUTFILES+=($OUTFILE)
   if [[ "$BUILD" == "N" ]]; then return; fi
-  (set -x; python3 Builder.py -o $OUTDIR $SRCFILE $*)
+  GIDSPATH=$GIDSDIR$BASENAME-gids.txt
+  (set -x; python3 Builder.py \
+      --gids-file "$GIDSPATH" \
+      -o "$OUTDIR" "$SRCFILE" $*)
 }
 
 build-all() {
-  mkdir -p $OUTDIR
+  mkdir -p "$OUTDIR"
+  mkdir -p "$GIDSDIR"
   for WEIGHT in $WEIGHTS; do
     build ${SRCDIR}NotoSansCJK-$WEIGHT.ttc --face-index=0,1,2,3,4 $*
     build ${SRCDIR}NotoSerifCJK-$WEIGHT.ttc --language=,KOR,ZHS $*

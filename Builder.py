@@ -49,6 +49,7 @@ class Builder(object):
       return
     font.language = language
     spacing = EastAsianSpacing(font)
+    spacing.add_glyphs()
     spacing.add_to_font()
     self.spacings = (spacing,)
 
@@ -87,6 +88,7 @@ class Builder(object):
         face_indices.append(face_index)
         continue
       spacing = EastAsianSpacing(font)
+      spacing.add_glyphs()
       spacing_by_offset[reader_offset] = (spacing, [face_index])
 
     # Add to each font using the united `EastAsianSpacing`s.
@@ -110,15 +112,10 @@ class Builder(object):
 
   def save_glyph_ids(self, file):
     logging.info("Saving glyph IDs to %s", file)
-    glyph_ids = set(self.glyph_ids)
-    file.write("\n".join(str(g) for g in sorted(glyph_ids)))
-
-    vertical_glyph_ids = set(self.vertical_glyph_ids)
-    vertical_glyph_ids = vertical_glyph_ids.difference(glyph_ids)
-    if len(vertical_glyph_ids):
-      file.write("\n# Vertical-only glyphs\n")
-      file.write("\n".join(str(g) for g in sorted(vertical_glyph_ids)))
-    file.write("\n")
+    united_spacing = EastAsianSpacing(self.font)
+    for spacing in self.spacings:
+      united_spacing.unite(spacing)
+    united_spacing.save_glyph_ids(file)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
