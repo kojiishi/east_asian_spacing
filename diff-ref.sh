@@ -23,7 +23,7 @@ ensure-end-slash() {
 }
 OUTDIR=$(ensure-end-slash $OUTDIR)
 SRCOUTDIR=${OUTDIR}src/
-DSTOUTDIR=${OUTDIR}chws/
+DSTOUTDIR=${OUTDIR}out/
 DIFFOUTDIR=${OUTDIR}diff/
 REFDIR=$(ensure-end-slash $REFDIR)
 mkdir -p $SRCOUTDIR
@@ -45,7 +45,7 @@ else
 fi
 
 tablelist() {
-  (set -x; python3 Dump.py -n "$1") | \
+  (set -x; python3 Dump.py -n "$1" --ttx "$3") | \
     grep -v '^File: ' >"$2"
 }
 
@@ -71,47 +71,63 @@ for DSTPATH in "$@"; do
   SRCOUTPATH=$SRCOUTDIR$SRCBASENAME
   DIFFOUTPATH=$DIFFOUTDIR$SRCBASENAME
 
-  # Create tablelists.
-  SRCTABLELISTPATH=$SRCOUTPATH-tablelist.txt
-  tablelist "$SRCPATH" "$SRCTABLELISTPATH"
-  DSTTABLELISTPATH=$DSTOUTPATH-tablelist.txt
-  tablelist "$DSTPATH" "$DSTTABLELISTPATH"
-  DIFFTABLELISTPATH=$DIFFOUTPATH-tablelist.diff
-  # Ignore first 2 lines (diff -u header).
-  (set -x; diff -u "$SRCTABLELISTPATH" "$DSTTABLELISTPATH") | \
-    tail -n +3 >"$DIFFTABLELISTPATH"
-  CHECKPATHS+=("$DIFFTABLELISTPATH")
-
   # Check if glyph id file exists.
   GIDSPATH=${DSTOUTPATH}-gids.txt
   if [[ -f "$GIDSPATH" ]]; then
     CHECKPATHS+=("$GIDSPATH")
   fi
 
-  # Create TTX.
-  # TTX takes long for large fonts. Run them in parallel.
+  # Create table lists.
+  DUMPJOBS=()
+  SRCTABLELISTPATH=$SRCOUTPATH.tables
+  SRCTTXPATH=$SRCOUTPATH.ttx
+  tablelist "$SRCPATH" "$SRCTABLELISTPATH" "$SRCTTXPATH" &
+  DUMPJOBS+=($!)
+  DSTTABLELISTPATH=$DSTOUTPATH.tables
+  DSTTTXPATH=$DSTOUTPATH.ttx
+  tablelist "$DSTPATH" "$DSTTABLELISTPATH" "$DSTTTXPATH" &
+  DUMPJOBS+=($!)
+  wait ${DUMPJOBS[@]}
+
+  # Diff table lists.
+  DIFFTABLELISTPATH=$DIFFOUTPATH.tables.diff
+  # Ignore first 2 lines (diff -u header).
+  (set -x; diff -u "$SRCTABLELISTPATH" "$DSTTABLELISTPATH") | \
+    tail -n +3 >"$DIFFTABLELISTPATH"
+  CHECKPATHS+=("$DIFFTABLELISTPATH")
+
+  # Diff TTX files.
   TTC=$(grep '^Font [0-9][0-9]*:' "$SRCTABLELISTPATH" | wc -l)
   for i in $(seq 0 $(expr $TTC - 1)); do
-    SRCTTXPATH=$SRCOUTPATH-$i.ttx
-    DSTTTXPATH=$DSTOUTPATH-$i.ttx
-    DIFFTTXPATH=$DIFFOUTPATH-$i.ttx.diff
-    (
-      dump-ttx "$DSTPATH" "$DSTTTXPATH" $i &
-      TTXJOBS=($!)
-      # Source doesn't change often, dump only if it does not exist.
-      #if [[ ! -f $SRCTTXPATH ]]; then
-        dump-ttx "$SRCPATH" "$SRCTTXPATH" $i &
-        TTXJOBS+=($!)
-      #fi
-      echo "Waiting for ${#TTXJOBS[@]} TTX jobs (${TTXJOBS[@]})"
-      wait ${TTXJOBS[@]}
-
-      # Create diff of the 2 TTX files.
-      # Ignore first 2 lines (diff -u header) and line numbers.
-      (set -x; diff -u "$SRCTTXPATH" "$DSTTTXPATH") | \
-        tail -n +3 | sed -e 's/^@@ -.*/@@/' >"$DIFFTTXPATH"
-    ) &
-    CHECKPATHS+=("$DIFFTTXPATH")
+    if [[ $TTC -eq 1 ]]; then
+      TTXFILES=("$SRCTTXPATH" "$DSTTTXPATH")
+    else
+      TTXFILES=("$SRCOUTPATH-$i.ttx" "$DSTOUTPATH-$i.ttx")
+    fi
+    mapfile -t TTX_TABLES < <(cat "${TTXFILES[@]}" |\
+        perl -ne '/src="(.*)"/ && print "$1\n"' |\
+        sort | uniq)
+    for TTX_TABLE in ${TTX_TABLES[@]}; do
+      DIFF_TTX_TABLE=$DIFFOUTDIR${TTX_TABLE}.diff
+      (set -x; diff -u "$SRCOUTDIR$TTX_TABLE" "$DSTOUTDIR$TTX_TABLE") |\
+          tail -n +3 | sed -e 's/^@@ -.*/@@/' >"$DIFF_TTX_TABLE"
+      if [[ ! -s "$DIFF_TTX_TABLE" ]]; then
+        rm "$DIFF_TTX_TABLE"
+        continue
+      fi
+      if [[ "$TTX_TABLE" == *_h_e_a_d.ttx ]]; then
+        DIFF_COUNT=$(tail -n +3 "$DIFF_TTX_TABLE" |\
+            grep -v '<checkSumAdjustment value=' |\
+            grep -v '<modified value=' |\
+            grep '^[-+]' | wc -l)
+        if [[ $DIFF_COUNT -eq 0 ]]; then
+          rm "$DIFF_TTX_TABLE"
+          continue
+        fi
+      fi
+      echo "Differences found in $TTX_TABLE"
+      CHECKPATHS+=("$DIFF_TTX_TABLE")
+    done
   done
 done
 

@@ -27,7 +27,7 @@ ensure-end-slash() {
 }
 SRCDIR=$(ensure-end-slash $SRCDIR)
 OUTDIR=$(ensure-end-slash $OUTDIR)
-GIDSDIR=${GIDSDIR:-${OUTDIR}chws/}
+GIDSDIR=${GIDSDIR:-${OUTDIR}out/}
 GIDSDIR=$(ensure-end-slash $GIDSDIR)
 
 OUTFILES=()
@@ -61,5 +61,5 @@ build-all $*
 echo "OUTFILES=${#OUTFILES[@]} (${OUTFILES[@]})"
 
 if [[ "$DIFF" != "N" ]]; then
-  ./diff-ref.sh $SRCDIR ${OUTFILES[@]}
+  (set -x; ./diff-ref.sh $SRCDIR ${OUTFILES[@]})
 fi
