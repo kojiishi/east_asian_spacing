@@ -41,11 +41,13 @@ class Builder(object):
       return os.path.join(output_path, output_name)
     return output_path
 
-  def build(self, language=None, face_indices=None):
+  def build(self, language=None, indices=None):
     font = self.font
     num_fonts = font.num_fonts_in_collection
     if num_fonts > 0:
-      self.build_collection(language=language, face_indices=face_indices)
+      indices_and_languages = self.calc_indices_and_languages(
+          font.num_fonts_in_collection, indices, language)
+      self.build_collection(indices_and_languages)
       return
     font.language = language
     spacing = EastAsianSpacing(font)
@@ -53,23 +55,23 @@ class Builder(object):
     spacing.add_to_font()
     self.spacings = (spacing,)
 
-  def build_collection(self, language=None, face_indices=None):
-    font = self.font
-    num_fonts = font.num_fonts_in_collection
+  @staticmethod
+  def calc_indices_and_languages(num_fonts, indices, language):
     assert num_fonts >= 2
-    if face_indices is None:
-      face_indices = range(num_fonts)
-    elif isinstance(face_indices, str):
-      face_indices = (int(i) for i in face_indices.split(","))
+    if indices is None:
+      indices = range(num_fonts)
+    elif isinstance(indices, str):
+      indices = (int(i) for i in indices.split(","))
     if language:
       languages = language.split(",")
       if len(languages) == 1:
-        indices_and_languages = itertools.zip_longest(face_indices, (),
-                                                      fillvalue=language)
-      else:
-        indices_and_languages = itertools.zip_longest(face_indices, languages)
-    else:
-      indices_and_languages = itertools.zip_longest(face_indices, ())
+        return itertools.zip_longest(indices, (), fillvalue=language)
+      return itertools.zip_longest(indices, languages)
+    return itertools.zip_longest(indices, ())
+
+  def build_collection(self, indices_and_languages):
+    font = self.font
+    num_fonts = font.num_fonts_in_collection
 
     # A font collection can share tables. When GPOS is shared in the original
     # font, make sure we add the same data so that the new GPOS is also shared.
@@ -117,12 +119,22 @@ class Builder(object):
       united_spacing.unite(spacing)
     united_spacing.save_glyph_ids(file)
 
-if __name__ == '__main__':
+def init_logging(verbose):
+  if verbose <= 0:
+    return
+  if verbose <= 1:
+    logging.basicConfig(level=logging.INFO)
+    return
+  logging.basicConfig(level=logging.DEBUG)
+  if verbose >= 3:
+    show_dump_images()
+
+def main():
   parser = argparse.ArgumentParser()
   parser.add_argument("path")
-  parser.add_argument("--face-index",
+  parser.add_argument("-i", "--index",
                       help="For a font collection (TTC), "
-                           "specify a list of face indices")
+                           "specify a list of indices.")
   parser.add_argument("--gids-file",
                       type=argparse.FileType("w"),
                       help="Outputs glyph IDs for `pyftsubset`")
@@ -140,15 +152,12 @@ if __name__ == '__main__':
                       help="increase output verbosity",
                       action="count", default=0)
   args = parser.parse_args()
-  if args.verbose:
-    if args.verbose >= 2:
-      if args.verbose >= 3:
-        show_dump_images()
-      logging.basicConfig(level=logging.DEBUG)
-    else:
-      logging.basicConfig(level=logging.INFO)
+  init_logging(args.verbose)
   builder = Builder(args.path)
-  builder.build(language=args.language, face_indices=args.face_index)
+  builder.build(language=args.language, indices=args.index)
   builder.save(args.output, args.suffix)
   if args.gids_file:
     builder.save_glyph_ids(args.gids_file)
+
+if __name__ == '__main__':
+  main()

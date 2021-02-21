@@ -51,7 +51,7 @@ build-all() {
   mkdir -p "$OUTDIR"
   mkdir -p "$GIDSDIR"
   for WEIGHT in $WEIGHTS; do
-    build ${SRCDIR}NotoSansCJK-$WEIGHT.ttc --face-index=0,1,2,3,4 $*
+    build ${SRCDIR}NotoSansCJK-$WEIGHT.ttc --index=0,1,2,3,4 $*
     build ${SRCDIR}NotoSerifCJK-$WEIGHT.ttc --language=,KOR,ZHS $*
   done
 }

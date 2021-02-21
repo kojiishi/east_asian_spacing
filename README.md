@@ -55,7 +55,7 @@ When the language can't be detected, this tool shows an error.
 You need to specify the [OpenType language system tag] of the font.
 
 ```sh
-% python3 Builder.py input-font-file -l=JAN
+% python3 Builder.py input-font-file --language=JAN
 ```
 specifies that the font is a Japanese font.
 
@@ -67,20 +67,29 @@ When the `input-font-file` is a TrueType Collection,
 this tool adds the table to all fonts in the collection.
 
 If you don't want to add the table to all fonts in the collection,
-you can specify the comma-separated list of font indexes.
+you can specify a comma-separated list of font indexes.
 
 ```sh
-% python3 Builder.py input-font-file --face-index=0,1
+% python3 Builder.py input-font-file --index=0,1
 ```
-adds the table to font index 0 and 1, but not to other fonts.
+The above example adds the table to font index 0 and 1, but not to other fonts.
 
-If you want to specify the language of each font in the collection,
+The language option applies to all fonts in the collection by default.
+When you want to specify different languages to each font in the collection,
+it accepts a comma-separated list.
 ```sh
-% python3 Builder.py input-font-file --l=,KOR,ZHS
+% python3 Builder.py input-font-file --language=,KOR,ZHS
 ```
-specifies Korean for the font index 1,
+This example specifies automatic for the font index 0,
+Korean for the font index 1,
 Simplified Chinese for the font index 2,
-and automatic detection for the font index 0 and all other fonts.
+and automatic for all other fonts.
+
+When these two options are combined, for example:
+```sh
+% python3 Builder.py input-font-file --index=2,3 --language=JAN,ZHS
+```
+This example processes the index 2 as `JAN`, and the index 3 as `ZHS`.
 
 ## Appendix
 
