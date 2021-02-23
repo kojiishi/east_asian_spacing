@@ -102,16 +102,6 @@ class Builder(object):
 
     self.spacings = (i[0] for i in spacing_by_offset.values())
 
-  @property
-  def glyph_ids(self):
-    return EastAsianSpacing.glyph_ids_from_spacings(self.spacings)
-
-  @property
-  def vertical_glyph_ids(self):
-    vertical_spacings = (spacing.vertical_spacing for spacing in self.spacings)
-    vertical_spacings = filter(lambda spacing: spacing, vertical_spacings)
-    return EastAsianSpacing.glyph_ids_from_spacings(vertical_spacings)
-
   def save_glyph_ids(self, file):
     logging.info("Saving glyph IDs to %s", file)
     united_spacing = EastAsianSpacing(self.font)

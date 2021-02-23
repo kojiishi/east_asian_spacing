@@ -31,24 +31,6 @@ class EastAsianSpacing(object):
       if vertical_font:
         self.vertical_spacing = EastAsianSpacing(vertical_font)
 
-  @property
-  def spacings(self):
-    if self.vertical_spacing:
-      return (self, self.vertical_spacing)
-    return (self)
-
-  @property
-  def glyph_sets(self):
-    return (self.left, self.middle, self.right)
-
-  @property
-  def glyph_ids(self):
-    return itertools.chain(*(glyphs.glyph_ids for glyphs in self.glyph_sets))
-
-  @staticmethod
-  def glyph_ids_from_spacings(spacings):
-    return itertools.chain(*(spacing.glyph_ids for spacing in spacings))
-
   def save_glyph_ids(self, output, prefix=''):
     self._save_glyph_ids(self.left, prefix + 'left', output)
     self._save_glyph_ids(self.right, prefix + 'right', output)
