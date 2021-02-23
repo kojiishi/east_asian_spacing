@@ -49,16 +49,10 @@ tablelist() {
     grep -v '^File: ' >"$2"
 }
 
-dump-ttx() {
-  # Exclude CFF, post, and/or glyp tables for faster executions.
-  # EXCLUDE=CFF
-  (set -x; ttx -y $3 -x "$EXCLUDE" -o - "$1") | \
-    grep -v '<checkSumAdjustment value=' | \
-    grep -v '<modified value=' >"$2"
-}
-
 CHECKPATHS=()
-for DSTPATH in "$@"; do
+
+create-diff () {
+  DSTPATH=$1
   DSTBASENAME=$(basename "$DSTPATH")
   DSTOUTPATH=$DSTOUTDIR$DSTBASENAME
 
@@ -129,13 +123,17 @@ for DSTPATH in "$@"; do
       CHECKPATHS+=("$DIFF_TTX_TABLE")
     done
   done
-done
+}
 
-# Wait until all jobs are done.
-NJOBS=$(jobs | wc -l)
-echo "Waiting for $NJOBS jobs to complete..."
-wait
-echo "All $NJOBS jobs completed."
+if [[ $# -gt 0 ]]; then
+  for DSTPATH in "$@"; do
+    create-diff "$DSTPATH"
+  done
+else
+  while read DSTPATH; do
+    create-diff "$DSTPATH"
+  done
+fi
 
 # Diff all diff files with reference files.
 echo "Produced ${#CHECKPATHS[@]} diff files, comparing with references."

@@ -24,6 +24,7 @@ class Builder(object):
     font = self.font
     output_path = self.calc_output_path(font.path, output_path, suffix)
     font.save(output_path)
+    return output_path
 
   @staticmethod
   def calc_output_path(input_path, output_path, suffix=None):
@@ -49,6 +50,7 @@ class Builder(object):
           font.num_fonts_in_collection, indices, language)
       self.build_collection(indices_and_languages)
       return
+    logging.info(f'Font "{font}" lang={language}')
     font.language = language
     spacing = EastAsianSpacing(font)
     spacing.add_glyphs()
@@ -71,16 +73,13 @@ class Builder(object):
 
   def build_collection(self, indices_and_languages):
     font = self.font
-    num_fonts = font.num_fonts_in_collection
-
     # A font collection can share tables. When GPOS is shared in the original
     # font, make sure we add the same data so that the new GPOS is also shared.
     spacing_by_offset = {}
     for face_index, language in indices_and_languages:
       font.set_face_index(face_index)
       font.language = language
-      logging.info("Face {}/{} '{}' lang={}".format(
-          face_index + 1, num_fonts, font, font.language))
+      logging.info(f'Font index {face_index + 1} "{font}" lang={font.language}')
       reader_offset = font.reader_offset("GPOS")
       spacing_entry = spacing_by_offset.get(reader_offset)
       if spacing_entry:
