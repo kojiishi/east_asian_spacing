@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import argparse
+import asyncio
 import itertools
 import logging
 import os
-import subprocess
 
 from Font import Font
 
@@ -116,7 +116,7 @@ class TableEntry(object):
           print(f"  {script_tag} {lang_tag} (no features)")
 
   @staticmethod
-  def dump_ttx(font, entries, ttx):
+  async def dump_ttx(font, entries, ttx):
     """Same as `ttx -s`, except for TTC:
     1. Dumps all fonts in TTC, with the index in the output file name.
     2. Eliminates dumping shared files multiple times."""
@@ -137,7 +137,7 @@ class TableEntry(object):
           remaining.append(entry)
       entries = remaining
       assert len(tables)
-      args = ['ttx', '-sf']
+      args = ['-sf']
       if num_fonts:
         ttx_no_ext, ttx_ext = os.path.splitext(ttx)
         args.extend([f'-y{index}', f'-o{ttx_no_ext}-{index}{ttx_ext}'])
@@ -146,12 +146,14 @@ class TableEntry(object):
       args.extend((f'-t{table}' for table in tables))
       args.append(font.path)
       logging.debug(args)
-      procs.append(subprocess.Popen(args))
-    for proc in procs:
-      proc.wait()
+      proc = await asyncio.create_subprocess_exec('ttx', *args)
+      procs.append(proc)
+    tasks = list((asyncio.create_task(p.wait()) for p in procs))
+    await asyncio.wait(tasks)
+    logging.debug("dump_ttx completed: %s", font)
 
   @staticmethod
-  def main():
+  async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs="+")
     parser.add_argument("-f", "--features", action="store_true")
@@ -178,7 +180,10 @@ class TableEntry(object):
       entries = TableEntry.read_font(font)
       TableEntry.dump_entries(font, entries, args)
       if args.ttx:
-        TableEntry.dump_ttx(font, entries, args.ttx)
+        await TableEntry.dump_ttx(font, entries, args.ttx)
+      logging.debug("dump %d completed: %s", i, font)
+    logging.debug("main completed")
 
 if __name__ == '__main__':
-  TableEntry.main()
+  asyncio.run(TableEntry.main())
+  logging.debug("All completed")
