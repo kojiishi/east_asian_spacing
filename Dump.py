@@ -4,6 +4,7 @@ import asyncio
 import itertools
 import logging
 import os
+import sys
 
 from Font import Font
 
@@ -52,7 +53,7 @@ class TableEntry(object):
     return merged
 
   @staticmethod
-  def dump_font_list(font):
+  def dump_font_list(font, out_file=sys.stdout):
     for index, ttfont in enumerate(font.ttfonts):
       name = ttfont.get("name")
       print(f'Font {index}: '
@@ -62,10 +63,11 @@ class TableEntry(object):
             f'"{name.getDebugName(2)}" '
             # 6. The name the font will be known by on a PostScript printer.
             # TimesNewRoman-Bold
-            f'PS="{name.getDebugName(6)}"')
+            f'PS="{name.getDebugName(6)}"',
+            file=out_file)
 
   @staticmethod
-  def dump_entries(font, rows, args):
+  def dump_entries(font, rows, args, out_file=sys.stdout):
     """Dump OpenType tables, similar to `ttx -l` command (`ttList()`).
 
     Supports reading all fonts in TTCollection.
@@ -77,22 +79,24 @@ class TableEntry(object):
     else:
       header_format = "{0:8} Tag  {1:10} {2:5}"
       row_format = "{1:08X} {0} {2:10,d} {3:5,d} {4}"
-    print(header_format.format("Offset", "Size", "Gap"))
+    print(header_format.format("Offset", "Size", "Gap"), file=out_file)
     for row in rows:
-      print(row_format.format(row.tag, row.offset, row.size, row.gap, row.indices))
+      print(row_format.format(row.tag, row.offset, row.size, row.gap, row.indices),
+            file=out_file)
       tag = row.tag
       if args.features and (tag == "GPOS" or tag == "GSUB"):
-        TableEntry.dump_features(font, row.indices[0], tag)
+        TableEntry.dump_features(font, row.indices[0], tag, out_file=out_file)
 
     sum_data = sum_gap = 0
     for row in rows:
       sum_data += row.size
       sum_gap += row.gap
     print("Total: {0:,}\nData: {1:,}\nGap: {2:,}\nTables: {3}".format(
-          sum_data + sum_gap, sum_data, sum_gap, len(rows)))
+          sum_data + sum_gap, sum_data, sum_gap, len(rows)),
+          file=out_file)
 
   @staticmethod
-  def dump_features(font, face_index, tag):
+  def dump_features(font, face_index, tag, out_file=sys.stdout):
     ttfont = font.ttfonts[face_index]
     tttable = ttfont.get(tag)
     table = tttable.table
@@ -111,9 +115,9 @@ class TableEntry(object):
         if feature_indices:
           feature_tags = ",".join(feature_records[i].FeatureTag
                                   for i in feature_indices)
-          print(f"  {script_tag} {lang_tag} {feature_tags}")
+          print(f"  {script_tag} {lang_tag} {feature_tags}", file=out_file)
         else:
-          print(f"  {script_tag} {lang_tag} (no features)")
+          print(f"  {script_tag} {lang_tag} (no features)", file=out_file)
 
   @staticmethod
   async def dump_ttx(font, entries, ttx):
@@ -153,11 +157,22 @@ class TableEntry(object):
     logging.debug("dump_ttx completed: %s", font)
 
   @staticmethod
+  async def dump_font(font, args, out_file=sys.stdout):
+    TableEntry.dump_font_list(font, out_file=out_file)
+    entries = TableEntry.read_font(font)
+    TableEntry.dump_entries(font, entries, args, out_file=out_file)
+    if args.ttx:
+      await TableEntry.dump_ttx(font, entries, args.ttx)
+    logging.debug("dump_font completed: %s", font)
+
+  @staticmethod
   async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs="+")
     parser.add_argument("-f", "--features", action="store_true")
     parser.add_argument("-n", "--order-by-name", action="store_true")
+    parser.add_argument("-o", "--output",
+                        help="The output directory.")
     parser.add_argument("--ttx",
                         help="Create TTX files at the specified path.")
     parser.add_argument("-v", "--verbose",
@@ -170,17 +185,21 @@ class TableEntry(object):
       else:
         logging.basicConfig(level=logging.INFO)
     num_files = len(args.path)
+    if args.output:
+      os.makedirs(args.output, exist_ok=True)
     for i, path in enumerate(args.path):
-      if num_files > 1:
-        if i:
-          print()
-        print("File:", os.path.basename(path))
       font = Font(path)
-      TableEntry.dump_font_list(font)
-      entries = TableEntry.read_font(font)
-      TableEntry.dump_entries(font, entries, args)
-      if args.ttx:
-        await TableEntry.dump_ttx(font, entries, args.ttx)
+      if args.output:
+        basename = os.path.basename(path)
+        out_path = os.path.join(args.output, basename + '.tables')
+        with open(out_path, 'w') as out_file:
+          await TableEntry.dump_font(font, args, out_file=out_file)
+      else:
+        if num_files > 1:
+          if i:
+            print()
+          print(f'File: {os.path.basename(path)}')
+        await TableEntry.dump_font(font, args)
       logging.debug("dump %d completed: %s", i, font)
     logging.debug("main completed")
 
