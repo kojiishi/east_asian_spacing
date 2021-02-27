@@ -7,6 +7,6 @@ def test_has_table_diff_head(data_dir):
 
 
 def test_read_split_table_ttx(data_dir):
-    tables = Dump.read_split_table_ttx(str(data_dir / 'split-table.ttx'))
+    tables = Dump.read_split_table_ttx(data_dir / 'split-table.ttx')
     assert list(tables.keys()) == ['head', 'hmtx']
-    assert tables['head'] == str(data_dir / 'test._h_e_a_d.ttx')
+    assert tables['head'] == data_dir / 'test._h_e_a_d.ttx'

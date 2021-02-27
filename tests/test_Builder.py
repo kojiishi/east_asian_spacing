@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from Builder import Builder
 
 
@@ -20,3 +22,15 @@ def test_calc_indices_and_languages():
     assert call(4, '0,2', 'JAN,ZHS') == [(0, 'JAN'), (2, 'ZHS')]
     assert call(6, '0,2,5', 'JAN,ZHS') == [(0, 'JAN'), (2, 'ZHS'), (5, None)]
     assert call(6, '0,2,5', 'JAN,,ZHS') == [(0, 'JAN'), (2, ''), (5, 'ZHS')]
+
+
+def test_calc_output_path(data_dir):
+    def call(input_path, output_path, stem_suffix=None):
+        return Builder.calc_output_path(input_path, output_path, stem_suffix)
+
+    assert call(Path('c.otf'), None) == Path('c-chws.otf')
+    assert call(Path('a/b/c.otf'), None) == Path('a/b/c-chws.otf')
+    assert call(Path('c.otf'), Path('build')) == Path('build/c.otf')
+    assert call(Path('a/b/c.otf'), Path('build')) == Path('build/c.otf')
+    assert call(Path('a/b/c.otf'), Path('build'),
+                '-xyz') == Path('build/c-xyz.otf')

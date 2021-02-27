@@ -4,6 +4,7 @@ import io
 import itertools
 import json
 import logging
+from pathlib import Path
 import subprocess
 
 from Font import Font
@@ -62,7 +63,7 @@ class GlyphSet(object):
 
 class TextRun(object):
     def __init__(self, font, text, language=None, script=None):
-        assert isinstance(font.path, str)
+        assert isinstance(font.path, Path)
         self.font = font
         self.language = language
         self.script = script
@@ -107,7 +108,7 @@ class TextRun(object):
 
     def append_hb_args(self, text, args):
         font = self.font
-        args.append("--font-file=" + font.path)
+        args.append("--font-file=" + str(font.path))
         if font.face_index is not None:
             args.append("--face-index=" + str(font.face_index))
         if self.language:

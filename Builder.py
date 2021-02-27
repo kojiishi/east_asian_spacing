@@ -2,7 +2,7 @@
 import argparse
 import itertools
 import logging
-import os
+from pathlib import Path
 import re
 import sys
 
@@ -21,26 +21,28 @@ class Builder(object):
             font = Font(font)
         self.font = font
 
-    def save(self, output_path=None, suffix=None):
+    def save(self, output_path=None, stem_suffix=None):
         font = self.font
-        output_path = self.calc_output_path(font.path, output_path, suffix)
+        output_path = self.calc_output_path(font.path, output_path,
+                                            stem_suffix)
         font.save(output_path)
         return output_path
 
     @staticmethod
-    def calc_output_path(input_path, output_path, suffix=None):
+    def calc_output_path(input_path, output_path, stem_suffix=None):
         if not output_path:
-            assert input_path
-            path_without_ext, ext = os.path.splitext(input_path)
-            suffix = suffix if suffix is not None else "-chws"
-            return path_without_ext + suffix + ext
-        if os.path.isdir(output_path):
-            assert input_path
-            output_name = os.path.basename(input_path)
-            if suffix is not None:
-                path_without_ext, ext = os.path.splitext(output_name)
-                output_name = path_without_ext + suffix + ext
-            return os.path.join(output_path, output_name)
+            assert isinstance(input_path, Path)
+            stem_suffix = stem_suffix if stem_suffix is not None else "-chws"
+            return input_path.parent / (input_path.stem + stem_suffix +
+                                        input_path.suffix)
+        if isinstance(output_path, str):
+            output_path = Path(output_path)
+        if output_path.is_dir():
+            assert isinstance(input_path, Path)
+            if stem_suffix is None:
+                return output_path / input_path.name
+            return output_path / (input_path.stem + stem_suffix +
+                                  input_path.suffix)
         return output_path
 
     def build(self, language=None, indices=None):
@@ -151,6 +153,8 @@ def main():
                         default=0)
     args = parser.parse_args()
     init_logging(args.verbose)
+    if args.output:
+        args.output = Path(args.output)
     builder = Builder(args.path)
     builder.build(language=args.language, indices=args.index)
     builder.save(args.output, args.suffix)

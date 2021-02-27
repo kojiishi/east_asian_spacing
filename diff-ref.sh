@@ -48,7 +48,7 @@ create-diff () {
   DSTBASENAME=$(basename "$DSTPATH")
 
   # Check if glyph id file exists.
-  GIDSPATH=$OUTDIR$DSTBASENAME-gids.txt
+  GIDSPATH=$OUTDIR$DSTBASENAME-gids
   if [[ -f "$GIDSPATH" ]]; then
     CHECKPATHS+=("$GIDSPATH")
   fi
@@ -56,7 +56,7 @@ create-diff () {
   # Create table lists, TTXs, and their diffs.
   mapfile -t DIFFS < <(set -x;
       python3 Dump.py "$DSTPATH" -no "$OUTDIR" --diff "$SRC" $DUMPOPTS)
-  CHECKPATHS+=("${DIFF[@]}")
+  CHECKPATHS+=("${DIFFS[@]}")
 }
 
 CHECKPATHS=()

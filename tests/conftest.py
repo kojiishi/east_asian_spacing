@@ -5,8 +5,9 @@ import pytest
 
 test_dir = Path(__file__).resolve().parent
 sys.path.append(str(test_dir.parent))
+_data_dir = test_dir / 'data'
 
 
 @pytest.fixture(scope="session")
 def data_dir():
-    return test_dir / 'data'
+    return _data_dir

@@ -2,7 +2,7 @@
 import argparse
 import itertools
 import logging
-import os.path
+from pathlib import Path
 import sys
 
 from fontTools.ttLib import newTable
@@ -15,8 +15,11 @@ class Font(object):
     def __init__(self, args):
         self.is_vertical_ = False
         self.language_ = None
-        if isinstance(args, str):
+        if isinstance(args, Path):
             self.load(args)
+            return
+        if isinstance(args, str):
+            self.load(Path(args))
             return
         if isinstance(args, Font):
             self.face_index = args.face_index
@@ -33,32 +36,36 @@ class Font(object):
 
     def load(self, path):
         logging.info("Reading font file: \"%s\"", path)
+        if isinstance(path, str):
+            path = Path(path)
         self.path = path
-        self.path_ext = os.path.splitext(path)[1]
-        if self.path_ext == ".ttc":
-            self.ttcollection = TTCollection(path)
+        if self.path.suffix == ".ttc":
+            self.ttcollection = TTCollection(str(path))
             logging.info("%d fonts found in the collection",
                          len(self.ttcollection.fonts))
             self.set_face_index(0)
             return
         self.ttcollection = None
         self.face_index = None
-        self.set_ttfont(TTFont(path))
+        self.set_ttfont(TTFont(str(path)))
 
     def save(self, out_path=None):
         if not out_path:
-            out_path = "out" + self.path_ext
+            out_path = Path("out" + self.path.suffix)
+        elif isinstance(out_path, str):
+            out_path = Path(out_path)
         logging.info("Saving to: \"%s\"", out_path)
         if self.ttcollection:
             for font in self.ttcollection.fonts:
                 Font.before_save(font)
-            self.ttcollection.save(out_path)
+            self.ttcollection.save(str(out_path))
         else:
             Font.before_save(self.ttfont)
-            self.ttfont.save(out_path)
-        logging.info("File sizes: %d -> %d Delta: %d",
-                     os.path.getsize(self.path), os.path.getsize(out_path),
-                     os.path.getsize(out_path) - os.path.getsize(self.path))
+            self.ttfont.save(str(out_path))
+        size_before = self.path.stat().st_size
+        size_after = out_path.stat().st_size
+        logging.info("File sizes: %d -> %d Delta: %d", size_before, size_after,
+                     size_after - size_before)
 
     @staticmethod
     def before_save(ttfont):

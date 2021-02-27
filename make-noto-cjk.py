@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import argparse
-import glob
 import logging
-import os
+from pathlib import Path
 
 from Builder import Builder
 from Builder import Font
@@ -41,9 +40,11 @@ def indices_and_languages(font):
 
 def make_noto_cjk(input_path, output_dir, gids_dir):
     # If `input_path` is a directory, list files in the directory.
-    if os.path.isdir(input_path):
-        for file in glob.glob(os.path.join(input_path, 'Noto*CJK*')):
-            make_noto_cjk(file, output_dir, gids_dir)
+    if isinstance(input_path, str):
+        input_path = Path(input_path)
+    if input_path.is_dir():
+        for path in input_path.glob('Noto*CJK*'):
+            make_noto_cjk(path, output_dir, gids_dir)
         return
 
     builder = Builder(input_path)
@@ -57,10 +58,9 @@ def make_noto_cjk(input_path, output_dir, gids_dir):
 
     output_path = builder.save(output_dir)
 
-    gid_path = os.path.join(gids_dir,
-                            os.path.basename(input_path) + '-gids.txt')
-    with open(gid_path, 'w') as gid_file:
-        builder.save_glyph_ids(gid_file)
+    gids_path = gids_dir / (input_path.name + '-gids')
+    with gids_path.open('w') as gids_file:
+        builder.save_glyph_ids(gids_file)
 
     print(output_path)
 
@@ -77,8 +77,12 @@ def main():
                         default=0)
     args = parser.parse_args()
     init_logging(args.verbose)
-    os.makedirs(args.output, exist_ok=True)
-    os.makedirs(args.gids, exist_ok=True)
+    if args.gids:
+        args.gids = Path(args.gids)
+        args.gids.mkdir(exist_ok=True, parents=True)
+    if args.output:
+        args.output = Path(args.output)
+        args.output.mkdir(exist_ok=True, parents=True)
     make_noto_cjk(args.path, args.output, args.gids)
 
 

@@ -3,7 +3,7 @@ import argparse
 import asyncio
 import itertools
 import logging
-import os
+from pathlib import Path
 import re
 import sys
 
@@ -133,13 +133,14 @@ class Dump(object):
                           file=out_file)
 
     @staticmethod
-    async def dump_ttx(font, entries, ttx):
+    async def dump_ttx(font, ttx_path, entries):
         """Same as `ttx -s`, except for TTC:
         1. Dumps all fonts in TTC, with the index in the output file name.
         2. Eliminates dumping shared files multiple times."""
-        if os.path.isdir(ttx):
-            basename = os.path.basename(font.path)
-            ttx = os.path.join(ttx, basename) + '.ttx'
+        if isinstance(ttx_path, str):
+            ttx_path = Path(ttx_path)
+        if ttx_path.is_dir():
+            ttx_path = ttx_path / (font.path.name + '.ttx')
 
         num_fonts = font.num_fonts_in_collection
         ttx_paths = []
@@ -156,15 +157,15 @@ class Dump(object):
             assert len(tables)
             args = ['-sf']
             if num_fonts:
-                ttx_no_ext, ttx_ext = os.path.splitext(ttx)
-                ttx_path = f'{ttx_no_ext}-{index}{ttx_ext}'
+                indexed_ttx_path = ttx_path.parent / f'{ttx_path.stem}-{index}{ttx_path.suffix}'
                 args.append(f'-y{index}')
+                args.append(f'-o{indexed_ttx_path}')
+                ttx_paths.append(indexed_ttx_path)
             else:
-                ttx_path = ttx
-            ttx_paths.append(ttx_path)
-            args.append(f'-o{ttx_path}')
+                args.append(f'-o{ttx_path}')
+                ttx_paths.append(ttx_path)
             args.extend((f'-t{table}' for table in tables))
-            args.append(font.path)
+            args.append(str(font.path))
             logging.debug('ttx %s', args)
             procs.append(await asyncio.create_subprocess_exec('ttx', *args))
         logging.debug("Awaiting %d dump_ttx for %s", len(procs), font)
@@ -176,9 +177,10 @@ class Dump(object):
     @staticmethod
     async def dump_font(font, args, out_file=sys.stdout, ttx=None):
         if isinstance(out_file, str):
-            basename = os.path.basename(font.path)
-            out_path = os.path.join(out_file, basename + '.tables')
-            with open(out_path, 'w') as out_file:
+            out_file = Path(out_file)
+        if isinstance(out_file, Path):
+            out_path = out_file / (font.path.name + '.tables')
+            with out_path.open('w') as out_file:
                 _, ttx_paths = await Dump.dump_font(font,
                                                     args,
                                                     out_file=out_file,
@@ -189,13 +191,13 @@ class Dump(object):
         Dump.dump_entries(font, entries, args, out_file=out_file)
         ttx_paths = None
         if ttx:
-            ttx_paths = await Dump.dump_ttx(font, entries, ttx)
+            ttx_paths = await Dump.dump_ttx(font, ttx, entries)
         logging.debug("dump_font completed: %s", font)
         return (None, ttx_paths)
 
     @staticmethod
     async def run_diff(src, dst, out_dir, ignore_line_numbers=False):
-        out_path = os.path.join(out_dir, os.path.basename(dst)) + '.diff'
+        out_path = out_dir / (dst.name + '.diff')
         cmd = f"diff -u '{src}' '{dst}' | tail -n +3"
         if ignore_line_numbers:
             cmd += " | sed -e 's/^@@ -.*/@@/'"
@@ -206,25 +208,27 @@ class Dump(object):
         return out_path
 
     @staticmethod
-    def read_split_table_ttx(path):
-        with open(path) as file:
-            lines = file.readlines()
-        dir = os.path.dirname(path)
+    def read_split_table_ttx(input, dir=None):
+        if isinstance(input, Path):
+            with input.open() as file:
+                return Dump.read_split_table_ttx(file, input.parent)
         tables = {}
-        for line in lines:
+        for line in input:
             match = re.search(r'<(\S+) src="(.+)"', line)
             if match:
-                tables[match.group(1)] = os.path.join(dir, match.group(2))
-        logging.debug("Read TTX: %s has %d tables", path, len(tables))
+                path = match.group(2)
+                path = dir / path if dir else Path(path)
+                tables[match.group(1)] = path
+        logging.debug("Read TTX: %s has %d tables", input, len(tables))
         return tables
 
     @staticmethod
-    def has_table_diff(ttx_diff, table_name):
-        if os.path.getsize(ttx_diff) == 0:
+    def has_table_diff(ttx_diff_path, table_name):
+        if ttx_diff_path.stat().st_size == 0:
             return False
         if table_name == 'head':
-            with open(ttx_diff) as file:
-                for line in file.readlines():
+            with ttx_diff_path.open() as file:
+                for line in file:
                     if ('<checkSumAdjustment value=' in line
                             or '<modified value=' in line):
                         continue
@@ -235,24 +239,28 @@ class Dump(object):
 
     @staticmethod
     async def diff_font(font, args, src_font, out_file):
-        if os.path.isdir(src_font):
-            src_font = os.path.join(src_font, os.path.basename(font.path))
+        if isinstance(src_font, str):
+            src_font = Path(src_font)
+        if src_font.is_dir():
+            src_font = src_font / font.path.name
         src_font = Font(src_font)
-        src_out_dir = os.path.join(args.output, 'src')
-        os.makedirs(src_out_dir, exist_ok=True)
+        if isinstance(out_file, str):
+            out_file = Path(out_file)
+        src_out_dir = out_file / 'src'
+        src_out_dir.mkdir(exist_ok=True, parents=True)
         (table_path, ttx_paths), (src_table_path,
                                   src_ttx_paths) = await asyncio.gather(
                                       Dump.dump_font(font,
                                                      args,
-                                                     out_file=args.output,
-                                                     ttx=args.output),
+                                                     out_file=out_file,
+                                                     ttx=out_file),
                                       Dump.dump_font(src_font,
                                                      args,
                                                      out_file=src_out_dir,
                                                      ttx=src_out_dir))
 
-        diff_out_dir = os.path.join(args.output, 'diff')
-        os.makedirs(diff_out_dir, exist_ok=True)
+        diff_out_dir = out_file / 'diff'
+        diff_out_dir.mkdir(exist_ok=True, parents=True)
         table_diff = await Dump.run_diff(src_table_path, table_path,
                                          diff_out_dir)
         print(table_diff)
@@ -271,8 +279,9 @@ class Dump(object):
                                                ignore_line_numbers=True)
                 if not Dump.has_table_diff(ttx_diff, table_name):
                     logging.debug('No diff for %s', table_name)
-                    os.remove(ttx_diff)
+                    ttx_diff.unlink()
                     continue
+                logging.debug('Diff found for %s', table_name)
                 print(ttx_diff)
         logging.debug("diff completed: %s", font)
 
@@ -298,9 +307,10 @@ class Dump(object):
                 logging.basicConfig(level=logging.DEBUG)
             else:
                 logging.basicConfig(level=logging.INFO)
-        num_files = len(args.path)
         if args.output:
-            os.makedirs(args.output, exist_ok=True)
+            args.output = Path(args.output)
+            args.output.mkdir(exist_ok=True, parents=True)
+        num_files = len(args.path)
         for i, path in enumerate(args.path):
             font = Font(path)
             if args.output:
@@ -318,7 +328,7 @@ class Dump(object):
                 if num_files > 1:
                     if i:
                         print()
-                    print(f'File: {os.path.basename(path)}')
+                    print(f'File: {font.path.name}')
                 await Dump.dump_font(font, args, ttx=args.ttx)
             logging.debug("dump %d completed: %s", i, font)
         logging.debug("main completed")
