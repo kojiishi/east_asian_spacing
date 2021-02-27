@@ -10,6 +10,7 @@ fonttools = "^4.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
+yapf = "^0.30.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
