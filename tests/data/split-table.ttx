@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="4.20">
+  <head src="test._h_e_a_d.ttx"/>
+  <hmtx src="test._h_m_t_x.ttx"/>
+</ttFont>

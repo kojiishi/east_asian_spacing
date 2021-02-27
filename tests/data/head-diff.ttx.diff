@@ -1,0 +1,15 @@
+     <!-- Most of this table will be recalculated by the compiler -->
+     <tableVersion value="1.0"/>
+     <fontRevision value="2.00099"/>
+-    <checkSumAdjustment value="0x80cd498b"/>
++    <checkSumAdjustment value="0x74ddf9ad"/>
+     <magicNumber value="0x5f0f3cf5"/>
+     <flags value="00000000 00000011"/>
+-    <unitsPerEm value="1000"/>
++    <unitsPerEm value="2000"/>
+     <created value="Thu Apr  4 12:58:19 2019"/>
+-    <modified value="Fri Apr  5 18:18:26 2019"/>
++    <modified value="Sat Feb 27 14:55:45 2021"/>
+     <xMin value="-1002"/>
+     <yMin value="-1048"/>
+     <xMax value="2928"/>
