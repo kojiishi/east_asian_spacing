@@ -63,7 +63,7 @@ def make_noto_cjk(input_path, output_dir, gids_dir):
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument("path")
-  parser.add_argument("-g", "--gids", default='build/out')
+  parser.add_argument("-g", "--gids", default='build/dump')
   parser.add_argument("-o", "--output", default='build')
   parser.add_argument("-v", "--verbose",
                       help="increase output verbosity",

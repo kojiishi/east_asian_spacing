@@ -10,7 +10,7 @@
 # 2. Creates diff of these files between source and target.
 # 3. Compare the diff files with the ones in the reference directory.
 #
-OUTDIR=${OUTDIR:-build/}
+OUTDIR=${OUTDIR:-build/dump}
 REFDIR=${REFDIR:-reference/}
 
 # Make sure directory names end with a slash to make joining easier.
@@ -22,116 +22,51 @@ ensure-end-slash() {
   fi
 }
 OUTDIR=$(ensure-end-slash $OUTDIR)
-SRCOUTDIR=${OUTDIR}src/
-DSTOUTDIR=${OUTDIR}out/
-DIFFOUTDIR=${OUTDIR}diff/
 REFDIR=$(ensure-end-slash $REFDIR)
-mkdir -p $SRCOUTDIR
-mkdir -p $DSTOUTDIR
-mkdir -p $DIFFOUTDIR
 
-SRCDIR=$1
-shift
-if [[ -d "$SRCDIR" ]]; then
-  SRCDIR=$(ensure-end-slash $SRCDIR)
-  SRCPATH=
-else
-  if [[ $# -ne 1 ]]; then
-    echo "There must be one target" >&2
-    exit 1
+# Analyze argments.
+# * If it starts with '-', add to DUMPOPTS.
+# * The first argment is set to SRC.
+# * The rests are set to DSTS.
+DUMPOPTS=${DUMPOPTS:-}
+SRC=
+DSTS=()
+for ARG in "$@"; do
+  if [[ "$ARG" == \-* ]]; then
+    DUMPOPTS="$DUMPOPTS $ARG"
+    continue
   fi
-  SRCPATH=$SRCDIR
-  SRCDIR=
-fi
-
-tablelist() {
-  (set -x; python3 Dump.py -n "$1" --ttx "$3") | \
-    grep -v '^File: ' >"$2"
-}
-
-CHECKPATHS=()
+  if [[ -z "$SRC" ]]; then
+    SRC=$ARG
+    continue
+  fi
+  DSTS+=("$ARG")
+done
 
 create-diff () {
   DSTPATH=$1
   DSTBASENAME=$(basename "$DSTPATH")
-  DSTOUTPATH=$DSTOUTDIR$DSTBASENAME
-
-  if [[ -n "$SRCDIR" ]]; then
-    SRCBASENAME=$DSTBASENAME
-    SRCPATH=$SRCDIR$SRCBASENAME
-  else
-    SRCBASENAME=$(basename $SRCPATH)
-  fi
-  SRCOUTPATH=$SRCOUTDIR$SRCBASENAME
-  DIFFOUTPATH=$DIFFOUTDIR$SRCBASENAME
 
   # Check if glyph id file exists.
-  GIDSPATH=${DSTOUTPATH}-gids.txt
+  GIDSPATH=$OUTDIR$DSTBASENAME-gids.txt
   if [[ -f "$GIDSPATH" ]]; then
     CHECKPATHS+=("$GIDSPATH")
   fi
 
-  # Create table lists.
-  DUMPJOBS=()
-  SRCTABLELISTPATH=$SRCOUTPATH.tables
-  SRCTTXPATH=$SRCOUTPATH.ttx
-  tablelist "$SRCPATH" "$SRCTABLELISTPATH" "$SRCTTXPATH" &
-  DUMPJOBS+=($!)
-  DSTTABLELISTPATH=$DSTOUTPATH.tables
-  DSTTTXPATH=$DSTOUTPATH.ttx
-  tablelist "$DSTPATH" "$DSTTABLELISTPATH" "$DSTTTXPATH" &
-  DUMPJOBS+=($!)
-  wait ${DUMPJOBS[@]}
-
-  # Diff table lists.
-  DIFFTABLELISTPATH=$DIFFOUTPATH.tables.diff
-  # Ignore first 2 lines (diff -u header).
-  (set -x; diff -u "$SRCTABLELISTPATH" "$DSTTABLELISTPATH") | \
-    tail -n +3 >"$DIFFTABLELISTPATH"
-  CHECKPATHS+=("$DIFFTABLELISTPATH")
-
-  # Diff TTX files.
-  TTC=$(grep '^Font [0-9][0-9]*:' "$SRCTABLELISTPATH" | wc -l)
-  for i in $(seq 0 $(expr $TTC - 1)); do
-    if [[ $TTC -eq 1 ]]; then
-      TTXFILES=("$SRCTTXPATH" "$DSTTTXPATH")
-    else
-      TTXFILES=("$SRCOUTPATH-$i.ttx" "$DSTOUTPATH-$i.ttx")
-    fi
-    mapfile -t TTX_TABLES < <(cat "${TTXFILES[@]}" |\
-        perl -ne '/src="(.*)"/ && print "$1\n"' |\
-        sort | uniq)
-    for TTX_TABLE in ${TTX_TABLES[@]}; do
-      DIFF_TTX_TABLE=$DIFFOUTDIR${TTX_TABLE}.diff
-      (set -x; diff -u "$SRCOUTDIR$TTX_TABLE" "$DSTOUTDIR$TTX_TABLE") |\
-          tail -n +3 | sed -e 's/^@@ -.*/@@/' >"$DIFF_TTX_TABLE"
-      if [[ ! -s "$DIFF_TTX_TABLE" ]]; then
-        rm "$DIFF_TTX_TABLE"
-        continue
-      fi
-      if [[ "$TTX_TABLE" == *_h_e_a_d.ttx ]]; then
-        DIFF_COUNT=$(tail -n +3 "$DIFF_TTX_TABLE" |\
-            grep -v '<checkSumAdjustment value=' |\
-            grep -v '<modified value=' |\
-            grep '^[-+]' | wc -l)
-        if [[ $DIFF_COUNT -eq 0 ]]; then
-          rm "$DIFF_TTX_TABLE"
-          continue
-        fi
-      fi
-      echo "Differences found in $TTX_TABLE"
-      CHECKPATHS+=("$DIFF_TTX_TABLE")
-    done
-  done
+  # Create table lists, TTXs, and their diffs.
+  mapfile -t DIFFS < <(set -x;
+      python3 Dump.py "$DSTPATH" -no "$OUTDIR" --diff "$SRC" $DUMPOPTS)
+  CHECKPATHS+=("${DIFF[@]}")
 }
 
-if [[ $# -gt 0 ]]; then
-  for DSTPATH in "$@"; do
-    create-diff "$DSTPATH"
+CHECKPATHS=()
+if [[ ${#DSTS[@]} -ne 0 ]]; then
+  for DST in "${DSTS[@]}"; do
+    create-diff "$DST"
   done
 else
-  while read DSTPATH; do
-    create-diff "$DSTPATH"
+  while read DST; do
+    create-diff "$DST"
   done
 fi
 
