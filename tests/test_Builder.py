@@ -28,9 +28,14 @@ def test_calc_output_path(data_dir):
     def call(input_path, output_path, stem_suffix=None):
         return Builder.calc_output_path(input_path, output_path, stem_suffix)
 
-    assert call(Path('c.otf'), None) == Path('c-chws.otf')
-    assert call(Path('a/b/c.otf'), None) == Path('a/b/c-chws.otf')
+    assert call(Path('c.otf'), None) == Path('c.otf')
+    assert call(Path('a/b/c.otf'), None) == Path('a/b/c.otf')
+
+    assert call(Path('c.otf'), None, '-chws') == Path('c-chws.otf')
+    assert call(Path('a/b/c.otf'), None, '-chws') == Path('a/b/c-chws.otf')
+
     assert call(Path('c.otf'), Path('build')) == Path('build/c.otf')
     assert call(Path('a/b/c.otf'), Path('build')) == Path('build/c.otf')
+
     assert call(Path('a/b/c.otf'), Path('build'),
                 '-xyz') == Path('build/c-xyz.otf')

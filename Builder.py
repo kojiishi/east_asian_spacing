@@ -30,20 +30,14 @@ class Builder(object):
 
     @staticmethod
     def calc_output_path(input_path, output_path, stem_suffix=None):
-        if not output_path:
-            assert isinstance(input_path, Path)
-            stem_suffix = stem_suffix if stem_suffix is not None else "-chws"
-            return input_path.parent / (input_path.stem + stem_suffix +
-                                        input_path.suffix)
-        if isinstance(output_path, str):
-            output_path = Path(output_path)
-        if output_path.is_dir():
-            assert isinstance(input_path, Path)
-            if stem_suffix is None:
-                return output_path / input_path.name
-            return output_path / (input_path.stem + stem_suffix +
-                                  input_path.suffix)
-        return output_path
+        if output_path:
+            output_path = output_path / input_path.name
+        else:
+            output_path = input_path
+        if not stem_suffix:
+            return output_path
+        return (output_path.parent /
+                f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
     def build(self, language=None, indices=None):
         font = self.font
@@ -140,12 +134,13 @@ def main():
                         "For a font collection (TTC), "
                         "a comma separated list can specify different "
                         "language for each font in the colletion.")
-    parser.add_argument("-o", "--output")
+    parser.add_argument("-o",
+                        "--output",
+                        default="build",
+                        help="The output directory.")
     parser.add_argument("-s",
                         "--suffix",
-                        help="Suffix to add to the output file name. "
-                        "When both `-o` and this option are ommited, "
-                        "`-chws` is used.")
+                        help="Suffix to add to the output file name.")
     parser.add_argument("-v",
                         "--verbose",
                         help="increase output verbosity",
@@ -155,6 +150,7 @@ def main():
     init_logging(args.verbose)
     if args.output:
         args.output = Path(args.output)
+        args.output.mkdir(exist_ok=True, parents=True)
     builder = Builder(args.path)
     builder.build(language=args.language, indices=args.index)
     builder.save(args.output, args.suffix)

@@ -45,8 +45,10 @@ If you prefer using the most basic `pip3`:
 
 ### Usage
 
+The following example adds the feature table to `input-font-file`
+and saves it to the `build` directory.
 ```sh
-% python3 Builder.py -o output-font-file input-font-file
+% python3 Builder.py -o build input-font-file
 ```
 Please use the `--help` option
 to see the full list of options.
