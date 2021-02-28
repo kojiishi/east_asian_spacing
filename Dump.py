@@ -106,11 +106,12 @@ class Dump(object):
 
         Supports reading all fonts in TTCollection.
         The output can identify which tables are shared across multiple fonts."""
-        if args.order_by_name:
+        if args.sort == 'tag':
             entries = sorted(entries, key=lambda entry: entry.tag)
             header_format = "Tag  {1:10}"
             row_format = "{0} {2:10,d} {4}"
         else:
+            assert args.sort == 'offset'
             header_format = "{0:8} Tag  {1:10} {2:5}"
             row_format = "{1:08X} {0} {2:10,d} {3:5,d} {4}"
         print(header_format.format("Offset", "Size", "Gap"), file=out_file)
@@ -333,11 +334,19 @@ class Dump(object):
     async def main():
         parser = argparse.ArgumentParser()
         parser.add_argument("path", nargs="+")
-        parser.add_argument(
-            "--diff", help="The source font to compute differences against.")
-        parser.add_argument("-f", "--features", action="store_true")
-        parser.add_argument("-n", "--order-by-name", action="store_true")
+        parser.add_argument("--diff",
+                            help="The source font or directory "
+                            "to compute differences against.")
+        parser.add_argument("-f",
+                            "--features",
+                            action="store_true",
+                            help="Dump GPOS/GSUB feature names.")
         parser.add_argument("-o", "--output", help="The output directory.")
+        parser.add_argument("-s",
+                            "--sort",
+                            default="tag",
+                            help="The sort order. "
+                            "'tag' or 'offset' are supported.")
         parser.add_argument("--ttx",
                             help="Create TTX files at the specified path.")
         parser.add_argument("-v",
@@ -357,11 +366,11 @@ class Dump(object):
         num_files = len(args.path)
         for i, path in enumerate(args.path):
             font = Font(path)
-            if args.output:
-                if args.diff:
-                    await Dump.diff_font(font, args)
-                else:
-                    await Dump.dump_font(font, args)
+            if args.diff:
+                assert args.output, "output is required for diff"
+                await Dump.diff_font(font, args)
+            elif args.output:
+                await Dump.dump_font(font, args)
             else:
                 if num_files > 1:
                     if i:

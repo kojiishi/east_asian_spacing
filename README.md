@@ -11,15 +11,11 @@ and [CLREQ 3.1.6.1 Punctuation Adjustment Space
 
 [Contextual Half-width Spacing]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
 
-## Test HTML
-
-View the [test HTML].
-
-[test HTML]: https://kojiishi.github.io/chws/test.html
-
 ## Adding the feature to your fonts
 
-### Prerequisites
+### Install
+
+This tool requires following packages.
 
 * Python3
 * [fonttools]
@@ -27,69 +23,121 @@ View the [test HTML].
 
 Installation for Linux:
 ```sh
-% pip3 install fonttools
 % sudo apt get libharfbuzz-bin
 ```
 Installation for Mac:
 ```sh
-% pip3 install fonttools
 % brew install harfbuzz
+```
+Then you can use your favorite package manager to install required Python packages.
+If you use [poetry]:
+```sh
+% poetry install --no-dev
+```
+If you prefer using the most basic `pip3`:
+```sh
+% pip3 install fonttools
 ```
 
 [fonttools]: https://pypi.org/project/fonttools/
 [hb-shape]: https://command-not-found.com/hb-shape
+[poetry]: https://github.com/python-poetry/poetry
 
 ### Usage
 
 ```sh
-% python3 Builder.py input-font-file -o output-font-file
+% python3 Builder.py -o output-font-file input-font-file
 ```
+Please use the `--help` option
+to see the full list of options.
 
 ### Languages
 
-There are some different behaviors depends on the languages.
+Because glyphs of a code point differ by languages,
+this tool need to generate different tables for different languages.
+
 When the font supports multiple East Asian languages,
-the font can detect the languages automatically in most cases.
+this tool can detect the languages automatically in most cases.
 
 When the language can't be detected, this tool shows an error.
 You need to specify the [OpenType language system tag] of the font.
 
+The following example specifies that the font is a Japanese font.
 ```sh
-% python3 Builder.py input-font-file --language=JAN
+% python3 Builder.py --language=JAN input-font-file
 ```
-specifies that the font is a Japanese font.
 
 [OpenType language system tag]: https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
 
 ### TrueType Collection (TTC)
 
 When the `input-font-file` is a TrueType Collection,
-this tool adds the table to all fonts in the collection.
+this tool adds the feature table to all fonts in the collection by default.
 
-If you don't want to add the table to all fonts in the collection,
+If you don't want to add the feature table to all fonts in the collection,
 you can specify a comma-separated list of font indexes.
 
+The following example adds the table to font index 0 and 1, but not to other fonts.
 ```sh
-% python3 Builder.py input-font-file --index=0,1
+% python3 Builder.py --index=0,1 input-font-file.ttc
 ```
-The above example adds the table to font index 0 and 1, but not to other fonts.
 
 The language option applies to all fonts in the collection by default.
 When you want to specify different languages to each font in the collection,
 it accepts a comma-separated list.
-```sh
-% python3 Builder.py input-font-file --language=,KOR,ZHS
-```
-This example specifies automatic for the font index 0,
+The following example specifies
 Korean for the font index 1,
 Simplified Chinese for the font index 2,
 and automatic for all other fonts.
-
-When these two options are combined, for example:
 ```sh
-% python3 Builder.py input-font-file --index=2,3 --language=JAN,ZHS
+% python3 Builder.py --language=,KOR,ZHS input-font-file.ttc
 ```
-This example processes the index 2 as `JAN`, and the index 3 as `ZHS`.
+
+You can combine these two options.
+The following example applies
+`JAN` to the index 2,
+and `ZHS` to the index 3.
+Other fonts are not changed.
+```sh
+% python3 Builder.py --index=2,3 --language=JAN,ZHS input-font-file.ttc
+```
+
+### Noto CJK
+
+For [Noto CJK] fonts,
+`make-noto-cjk.py` can determine the font indices and the languages automatically.
+```sh
+% python3 make-noto-cjk.py NotoSansCJK.ttc
+```
+
+[Noto CJK]: https://www.google.com/get/noto/help/cjk/
+
+## Testing
+
+### Test HTML
+
+A [test HTML] is available
+to check the behavior on browsers.
+
+[test HTML]: https://kojiishi.github.io/chws/test.html
+
+### Dump and Diff
+
+`Dump.py` can create various types of text dump files.
+```sh
+% python3 Dump.py build/NotoSansCJK-Regular.ttc
+```
+
+It can also create text dump files of two fonts, and
+create diff files between the two sets of dump files.
+This helps visualizing changes in the font files you created.
+```sh
+% python3 Dump.py -o build/dump --diff fonts build/NotoSansCJK.ttc
+```
+
+`diff-ref.sh` can create diff files between two sets of diff files.
+By placing once-reviewed diff files into the `reference` directory,
+this tool can visualize differences in subsequent builds.
 
 ## Appendix
 
