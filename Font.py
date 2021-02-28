@@ -102,8 +102,16 @@ class Font(object):
     def tttable(self, name):
         return self.ttfont.get(name)
 
+    @property
+    def reader(self):
+        return self.ttfont.reader
+
+    @property
+    def file(self):
+        return self.reader.file
+
     def reader_offset(self, tag):
-        entry = self.ttfont.reader.tables.get(tag)
+        entry = self.reader.tables.get(tag)
         if entry:
             return entry.offset
         return None
