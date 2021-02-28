@@ -62,7 +62,8 @@ def make_noto_cjk(input_path, output_dir, gids_dir):
     with gids_path.open('w') as gids_file:
         builder.save_glyph_ids(gids_file)
 
-    print(output_path)
+    # Flush, for the better parallelism when piping.
+    print(output_path, flush=True)
 
 
 def main():
