@@ -38,15 +38,16 @@ def indices_and_languages(font):
         yield (index, lang)
 
 
-def make_noto_cjk(input_path, output_dir, gids_dir):
-    # If `input_path` is a directory, list files in the directory.
-    if isinstance(input_path, str):
-        input_path = Path(input_path)
-    if input_path.is_dir():
-        for path in input_path.glob('Noto*CJK*'):
-            make_noto_cjk(path, output_dir, gids_dir)
-        return
+def fonts_in_dir(dir):
+    assert dir.is_dir()
+    paths = dir.glob('Noto*CJK*')
+    paths = filter(
+        lambda path: path.suffix.casefold() in
+        (ext.casefold() for ext in ('.otf', '.ttc')), paths)
+    return paths
 
+
+def make_noto_cjk(input_path, output_dir, gids_dir):
     builder = Builder(input_path)
     font = builder.font
     num_fonts = font.num_fonts_in_collection
@@ -68,7 +69,7 @@ def make_noto_cjk(input_path, output_dir, gids_dir):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("path")
+    parser.add_argument("path", nargs="+")
     parser.add_argument("-g", "--gids", default='build/dump')
     parser.add_argument("-o", "--output", default='build')
     parser.add_argument("-v",
@@ -84,7 +85,13 @@ def main():
     if args.output:
         args.output = Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
-    make_noto_cjk(args.path, args.output, args.gids)
+    for path in args.path:
+        path = Path(path)
+        if path.is_dir():
+            for path in fonts_in_dir(path):
+                make_noto_cjk(path, args.output, args.gids)
+        else:
+            make_noto_cjk(path, args.output, args.gids)
 
 
 if __name__ == '__main__':
