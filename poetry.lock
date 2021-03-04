@@ -21,6 +21,36 @@ tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)"
 tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six"]
 
 [[package]]
+name = "brotli"
+version = "1.0.9"
+description = "Python bindings for the Brotli compression library"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "brotlicffi"
+version = "1.0.9.1"
+description = "Python CFFI bindings to the Brotli library"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+cffi = ">=1.0.0"
+
+[[package]]
+name = "cffi"
+version = "1.14.5"
+description = "Foreign Function Interface for Python calling C code."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pycparser = "*"
+
+[[package]]
 name = "colorama"
 version = "0.4.4"
 description = "Cross-platform colored terminal text."
@@ -30,11 +60,16 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "fonttools"
-version = "4.20.0"
+version = "4.21.1"
 description = "Tools to manipulate font files"
 category = "main"
 optional = false
 python-versions = ">=3.6"
+
+[package.dependencies]
+brotli = {version = ">=1.0.1", optional = true, markers = "platform_python_implementation == \"CPython\" and extra == \"woff\""}
+brotlicffi = {version = ">=0.8.0", optional = true, markers = "platform_python_implementation != \"CPython\" and extra == \"woff\""}
+zopfli = {version = ">=0.1.4", optional = true, markers = "extra == \"woff\""}
 
 [package.extras]
 all = ["fs (>=2.2.0,<3)", "lxml (>=4.0,<5)", "zopfli (>=0.1.4)", "lz4 (>=1.7.4.2)", "matplotlib", "sympy", "skia-pathops (>=0.5.0)", "brotlicffi (>=0.8.0)", "scipy", "brotli (>=1.0.1)", "munkres", "unicodedata2 (>=13.0.0)", "xattr"]
@@ -88,6 +123,14 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
+name = "pycparser"
+version = "2.20"
+description = "C parser in Python"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
 name = "pyparsing"
 version = "2.4.7"
 description = "Python parsing module"
@@ -132,10 +175,18 @@ category = "dev"
 optional = false
 python-versions = "*"
 
+[[package]]
+name = "zopfli"
+version = "0.1.7"
+description = "Zopfli module for python"
+category = "main"
+optional = false
+python-versions = "*"
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "fc2a4bca77f809cf3579ae0808d0f0873a0b129ade7980c8a0c65392e98313b6"
+content-hash = "4d60769b5d5acdd3fd9e44d751db3e9ebbe5d85150e11c8ec72830e29ddcac3e"
 
 [metadata.files]
 atomicwrites = [
@@ -146,13 +197,117 @@ attrs = [
     {file = "attrs-20.3.0-py2.py3-none-any.whl", hash = "sha256:31b2eced602aa8423c2aea9c76a724617ed67cf9513173fd3a4f03e3a929c7e6"},
     {file = "attrs-20.3.0.tar.gz", hash = "sha256:832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"},
 ]
+brotli = [
+    {file = "Brotli-1.0.9-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:268fe94547ba25b58ebc724680609c8ee3e5a843202e9a381f6f9c5e8bdb5c70"},
+    {file = "Brotli-1.0.9-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:c2415d9d082152460f2bd4e382a1e85aed233abc92db5a3880da2257dc7daf7b"},
+    {file = "Brotli-1.0.9-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:5913a1177fc36e30fcf6dc868ce23b0453952c78c04c266d3149b3d39e1410d6"},
+    {file = "Brotli-1.0.9-cp27-cp27m-win32.whl", hash = "sha256:afde17ae04d90fbe53afb628f7f2d4ca022797aa093e809de5c3cf276f61bbfa"},
+    {file = "Brotli-1.0.9-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:7cb81373984cc0e4682f31bc3d6be9026006d96eecd07ea49aafb06897746452"},
+    {file = "Brotli-1.0.9-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:db844eb158a87ccab83e868a762ea8024ae27337fc7ddcbfcddd157f841fdfe7"},
+    {file = "Brotli-1.0.9-cp35-cp35m-macosx_10_6_intel.whl", hash = "sha256:c83aa123d56f2e060644427a882a36b3c12db93727ad7a7b9efd7d7f3e9cc2c4"},
+    {file = "Brotli-1.0.9-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:6b2ae9f5f67f89aade1fab0f7fd8f2832501311c363a21579d02defa844d9296"},
+    {file = "Brotli-1.0.9-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:68715970f16b6e92c574c30747c95cf8cf62804569647386ff032195dc89a430"},
+    {file = "Brotli-1.0.9-cp35-cp35m-win32.whl", hash = "sha256:defed7ea5f218a9f2336301e6fd379f55c655bea65ba2476346340a0ce6f74a1"},
+    {file = "Brotli-1.0.9-cp35-cp35m-win_amd64.whl", hash = "sha256:88c63a1b55f352b02c6ffd24b15ead9fc0e8bf781dbe070213039324922a2eea"},
+    {file = "Brotli-1.0.9-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:503fa6af7da9f4b5780bb7e4cbe0c639b010f12be85d02c99452825dd0feef3f"},
+    {file = "Brotli-1.0.9-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:40d15c79f42e0a2c72892bf407979febd9cf91f36f495ffb333d1d04cebb34e4"},
+    {file = "Brotli-1.0.9-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:93130612b837103e15ac3f9cbacb4613f9e348b58b3aad53721d92e57f96d46a"},
+    {file = "Brotli-1.0.9-cp36-cp36m-win32.whl", hash = "sha256:61a7ee1f13ab913897dac7da44a73c6d44d48a4adff42a5701e3239791c96e14"},
+    {file = "Brotli-1.0.9-cp36-cp36m-win_amd64.whl", hash = "sha256:1c48472a6ba3b113452355b9af0a60da5c2ae60477f8feda8346f8fd48e3e87c"},
+    {file = "Brotli-1.0.9-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:3b78a24b5fd13c03ee2b7b86290ed20efdc95da75a3557cc06811764d5ad1126"},
+    {file = "Brotli-1.0.9-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:9d12cf2851759b8de8ca5fde36a59c08210a97ffca0eb94c532ce7b17c6a3d1d"},
+    {file = "Brotli-1.0.9-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:6c772d6c0a79ac0f414a9f8947cc407e119b8598de7621f39cacadae3cf57d12"},
+    {file = "Brotli-1.0.9-cp37-cp37m-win32.whl", hash = "sha256:f909bbbc433048b499cb9db9e713b5d8d949e8c109a2a548502fb9aa8630f0b1"},
+    {file = "Brotli-1.0.9-cp37-cp37m-win_amd64.whl", hash = "sha256:97f715cf371b16ac88b8c19da00029804e20e25f30d80203417255d239f228b5"},
+    {file = "Brotli-1.0.9-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:160c78292e98d21e73a4cc7f76a234390e516afcd982fa17e1422f7c6a9ce9c8"},
+    {file = "Brotli-1.0.9-cp38-cp38-manylinux1_i686.whl", hash = "sha256:b663f1e02de5d0573610756398e44c130add0eb9a3fc912a09665332942a2efb"},
+    {file = "Brotli-1.0.9-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:5b6ef7d9f9c38292df3690fe3e302b5b530999fa90014853dcd0d6902fb59f26"},
+    {file = "Brotli-1.0.9-cp38-cp38-win32.whl", hash = "sha256:35a3edbe18e876e596553c4007a087f8bcfd538f19bc116917b3c7522fca0429"},
+    {file = "Brotli-1.0.9-cp38-cp38-win_amd64.whl", hash = "sha256:269a5743a393c65db46a7bb982644c67ecba4b8d91b392403ad8a861ba6f495f"},
+    {file = "Brotli-1.0.9-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:5cb1e18167792d7d21e21365d7650b72d5081ed476123ff7b8cac7f45189c0c7"},
+    {file = "Brotli-1.0.9-cp39-cp39-manylinux1_i686.whl", hash = "sha256:16d528a45c2e1909c2798f27f7bf0a3feec1dc9e50948e738b961618e38b6a7b"},
+    {file = "Brotli-1.0.9-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:56d027eace784738457437df7331965473f2c0da2c70e1a1f6fdbae5402e0389"},
+    {file = "Brotli-1.0.9-cp39-cp39-win32.whl", hash = "sha256:cfc391f4429ee0a9370aa93d812a52e1fee0f37a81861f4fdd1f4fb28e8547c3"},
+    {file = "Brotli-1.0.9-cp39-cp39-win_amd64.whl", hash = "sha256:854c33dad5ba0fbd6ab69185fec8dab89e13cda6b7d191ba111987df74f38761"},
+    {file = "Brotli-1.0.9.zip", hash = "sha256:4d1b810aa0ed773f81dceda2cc7b403d01057458730e309856356d4ef4188438"},
+]
+brotlicffi = [
+    {file = "brotlicffi-1.0.9.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:37e0e33241f0cd747ec348f139c4b48981c641eae05ba0e3d68ed21083a6e46c"},
+    {file = "brotlicffi-1.0.9.1-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:c187eb07a880c1acaf2105e9513ec9d0ab6029f33fcccfbfbce61543fe839abc"},
+    {file = "brotlicffi-1.0.9.1-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:d19bdde34363f96b74ca8dc459ff95864b8aa6bb284f31923ef3dcd4330a4332"},
+    {file = "brotlicffi-1.0.9.1-cp27-cp27m-manylinux2010_i686.whl", hash = "sha256:15268192b254253005ba144a7c2f408c1f3f5e2d2d98455d1a197f4d8f07d949"},
+    {file = "brotlicffi-1.0.9.1-cp27-cp27m-manylinux2010_x86_64.whl", hash = "sha256:5e00773fff91e6d2f520b0d7233e63c023fea877f47509e05ffe4032a03f57ef"},
+    {file = "brotlicffi-1.0.9.1-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:1d5d19c8c4c291d7b5e5115c04586117863e6647ddc221cd5094709fa1dcc95c"},
+    {file = "brotlicffi-1.0.9.1-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:dd81f749fdf910076b360b550ef798479d5ba4d7fc22746e6ce89c2c1a3c4099"},
+    {file = "brotlicffi-1.0.9.1-cp27-cp27mu-manylinux2010_i686.whl", hash = "sha256:31009ea94e75fa28982e1957ef2363eabb841a2a6495995e2d0dbc0ec56dbce3"},
+    {file = "brotlicffi-1.0.9.1-cp27-cp27mu-manylinux2010_x86_64.whl", hash = "sha256:a4a46ebc9fcb497316f200bd651868d0e528c0d198c54a789950b3e5b4a65a94"},
+    {file = "brotlicffi-1.0.9.1-cp35-abi3-macosx_10_9_x86_64.whl", hash = "sha256:68b2a2032efbf97e28edc2064b73ddcc1c8744f61d0d7045f51ca0c8018f8572"},
+    {file = "brotlicffi-1.0.9.1-cp35-abi3-manylinux1_i686.whl", hash = "sha256:caf90fa25811c8601633dbf979d7924220a345239b0b150a82e61c76521a38ff"},
+    {file = "brotlicffi-1.0.9.1-cp35-abi3-manylinux1_x86_64.whl", hash = "sha256:f9200538814c382e645fe17566c9113ede1fe76aac6c5aefcf2c81c21b61fa38"},
+    {file = "brotlicffi-1.0.9.1-cp35-abi3-manylinux2010_i686.whl", hash = "sha256:3a99f2119bcfc467a95e042b6b8b2a5dbf66e75efe58c8e8ee39926f88f3b6bc"},
+    {file = "brotlicffi-1.0.9.1-cp35-abi3-manylinux2010_x86_64.whl", hash = "sha256:ecf35c8e1e097eb880cbbbb0d7dcfe50fdc8b0f24e31c85852ee64efb9f56e85"},
+    {file = "brotlicffi-1.0.9.1-cp35-abi3-win32.whl", hash = "sha256:7f35a2855f345d5c0e7cdc54f5f345c56d32796931b74107945e1deaf9c2231f"},
+    {file = "brotlicffi-1.0.9.1-cp35-abi3-win_amd64.whl", hash = "sha256:640c9c55473a2181e5ddb2e2ffe1800496847a23cde49198d6a9056559b5bf9e"},
+    {file = "brotlicffi-1.0.9.1-pp27-pypy_73-macosx_10_9_x86_64.whl", hash = "sha256:127889134ac146c89c9c0f81049df1328d892a383b3fa448bd4a14048195f2ab"},
+    {file = "brotlicffi-1.0.9.1-pp27-pypy_73-manylinux1_x86_64.whl", hash = "sha256:cd3c0491fdc656d4b3a9fc74c13980c7f22455fab7709a228e7afeb4e3391806"},
+    {file = "brotlicffi-1.0.9.1-pp27-pypy_73-manylinux2010_x86_64.whl", hash = "sha256:ad9620fb8dc675bc862b3516ca7b00ce75b5e0850894bc1a1c79c07b7c7690a1"},
+    {file = "brotlicffi-1.0.9.1-pp27-pypy_73-win32.whl", hash = "sha256:34ad81d2ec676f967e38fa0e67e8166ab85d8aed576d2deb9836df5004bebbdb"},
+    {file = "brotlicffi-1.0.9.1-pp36-pypy36_pp73-macosx_10_9_x86_64.whl", hash = "sha256:d9e0c88b4581ea9671bc9b497c893ce1df7976148b6cb76b23dbab77747b12bd"},
+    {file = "brotlicffi-1.0.9.1-pp36-pypy36_pp73-manylinux1_x86_64.whl", hash = "sha256:7194f2d1caafa318946444e0629419956b6dde3f0c3d4e215cf1267be34854d6"},
+    {file = "brotlicffi-1.0.9.1-pp36-pypy36_pp73-manylinux2010_x86_64.whl", hash = "sha256:50d756483a755ca731bdb44ec961c8b0791bb316131e0265042685f8e62a16ca"},
+    {file = "brotlicffi-1.0.9.1-pp36-pypy36_pp73-win32.whl", hash = "sha256:2816a6e3ffeb104dcd36aee0781ee4fe4f8d1e19901506f9dabcf4a92f8302af"},
+    {file = "brotlicffi-1.0.9.1-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:028f4e5edecc622c08cb9913f85420c149578f321672159a61e704b9ab1b616a"},
+    {file = "brotlicffi-1.0.9.1-pp37-pypy37_pp73-manylinux1_x86_64.whl", hash = "sha256:4af7fab4f0bafc2d4b5511f50db3bf91964c251789fdcfc9f4b68b3b8dfba7fd"},
+    {file = "brotlicffi-1.0.9.1-pp37-pypy37_pp73-manylinux2010_x86_64.whl", hash = "sha256:4d8700ec2d4b8cdc221d745923825168e7d9db53bb8c8d6807a04bf21af57dd2"},
+    {file = "brotlicffi-1.0.9.1-pp37-pypy37_pp73-win32.whl", hash = "sha256:bb82fef13f561e394358bf05c36bfab0eb3ae26162c3d2ec1f058161a2ff333f"},
+    {file = "brotlicffi-1.0.9.1.tar.gz", hash = "sha256:f875e00212e706ec99945002eef9181ccdaada5eb20f15fe7089aa3a59e0d91b"},
+]
+cffi = [
+    {file = "cffi-1.14.5-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:bb89f306e5da99f4d922728ddcd6f7fcebb3241fc40edebcb7284d7514741991"},
+    {file = "cffi-1.14.5-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:34eff4b97f3d982fb93e2831e6750127d1355a923ebaeeb565407b3d2f8d41a1"},
+    {file = "cffi-1.14.5-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:99cd03ae7988a93dd00bcd9d0b75e1f6c426063d6f03d2f90b89e29b25b82dfa"},
+    {file = "cffi-1.14.5-cp27-cp27m-win32.whl", hash = "sha256:65fa59693c62cf06e45ddbb822165394a288edce9e276647f0046e1ec26920f3"},
+    {file = "cffi-1.14.5-cp27-cp27m-win_amd64.whl", hash = "sha256:51182f8927c5af975fece87b1b369f722c570fe169f9880764b1ee3bca8347b5"},
+    {file = "cffi-1.14.5-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:43e0b9d9e2c9e5d152946b9c5fe062c151614b262fda2e7b201204de0b99e482"},
+    {file = "cffi-1.14.5-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:cbde590d4faaa07c72bf979734738f328d239913ba3e043b1e98fe9a39f8b2b6"},
+    {file = "cffi-1.14.5-cp35-cp35m-macosx_10_9_x86_64.whl", hash = "sha256:5de7970188bb46b7bf9858eb6890aad302577a5f6f75091fd7cdd3ef13ef3045"},
+    {file = "cffi-1.14.5-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:a465da611f6fa124963b91bf432d960a555563efe4ed1cc403ba5077b15370aa"},
+    {file = "cffi-1.14.5-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:d42b11d692e11b6634f7613ad8df5d6d5f8875f5d48939520d351007b3c13406"},
+    {file = "cffi-1.14.5-cp35-cp35m-win32.whl", hash = "sha256:72d8d3ef52c208ee1c7b2e341f7d71c6fd3157138abf1a95166e6165dd5d4369"},
+    {file = "cffi-1.14.5-cp35-cp35m-win_amd64.whl", hash = "sha256:29314480e958fd8aab22e4a58b355b629c59bf5f2ac2492b61e3dc06d8c7a315"},
+    {file = "cffi-1.14.5-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:3d3dd4c9e559eb172ecf00a2a7517e97d1e96de2a5e610bd9b68cea3925b4892"},
+    {file = "cffi-1.14.5-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:48e1c69bbacfc3d932221851b39d49e81567a4d4aac3b21258d9c24578280058"},
+    {file = "cffi-1.14.5-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:69e395c24fc60aad6bb4fa7e583698ea6cc684648e1ffb7fe85e3c1ca131a7d5"},
+    {file = "cffi-1.14.5-cp36-cp36m-manylinux2014_aarch64.whl", hash = "sha256:9e93e79c2551ff263400e1e4be085a1210e12073a31c2011dbbda14bda0c6132"},
+    {file = "cffi-1.14.5-cp36-cp36m-win32.whl", hash = "sha256:58e3f59d583d413809d60779492342801d6e82fefb89c86a38e040c16883be53"},
+    {file = "cffi-1.14.5-cp36-cp36m-win_amd64.whl", hash = "sha256:005a36f41773e148deac64b08f233873a4d0c18b053d37da83f6af4d9087b813"},
+    {file = "cffi-1.14.5-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:2894f2df484ff56d717bead0a5c2abb6b9d2bf26d6960c4604d5c48bbc30ee73"},
+    {file = "cffi-1.14.5-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:0857f0ae312d855239a55c81ef453ee8fd24136eaba8e87a2eceba644c0d4c06"},
+    {file = "cffi-1.14.5-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:cd2868886d547469123fadc46eac7ea5253ea7fcb139f12e1dfc2bbd406427d1"},
+    {file = "cffi-1.14.5-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:35f27e6eb43380fa080dccf676dece30bef72e4a67617ffda586641cd4508d49"},
+    {file = "cffi-1.14.5-cp37-cp37m-win32.whl", hash = "sha256:9ff227395193126d82e60319a673a037d5de84633f11279e336f9c0f189ecc62"},
+    {file = "cffi-1.14.5-cp37-cp37m-win_amd64.whl", hash = "sha256:9cf8022fb8d07a97c178b02327b284521c7708d7c71a9c9c355c178ac4bbd3d4"},
+    {file = "cffi-1.14.5-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:8b198cec6c72df5289c05b05b8b0969819783f9418e0409865dac47288d2a053"},
+    {file = "cffi-1.14.5-cp38-cp38-manylinux1_i686.whl", hash = "sha256:ad17025d226ee5beec591b52800c11680fca3df50b8b29fe51d882576e039ee0"},
+    {file = "cffi-1.14.5-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:6c97d7350133666fbb5cf4abdc1178c812cb205dc6f41d174a7b0f18fb93337e"},
+    {file = "cffi-1.14.5-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:8ae6299f6c68de06f136f1f9e69458eae58f1dacf10af5c17353eae03aa0d827"},
+    {file = "cffi-1.14.5-cp38-cp38-win32.whl", hash = "sha256:b85eb46a81787c50650f2392b9b4ef23e1f126313b9e0e9013b35c15e4288e2e"},
+    {file = "cffi-1.14.5-cp38-cp38-win_amd64.whl", hash = "sha256:1f436816fc868b098b0d63b8920de7d208c90a67212546d02f84fe78a9c26396"},
+    {file = "cffi-1.14.5-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:1071534bbbf8cbb31b498d5d9db0f274f2f7a865adca4ae429e147ba40f73dea"},
+    {file = "cffi-1.14.5-cp39-cp39-manylinux1_i686.whl", hash = "sha256:9de2e279153a443c656f2defd67769e6d1e4163952b3c622dcea5b08a6405322"},
+    {file = "cffi-1.14.5-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:6e4714cc64f474e4d6e37cfff31a814b509a35cb17de4fb1999907575684479c"},
+    {file = "cffi-1.14.5-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:158d0d15119b4b7ff6b926536763dc0714313aa59e320ddf787502c70c4d4bee"},
+    {file = "cffi-1.14.5-cp39-cp39-win32.whl", hash = "sha256:afb29c1ba2e5a3736f1c301d9d0abe3ec8b86957d04ddfa9d7a6a42b9367e396"},
+    {file = "cffi-1.14.5-cp39-cp39-win_amd64.whl", hash = "sha256:f2d45f97ab6bb54753eab54fffe75aaf3de4ff2341c9daee1987ee1837636f1d"},
+    {file = "cffi-1.14.5.tar.gz", hash = "sha256:fd78e5fee591709f32ef6edb9a015b4aa1a5022598e36227500c8f4e02328d9c"},
+]
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
 fonttools = [
-    {file = "fonttools-4.20.0-py3-none-any.whl", hash = "sha256:decdb2ff74f8ab69f0afb6898eeb0dd0b30e8764ee68e4cc35c0e1831621719d"},
-    {file = "fonttools-4.20.0.zip", hash = "sha256:afd051129dd546f81534c1d08b4fc118c0307d614f6fc5145d2e3e76bcfb7513"},
+    {file = "fonttools-4.21.1-py3-none-any.whl", hash = "sha256:3e990e6de10c2d708fa79f1d0d93022d7e5fae1ff8cb94f69ee8d916e2512df8"},
+    {file = "fonttools-4.21.1.zip", hash = "sha256:d9cf618ab76afb42a79dcc0b4b5e5ee7ec1534f7ad9da3809bb15ddfcedc073d"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
@@ -170,6 +325,10 @@ py = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
     {file = "py-1.10.0.tar.gz", hash = "sha256:21b81bda15b66ef5e1a777a21c4dcd9c20ad3efd0b3f817e7a809035269e1bd3"},
 ]
+pycparser = [
+    {file = "pycparser-2.20-py2.py3-none-any.whl", hash = "sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705"},
+    {file = "pycparser-2.20.tar.gz", hash = "sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0"},
+]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
@@ -185,4 +344,34 @@ toml = [
 yapf = [
     {file = "yapf-0.30.0-py2.py3-none-any.whl", hash = "sha256:3abf61ba67cf603069710d30acbc88cfe565d907e16ad81429ae90ce9651e0c9"},
     {file = "yapf-0.30.0.tar.gz", hash = "sha256:3000abee4c28daebad55da6c85f3cd07b8062ce48e2e9943c8da1b9667d48427"},
+]
+zopfli = [
+    {file = "zopfli-0.1.7-cp27-cp27m-macosx_10_6_intel.whl", hash = "sha256:9bb6e091da6ccf8bec9844df593daf3d3198a94cbeb8a97f6902c5e8e6891c28"},
+    {file = "zopfli-0.1.7-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:bb886265ff36a4ee0136a1ba8ecdbc5736f9b4155e8b379afa0574042dab730b"},
+    {file = "zopfli-0.1.7-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:c9b57dd98505deb5e2a4218627b94cf23518c5fb7029936e905a1bbad42ebe82"},
+    {file = "zopfli-0.1.7-cp27-cp27m-win32.whl", hash = "sha256:a5cbefe59ffc0e4a4be80a8a45e12d91dd7be7fe4bb6c1e31e3dd3cc187eacc9"},
+    {file = "zopfli-0.1.7-cp27-cp27m-win_amd64.whl", hash = "sha256:ba1130ee91383cea99727e52cb9be1c56f4bbabd9c74ae737db041c081e8c292"},
+    {file = "zopfli-0.1.7-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:4753ee4821d7df5abe7f6acf9d9db3bb30a277bcb59750d44e86d6b5cb47a05c"},
+    {file = "zopfli-0.1.7-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:d0e7ec0398738a741fd71ff53d5f08b86b9c082d711ba48c2f119cb6c9d1ec38"},
+    {file = "zopfli-0.1.7-cp35-cp35m-macosx_10_6_intel.whl", hash = "sha256:b518cfede6bf3371726ac7c0df5568c66cb6b1ecad75cb622d2a762bb6d24df4"},
+    {file = "zopfli-0.1.7-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:97d85bf0ebbb1d256716a76fcccb9b544dd9a16c0d690582aa7907dffc2a9960"},
+    {file = "zopfli-0.1.7-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:7c1f14f34b89cc750b20442f00b5d28acb5db2d38298e31c765f4a48c416d63b"},
+    {file = "zopfli-0.1.7-cp35-cp35m-win32.whl", hash = "sha256:0512baec1856fe6b2ea910fc0713e0c0415ec55f6a22af0e1a3c807e2df78f9f"},
+    {file = "zopfli-0.1.7-cp35-cp35m-win_amd64.whl", hash = "sha256:5f8eece4acf2377dc7803688bdea11017fb6414b5e4b129ab80692a4a3f4b248"},
+    {file = "zopfli-0.1.7-cp36-cp36m-macosx_10_6_intel.whl", hash = "sha256:6be5101946c334b71c60d631f0725c5c7105f3cbbf359d108376660304e1d1bb"},
+    {file = "zopfli-0.1.7-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:578a3e38a0256dc3e0fb887d58203c1e26c387b77c0f3df2e011186737230534"},
+    {file = "zopfli-0.1.7-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:5fd88046bcdd2b01e27e0525ac699d297e75a5fbdc89fd9d4ac7a3b91e5eb054"},
+    {file = "zopfli-0.1.7-cp36-cp36m-win32.whl", hash = "sha256:f39b961186b18faa1155977706bfbfcf1644c47e5b7648de8e0645c53062ed90"},
+    {file = "zopfli-0.1.7-cp36-cp36m-win_amd64.whl", hash = "sha256:0504cd271f6e32b4b512615bd4ae1fabc787c72a90495376004f4023dcac0f3a"},
+    {file = "zopfli-0.1.7-cp37-cp37m-macosx_10_6_intel.whl", hash = "sha256:4837b1a8a1e7d04879d5cdd7742d9312d52466f10f1571d9beec6ecdcc329b97"},
+    {file = "zopfli-0.1.7-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:8fb3e8fd5ef947c28721c7008be44f5db8777deec77a72601f895bf6a70aa172"},
+    {file = "zopfli-0.1.7-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:697a809fd66d5de8098e6e6bebfcc5a8c8ab5278272f70e9b78bc72334ec12ec"},
+    {file = "zopfli-0.1.7-cp37-cp37m-win32.whl", hash = "sha256:1dfdfbbfe9a980e3ae2d9150bb8429a026b8254c2c63c295046192d14dd971ae"},
+    {file = "zopfli-0.1.7-cp37-cp37m-win_amd64.whl", hash = "sha256:05ad760a6d2b522d5e9518bbf9cc60896da26838181f02e52f7935c2ace12385"},
+    {file = "zopfli-0.1.7-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:03516ab62b858473c5e235d73cc01219a5ea5df0ca1da71933fd3cc0dbfff6c3"},
+    {file = "zopfli-0.1.7-cp38-cp38-manylinux1_i686.whl", hash = "sha256:52e705a763e41851773b8334fc8316cb483135802f12bbfdd69c0774b658b6e7"},
+    {file = "zopfli-0.1.7-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:6801f879e0c717e9cfb6b405f2b8cce1d20d3d034b9e2a6900e92994161f81f8"},
+    {file = "zopfli-0.1.7-cp38-cp38-win32.whl", hash = "sha256:0df32baa7b1b8c5ea547c455854d5ae8a8e45c10cad25ff5451f62e5cce48b60"},
+    {file = "zopfli-0.1.7-cp38-cp38-win_amd64.whl", hash = "sha256:c2d9dd6e4e6f9b35cceb7dde17b9ae153c194e16a105c6ba93c272f2a0fef3ec"},
+    {file = "zopfli-0.1.7.zip", hash = "sha256:512892714f0e3dcc9a77222cb509ed519f41ce2b92467e47a4b406a23b48561a"},
 ]
