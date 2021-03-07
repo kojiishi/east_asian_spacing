@@ -18,11 +18,11 @@ def show_dump_images():
 
 
 class GlyphSet(object):
-    def __init__(self, font, glyph_ids=set()):
+    def __init__(self, font, glyph_ids=None):
         assert isinstance(font, Font)
-        assert isinstance(glyph_ids, set)
         self.font = font
-        self.glyph_ids = glyph_ids
+        self.glyph_ids = glyph_ids if glyph_ids is not None else set()
+        assert isinstance(self.glyph_ids, set)
 
     def __bool__(self):
         return len(self.glyph_ids) > 0

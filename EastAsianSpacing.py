@@ -19,37 +19,34 @@ from TextRun import TextRun
 from TextRun import show_dump_images
 
 
-class EastAsianSpacing(object):
-    def __init__(self, font):
+class GlyphSetTrio(object):
+    def __init__(self, font, left=None, right=None, middle=None):
         self.font = font
-        self.left = GlyphSet(font)
-        self.right = GlyphSet(font)
-        self.middle = GlyphSet(font)
-        self.vertical_spacing = None
+        self.left = left if left is not None else GlyphSet(font)
+        self.right = right if right is not None else GlyphSet(font)
+        self.middle = middle if middle is not None else GlyphSet(font)
 
-        if not font.is_vertical:
-            vertical_font = font.vertical_font
-            if vertical_font:
-                self.vertical_spacing = EastAsianSpacing(vertical_font)
+    @property
+    def _name_and_glyphs(self):
+        return (('left', self.left), ('right', self.right), ('middle', self.middle))
+
+    def __str__(self):
+        name_and_glyphs = self._name_and_glyphs
+        name_and_glyphs = filter(lambda name_and_glyph: name_and_glyph[1], name_and_glyphs)
+        return ', '.join((f'{name}={glyphs}' for name, glyphs in name_and_glyphs))
 
     def save_glyph_ids(self, output, prefix=''):
-        self._save_glyph_ids(self.left, prefix + 'left', output)
-        self._save_glyph_ids(self.right, prefix + 'right', output)
-        self._save_glyph_ids(self.middle, prefix + 'middle', output)
-        if self.vertical_spacing:
-            self.vertical_spacing.save_glyph_ids(output, 'vertical.' + prefix)
-
-    def _save_glyph_ids(self, glyphs, name, output):
-        output.write(f'# {name}\n')
-        output.write('\n'.join(str(g) for g in sorted(glyphs.glyph_ids)))
-        output.write('\n')
+        for name, glyphs in self._name_and_glyphs:
+            output.write(f'# {prefix}{name}\n')
+            output.write('\n'.join(str(g) for g in sorted(glyphs.glyph_ids)))
+            output.write('\n')
 
     def unite(self, other):
+        if not other:
+            return
         self.left.unite(other.left)
         self.middle.unite(other.middle)
         self.right.unite(other.right)
-        if self.vertical_spacing and other.vertical_spacing:
-            self.vertical_spacing.unite(other.vertical_spacing)
 
     def assert_has_glyphs(self):
         assert self.left
@@ -62,19 +59,17 @@ class EastAsianSpacing(object):
         assert self.middle.isdisjoint(self.right)
 
     def add_glyphs(self):
-        self.add_opening_closing()
-        self.add_period_comma()
-        self.add_colon_semicolon()
-        self.add_exclam_question()
+        font = self.font
+        self.unite(self.get_opening_closing(font))
+        self.unite(self.get_period_comma(font))
+        self.unite(self.get_colon_semicolon(font))
+        self.unite(self.get_exclam_question(font))
         self.add_to_cache()
         self.assert_has_glyphs()
         self.assert_glyphs_are_disjoint()
 
-        if self.vertical_spacing:
-            self.vertical_spacing.add_glyphs()
-
-    def add_opening_closing(self):
-        font = self.font
+    @staticmethod
+    def get_opening_closing(font):
         opening = [
             0x2018, 0x201C, 0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014,
             0x3016, 0x3018, 0x301A, 0x301D, 0xFF08, 0xFF3B, 0xFF5B, 0xFF5F
@@ -97,23 +92,25 @@ class EastAsianSpacing(object):
         else:
             closing.append(0x2019)
             closing.append(0x201D)
-        self.left.unite(TextRun(font, closing).glyph_set())
-        self.right.unite(TextRun(font, opening).glyph_set())
-        self.middle.unite(TextRun(font, [0x3000, 0x30FB]).glyph_set())
+        result = GlyphSetTrio(font,
+            TextRun(font, closing).glyph_set(),
+            TextRun(font, opening).glyph_set(),
+            TextRun(font, [0x3000, 0x30FB]).glyph_set())
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
             horizontal = TextRun(font.horizontal_font,
                                  opening + closing).glyph_set()
-            self.left.subtract(horizontal)
-            self.right.subtract(horizontal)
-        self.assert_glyphs_are_disjoint()
+            result.left.subtract(horizontal)
+            result.right.subtract(horizontal)
+        result.assert_glyphs_are_disjoint()
+        return result
 
-    def add_period_comma(self):
+    @staticmethod
+    def get_period_comma(font):
         # Fullwidth period/comma are centered in ZHT but on left in other languages.
         # ZHT-variants (placed at middle) belong to middle.
         # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
-        font = self.font
         text = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
         ja = TextRun(font, text, language="JAN", script="hani").glyph_set()
         zht = TextRun(font, text, language="ZHT", script="hani").glyph_set()
@@ -131,13 +128,13 @@ class EastAsianSpacing(object):
             else:
                 zht.clear()
         assert ja.isdisjoint(zht)
-        self.left.unite(ja)
-        self.middle.unite(zht)
-        self.assert_glyphs_are_disjoint()
+        result = GlyphSetTrio(font, ja, None, zht)
+        result.assert_glyphs_are_disjoint()
+        return result
 
-    def add_colon_semicolon(self):
+    @staticmethod
+    def get_colon_semicolon(font):
         # Colon/semicolon are at middle for Japanese, left in ZHS.
-        font = self.font
         text = [0xFF1A, 0xFF1B]
         ja = TextRun(font, text, language="JAN", script="hani").glyph_set()
         zhs = TextRun(font, text, language="ZHS", script="hani").glyph_set()
@@ -145,10 +142,11 @@ class EastAsianSpacing(object):
             font, text, language="ZHT", script="hani").glyph_set() == ja
         assert font.is_vertical or TextRun(
             font, text, language="KOR", script="hani").glyph_set() == ja
-        self.add_from_cache(ja)
-        self.add_from_cache(zhs)
+        result = GlyphSetTrio(font)
+        result.add_from_cache(ja)
+        result.add_from_cache(zhs)
         if not ja and not zhs:
-            return
+            return result
         if ja == zhs:
             if not font.language: font.raise_require_language()
             if font.language == "ZHS":
@@ -167,16 +165,17 @@ class EastAsianSpacing(object):
                                         language="JAN",
                                         script="hani").glyph_set()
                 ja.subtract(ja_horizontal)
-                self.middle.unite(ja)
-            return
-        self.middle.unite(ja)
-        self.left.unite(zhs)
-        self.assert_glyphs_are_disjoint()
+                result.middle.unite(ja)
+            return result
+        result.middle.unite(ja)
+        result.left.unite(zhs)
+        result.assert_glyphs_are_disjoint()
+        return result
 
-    def add_exclam_question(self):
-        font = self.font
+    @staticmethod
+    def get_exclam_question(font):
         if font.is_vertical:
-            return
+            return None
         # Fullwidth exclamation mark and question mark are on left only in ZHS.
         text = [0xFF01, 0xFF1F]
         ja = TextRun(font, text, language="JAN", script="hani").glyph_set()
@@ -192,8 +191,9 @@ class EastAsianSpacing(object):
             else:
                 zhs.clear()
         assert ja.isdisjoint(zhs)
-        self.left.unite(zhs)
-        self.assert_glyphs_are_disjoint()
+        result = GlyphSetTrio(font, zhs, None, None)
+        result.assert_glyphs_are_disjoint()
+        return result
 
     class GlyphTypeCache(object):
         def __init__(self):
@@ -213,7 +213,7 @@ class EastAsianSpacing(object):
             return font.east_asian_spacing_
         if not create:
             return None
-        cache = EastAsianSpacing.GlyphTypeCache()
+        cache = GlyphSetTrio.GlyphTypeCache()
         font.east_asian_spacing_ = cache
         return cache
 
@@ -238,20 +238,6 @@ class EastAsianSpacing(object):
             value = cache.type_from_glyph_id(glyph_id)
             glyph_ids_by_value[value].add(glyph_id)
         glyphs.glyph_ids = not_cached
-
-    def add_to_font(self):
-        font = self.font
-        assert not font.is_vertical
-        gpos = font.tttable('GPOS')
-        if not gpos:
-            gpos = font.add_gpos_table()
-        table = gpos.table
-        assert table
-
-        self.add_to_table(table, 'chws')
-
-        if self.vertical_spacing:
-            self.vertical_spacing.add_to_table(table, 'vchw')
 
     def add_to_table(self, table, feature_tag):
         self.assert_has_glyphs()
@@ -339,6 +325,44 @@ class EastAsianSpacing(object):
 
         assert len(lookup_indices)
         return lookup_indices
+
+class EastAsianSpacing(object):
+    def __init__(self, font):
+        self.font = font
+        self.horizontal = GlyphSetTrio(font)
+        self.vertical = None
+        if not font.is_vertical:
+            vertical_font = font.vertical_font
+            if vertical_font:
+                self.vertical = GlyphSetTrio(vertical_font)
+
+    def save_glyph_ids(self, output):
+        self.horizontal.save_glyph_ids(output)
+        if self.vertical:
+            self.vertical.save_glyph_ids(output, 'vertical.')
+
+    def unite(self, other):
+        self.horizontal.unite(other.horizontal)
+        if self.vertical and other.vertical:
+            self.vertical.unite(other.vertical)
+
+    def add_glyphs(self):
+        self.horizontal.add_glyphs()
+        if self.vertical:
+            self.vertical.add_glyphs()
+
+    def add_to_font(self):
+        font = self.font
+        assert not font.is_vertical
+        gpos = font.tttable('GPOS')
+        if not gpos:
+            gpos = font.add_gpos_table()
+        table = gpos.table
+        assert table
+
+        self.horizontal.add_to_table(table, 'chws')
+        if self.vertical:
+            self.vertical.add_to_table(table, 'vchw')
 
 
 if __name__ == '__main__':
