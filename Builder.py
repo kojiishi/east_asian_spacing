@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import asyncio
 import argparse
 import itertools
 import logging
@@ -39,18 +40,18 @@ class Builder(object):
         return (output_path.parent /
                 f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
-    def build(self, language=None, indices=None):
+    async def build(self, language=None, indices=None):
         font = self.font
         num_fonts = font.num_fonts_in_collection
         if num_fonts > 0:
             indices_and_languages = self.calc_indices_and_languages(
                 font.num_fonts_in_collection, indices, language)
-            self.build_collection(indices_and_languages)
+            await self.build_collection(indices_and_languages)
             return
         logging.info(f'Font "{font}" lang={language}')
         font.language = language
         spacing = EastAsianSpacing(font)
-        spacing.add_glyphs()
+        await spacing.add_glyphs()
         spacing.add_to_font()
         self.spacings = (spacing, )
 
@@ -68,7 +69,7 @@ class Builder(object):
             return itertools.zip_longest(indices, languages)
         return itertools.zip_longest(indices, ())
 
-    def build_collection(self, indices_and_languages):
+    async def build_collection(self, indices_and_languages):
         font = self.font
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
@@ -83,11 +84,11 @@ class Builder(object):
             if spacing_entry:
                 spacing, face_indices = spacing_entry
                 # Different faces may have different set of glyphs. Unite them.
-                spacing.add_glyphs()
+                await spacing.add_glyphs()
                 face_indices.append(face_index)
                 continue
             spacing = EastAsianSpacing(font)
-            spacing.add_glyphs()
+            await spacing.add_glyphs()
             spacing_by_offset[reader_offset] = (spacing, [face_index])
 
         # Add to each font using the united `EastAsianSpacing`s.
@@ -118,7 +119,7 @@ def init_logging(verbose):
         show_dump_images()
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path")
     parser.add_argument("-i",
@@ -152,11 +153,11 @@ def main():
         args.output = Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
     builder = Builder(args.path)
-    builder.build(language=args.language, indices=args.index)
+    await builder.build(language=args.language, indices=args.index)
     builder.save(args.output, args.suffix)
     if args.gids_file:
         builder.save_glyph_ids(args.gids_file)
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

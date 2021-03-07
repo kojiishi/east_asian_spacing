@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import asyncio
 import argparse
 import logging
 from pathlib import Path
@@ -47,15 +48,15 @@ def fonts_in_dir(dir):
     return paths
 
 
-def make_noto_cjk(input_path, output_dir, gids_dir):
+async def make_noto_cjk(input_path, output_dir, gids_dir):
     builder = Builder(input_path)
     font = builder.font
     num_fonts = font.num_fonts_in_collection
     if num_fonts:
-        builder.build_collection(indices_and_languages(font))
+        await builder.build_collection(indices_and_languages(font))
     else:
         lang = lang_from_ttfont(font.ttfont)
-        builder.build(language=lang)
+        await builder.build(language=lang)
 
     output_path = builder.save(output_dir)
 
@@ -67,7 +68,7 @@ def make_noto_cjk(input_path, output_dir, gids_dir):
     print(output_path, flush=True)
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs="+")
     parser.add_argument("-g", "--gids", default='build/dump')
@@ -89,10 +90,10 @@ def main():
         path = Path(path)
         if path.is_dir():
             for path in fonts_in_dir(path):
-                make_noto_cjk(path, args.output, args.gids)
+                await make_noto_cjk(path, args.output, args.gids)
         else:
-            make_noto_cjk(path, args.output, args.gids)
+            await make_noto_cjk(path, args.output, args.gids)
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

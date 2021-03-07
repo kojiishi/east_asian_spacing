@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import asyncio
 import argparse
 import io
 import itertools
@@ -71,16 +72,19 @@ class TextRun(object):
             text = list(ord(c) for c in text)
         self.text = text
 
-    def glyph_set(self):
-        args = ["hb-shape", "--output-format=json", "--no-glyph-names"]
+    async def glyph_set(self):
+        args = ["--output-format=json", "--no-glyph-names"]
         self.append_hb_args(self.text, args)
         logging.debug("subprocess.run: %s", args)
-        result = subprocess.run(args, stdout=subprocess.PIPE)
-        with io.BytesIO(result.stdout) as file:
+        proc = await asyncio.create_subprocess_exec("hb-shape",
+                                                    *args,
+                                                    stdout=subprocess.PIPE)
+        stdout, _ = await proc.communicate()
+        with io.BytesIO(stdout) as file:
             glyphs = json.load(file)
         logging.debug("glyphs = %s", glyphs)
         if dump_images:
-            self.dump()
+            await self.dump()
 
         # East Asian spacing applies only to fullwidth glyphs.
         font = self.font
@@ -99,12 +103,13 @@ class TextRun(object):
         glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
         return GlyphSet(self.font, set(glyph_ids))
 
-    def dump(self):
-        args = ["hb-view", "--font-size=128"]
+    async def dump(self):
+        args = ["--font-size=128"]
         # Add '|' so that the height of `hb-view` dump becomes consistent.
         text = [ord('|')] + self.text + [ord('|')]
         self.append_hb_args(text, args)
-        subprocess.run(args)
+        proc = await asyncio.create_subprocess_exec("hb-view", *args)
+        await proc.wait()
 
     def append_hb_args(self, text, args):
         font = self.font
@@ -126,7 +131,7 @@ class TextRun(object):
         args.append("--unicodes=" + unicodes_as_hex_string)
 
 
-if __name__ == '__main__':
+async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path")
     parser.add_argument("--face-index")
@@ -141,7 +146,7 @@ if __name__ == '__main__':
                         action="count",
                         default=0)
     args = parser.parse_args()
-    dump_images = True
+    show_dump_images()
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
     else:
@@ -150,29 +155,34 @@ if __name__ == '__main__':
     if args.is_vertical:
         font = font.vertical_font
     if args.text:
-        glyphs = TextRun(font,
-                         args.text,
-                         language=args.language,
-                         script=args.script).glyph_set()
+        glyphs = await TextRun(font,
+                               args.text,
+                               language=args.language,
+                               script=args.script).glyph_set()
         print("glyph_id=", glyphs.glyph_ids)
     else:
         # Print samples.
-        TextRun(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
-        TextRun(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
-        TextRun(font,
-                [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F]).glyph_set()
-        TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                language="JAN",
-                script="hani").glyph_set()
-        TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                language="ZHS",
-                script="hani").glyph_set()
-        TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                language="ZHH",
-                script="hani").glyph_set()
-        TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                language="ZHT",
-                script="hani").glyph_set()
-        TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                language="KOR",
-                script="hani").glyph_set()
+        await TextRun(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
+        await TextRun(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
+        await TextRun(
+            font,
+            [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F]).glyph_set()
+        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                      language="JAN",
+                      script="hani").glyph_set()
+        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                      language="ZHS",
+                      script="hani").glyph_set()
+        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                      language="ZHH",
+                      script="hani").glyph_set()
+        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                      language="ZHT",
+                      script="hani").glyph_set()
+        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                      language="KOR",
+                      script="hani").glyph_set()
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
