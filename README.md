@@ -107,9 +107,13 @@ Other fonts are not changed.
 ### Noto CJK
 
 For [Noto CJK] fonts,
-`make-noto-cjk.py` can determine the font indices and the languages automatically.
+`NotoCJKBuilder.py` can determine the font indices and the languages automatically.
+It is equivalent to `Builder.py`, except that
+a) it computes the appropriate language for each font, and
+b) it skips `Mono` fonts,
+both determined by the font name.
 ```sh
-% python3 make-noto-cjk.py NotoSansCJK.ttc
+% python3 NotoCJKBuilder.py NotoSansCJK.ttc
 ```
 
 [Noto CJK]: https://www.google.com/get/noto/help/cjk/
