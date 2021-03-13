@@ -14,6 +14,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 from EastAsianSpacing import EastAsianSpacing
 from Font import Font
 from Shaper import show_dump_images
+from Tester import EastAsianSpacingTester
 
 
 class Builder(object):
@@ -21,6 +22,7 @@ class Builder(object):
         if not isinstance(font, Font):
             font = Font(font)
         self.font = font
+        self.built_indices = None
 
     def save(self, output_path=None, stem_suffix=None):
         font = self.font
@@ -42,12 +44,13 @@ class Builder(object):
 
     async def build(self, language=None, indices=None):
         font = self.font
-        num_fonts = font.num_fonts_in_collection
-        if num_fonts > 0:
-            indices_and_languages = self.calc_indices_and_languages(
-                font.num_fonts_in_collection, indices, language)
-            await self.build_collection(indices_and_languages)
+        if font.is_collection:
+            await self.build_collection(language, indices)
             return
+        await self.build_single(language=language)
+
+    async def build_single(self, language=None):
+        font = self.font
         logging.info(f'Font "{font}" lang={language}')
         font.language = language
         spacing = EastAsianSpacing(font)
@@ -55,21 +58,13 @@ class Builder(object):
         spacing.add_to_font()
         self.spacings = (spacing, )
 
-    @staticmethod
-    def calc_indices_and_languages(num_fonts, indices, language):
-        assert num_fonts >= 2
-        if indices is None:
-            indices = range(num_fonts)
-        elif isinstance(indices, str):
-            indices = (int(i) for i in indices.split(","))
-        if language:
-            languages = language.split(",")
-            if len(languages) == 1:
-                return itertools.zip_longest(indices, (), fillvalue=language)
-            return itertools.zip_longest(indices, languages)
-        return itertools.zip_longest(indices, ())
+    async def build_collection(self, language=None, indices=None):
+        font = self.font
+        indices_and_languages = self.calc_indices_and_languages(
+            font.num_fonts_in_collection, indices, language)
+        await self.build_indices_and_languages(indices_and_languages)
 
-    async def build_collection(self, indices_and_languages):
+    async def build_indices_and_languages(self, indices_and_languages):
         font = self.font
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
@@ -97,15 +92,49 @@ class Builder(object):
             for face_index in face_indices:
                 font.set_face_index(face_index)
                 spacing.add_to_font()
+            if self.built_indices is None:
+                self.built_indices = []
+            self.built_indices.extend(face_indices)
 
         self.spacings = (i[0] for i in spacing_by_offset.values())
 
-    def save_glyph_ids(self, file):
-        logging.info("Saving glyph IDs to %s", file)
-        united_spacing = EastAsianSpacing(self.font)
+    @staticmethod
+    def calc_indices_and_languages(num_fonts, indices, language):
+        assert num_fonts >= 2
+        if indices is None:
+            indices = range(num_fonts)
+        elif isinstance(indices, str):
+            indices = (int(i) for i in indices.split(","))
+        if language:
+            languages = language.split(",")
+            if len(languages) == 1:
+                return itertools.zip_longest(indices, (), fillvalue=language)
+            return itertools.zip_longest(indices, languages)
+        return itertools.zip_longest(indices, ())
+
+    def save_glyph_ids(self, gids_file):
+        font = self.font
+        if isinstance(gids_file, Path):
+            if gids_file.is_dir():
+                gids_file = gids_file / (font.path.name + '-gids')
+            with gids_file.open('w') as file:
+                self.save_glyph_ids(file)
+            return
+
+        logging.info("Saving glyph IDs to %s", gids_file)
+        united_spacing = EastAsianSpacing(font)
         for spacing in self.spacings:
             united_spacing.unite(spacing)
-        united_spacing.save_glyph_ids(file)
+        united_spacing.save_glyph_ids(gids_file)
+
+    async def test(self):
+        font = self.font
+        if self.built_indices:
+            for index in self.built_indices:
+                font.set_face_index(index)
+                await EastAsianSpacingTester(font).test()
+            return
+        await EastAsianSpacingTester(font).test()
 
 
 def init_logging(verbose):
@@ -157,6 +186,7 @@ async def main():
     builder.save(args.output, args.suffix)
     if args.gids_file:
         builder.save_glyph_ids(args.gids_file)
+    await builder.test()
 
 
 if __name__ == '__main__':

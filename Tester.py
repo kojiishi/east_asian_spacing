@@ -21,10 +21,15 @@ class EastAsianSpacingTester(object):
 
     async def test(self):
         config = EastAsianSpacingConfig()
-        await self.test_cut_right(
-            itertools.product(config.cjk_closing, config.cjk_opening))
-        await self.test_cut_left(
-            itertools.product(config.cjk_opening, config.cjk_opening))
+        coros = []
+        coros.append(
+            self.test_cut_right(
+                itertools.product(config.cjk_closing, config.cjk_opening)))
+        coros.append(
+            self.test_cut_left(
+                itertools.product(config.cjk_opening, config.cjk_opening)))
+        tasks = list((asyncio.create_task(coro) for coro in coros))
+        await asyncio.wait(tasks)
         logging.info(f'Tests pass: {self.font}')
 
         font = self.font

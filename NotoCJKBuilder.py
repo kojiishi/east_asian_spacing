@@ -9,69 +9,79 @@ from Builder import Font
 from Builder import init_logging
 
 
-def lang_from_ttfont(ttfont):
-    name = ttfont.get('name').getDebugName(1)
-    assert name.startswith('Noto ')
-    assert ' CJK ' in name
-    if 'Mono' in name:
-        return None
-    if 'JP' in name:
-        return 'JAN'
-    if 'KR' in name:
-        return 'KOR'
-    if 'SC' in name:
-        return 'ZHS'
-    if 'TC' in name:
-        return 'ZHT'
-    if 'HK' in name:
-        return 'ZHH'
-    assert False, name
+class NotoCJKBuilder(Builder):
+    @staticmethod
+    def lang_from_ttfont(ttfont):
+        name = ttfont.get('name').getDebugName(1)
+        assert name.startswith('Noto ')
+        assert ' CJK ' in name
+        if 'Mono' in name:
+            return None
+        if 'JP' in name:
+            return 'JAN'
+        if 'KR' in name:
+            return 'KOR'
+        if 'SC' in name:
+            return 'ZHS'
+        if 'TC' in name:
+            return 'ZHT'
+        if 'HK' in name:
+            return 'ZHH'
+        assert False, name
 
+    @staticmethod
+    def calc_indices_and_languages(font):
+        num_fonts = font.num_fonts_in_collection
+        assert num_fonts > 0
+        for index in range(num_fonts):
+            font.set_face_index(index)
+            lang = NotoCJKBuilder.lang_from_ttfont(font.ttfont)
+            if lang is None:
+                logging.info(f'Font index {index + 1} "{font}" skipped')
+                continue
+            yield (index, lang)
 
-def indices_and_languages(font):
-    num_fonts = font.num_fonts_in_collection
-    for index in range(num_fonts):
-        font.set_face_index(index)
-        lang = lang_from_ttfont(font.ttfont)
-        if lang is None:
-            logging.info(f'Font index {index + 1} "{font}" skipped')
-            continue
-        yield (index, lang)
+    async def build_single(self, language=None):
+        assert language is None
+        font = self.font
+        language = self.lang_from_ttfont(font.ttfont)
+        await super().build_single(language=language)
 
+    async def build_collection(self, language=None, indices=None):
+        assert language is None
+        assert indices is None
+        font = self.font
+        indices_and_languages = self.calc_indices_and_languages(font)
+        await self.build_indices_and_languages(indices_and_languages)
 
-def fonts_in_dir(dir):
-    assert dir.is_dir()
-    paths = dir.glob('Noto*CJK*')
-    paths = filter(
-        lambda path: path.suffix.casefold() in
-        (ext.casefold() for ext in ('.otf', '.ttc')), paths)
-    return paths
+    @staticmethod
+    async def build_and_save(input_path, output, gids_dir):
+        builder = NotoCJKBuilder(input_path)
+        await builder.build()
+        output_path = builder.save(output)
+        builder.save_glyph_ids(gids_dir)
+        # Flush, for the better parallelism when piping.
+        print(output_path, flush=True)
+        await builder.test()
 
-
-async def make_noto_cjk(input_path, output_dir, gids_dir):
-    builder = Builder(input_path)
-    font = builder.font
-    num_fonts = font.num_fonts_in_collection
-    if num_fonts:
-        await builder.build_collection(indices_and_languages(font))
-    else:
-        lang = lang_from_ttfont(font.ttfont)
-        await builder.build(language=lang)
-
-    output_path = builder.save(output_dir)
-
-    gids_path = gids_dir / (input_path.name + '-gids')
-    with gids_path.open('w') as gids_file:
-        builder.save_glyph_ids(gids_file)
-
-    # Flush, for the better parallelism when piping.
-    print(output_path, flush=True)
+    @staticmethod
+    def expand_paths(paths):
+        for path in paths:
+            path = Path(path)
+            if path.is_dir():
+                child_paths = path.glob('Noto*CJK*')
+                child_paths = filter(
+                    lambda path: path.suffix.casefold() in
+                    (ext.casefold() for ext in ('.otf', '.ttc')), child_paths)
+                yield from child_paths
+                continue
+            yield path
 
 
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs="+")
-    parser.add_argument("-g", "--gids", default='build/dump')
+    parser.add_argument("-g", "--gids-dir", default='build/dump')
     parser.add_argument("-o", "--output", default='build')
     parser.add_argument("-v",
                         "--verbose",
@@ -80,19 +90,14 @@ async def main():
                         default=0)
     args = parser.parse_args()
     init_logging(args.verbose)
-    if args.gids:
-        args.gids = Path(args.gids)
-        args.gids.mkdir(exist_ok=True, parents=True)
+    if args.gids_dir:
+        args.gids_dir = Path(args.gids_dir)
+        args.gids_dir.mkdir(exist_ok=True, parents=True)
     if args.output:
         args.output = Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
-    for path in args.path:
-        path = Path(path)
-        if path.is_dir():
-            for path in fonts_in_dir(path):
-                await make_noto_cjk(path, args.output, args.gids)
-        else:
-            await make_noto_cjk(path, args.output, args.gids)
+    for path in NotoCJKBuilder.expand_paths(args.path):
+        await NotoCJKBuilder.build_and_save(path, args.output, args.gids_dir)
 
 
 if __name__ == '__main__':

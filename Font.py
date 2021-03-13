@@ -85,6 +85,10 @@ class Font(object):
             vertical_font.face_index = self.face_index
 
     @property
+    def is_collection(self):
+        return self.ttcollection is not None
+
+    @property
     def num_fonts_in_collection(self):
         if self.ttcollection:
             return len(self.ttcollection.fonts)

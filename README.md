@@ -145,6 +145,14 @@ This helps visualizing changes in the font files you created.
 By placing once-reviewed diff files into the `reference` directory,
 this tool can visualize differences in subsequent builds.
 
+### Shape Tests
+
+`Tester.py` can test fonts by shaping several strings
+and by checking whether the contextual spacing is applied or not.
+
+`Builder.py` and `NotoCJKBuilder.py` call it automtically
+for all fonts they built.
+
 ## Appendix
 
 ### Data Comparisons and Analysis
