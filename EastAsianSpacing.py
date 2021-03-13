@@ -5,6 +5,7 @@ import io
 import itertools
 import json
 import logging
+import sys
 
 from fontTools.otlLib.builder import buildValue
 from fontTools.otlLib.builder import ChainContextPosBuilder
@@ -17,6 +18,24 @@ from Font import Font
 from Shaper import GlyphSet
 from Shaper import Shaper
 from Shaper import show_dump_images
+
+
+class EastAsianSpacingConfig(object):
+    def __init__(self):
+        self.cjk_opening = [
+            0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014, 0x3016, 0x3018,
+            0x301A, 0x301D, 0xFF08, 0xFF3B, 0xFF5B, 0xFF5F
+        ]
+        self.cjk_closing = [
+            0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 0x3019,
+            0x301B, 0x301E, 0x301F, 0xFF09, 0xFF3D, 0xFF5D, 0xFF60
+        ]
+        self.quotes_opening = [0x2018, 0x201C]
+        self.quotes_closing = [0x2019, 0x201D]
+        self.cjk_middle = [0x3000, 0x30FB]
+        self.cjk_period_comma = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
+        self.cjk_column_semicolon = [0xFF1A, 0xFF1B]
+        self.cjk_exclam_question = [0xFF01, 0xFF1F]
 
 
 class GlyphSetTrio(object):
@@ -38,10 +57,11 @@ class GlyphSetTrio(object):
         return ', '.join(
             (f'{name}={glyphs}' for name, glyphs in name_and_glyphs))
 
-    def save_glyph_ids(self, output, prefix=''):
+    def save_glyph_ids(self, output, prefix='', separator='\n'):
         for name, glyphs in self._name_and_glyphs:
             output.write(f'# {prefix}{name}\n')
-            output.write('\n'.join(str(g) for g in sorted(glyphs.glyph_ids)))
+            output.write(
+                separator.join(str(g) for g in sorted(glyphs.glyph_ids)))
             output.write('\n')
 
     def unite(self, other):
@@ -61,12 +81,12 @@ class GlyphSetTrio(object):
         assert self.left.isdisjoint(self.right)
         assert self.middle.isdisjoint(self.right)
 
-    async def add_glyphs(self):
+    async def add_glyphs(self, config):
         font = self.font
-        results = await asyncio.gather(self.get_opening_closing(font),
-                                       self.get_period_comma(font),
-                                       self.get_colon_semicolon(font),
-                                       self.get_exclam_question(font))
+        results = await asyncio.gather(self.get_opening_closing(font, config),
+                                       self.get_period_comma(font, config),
+                                       self.get_colon_semicolon(font, config),
+                                       self.get_exclam_question(font, config))
         for result in results:
             self.unite(result)
         self.add_to_cache()
@@ -74,15 +94,9 @@ class GlyphSetTrio(object):
         self.assert_glyphs_are_disjoint()
 
     @staticmethod
-    async def get_opening_closing(font):
-        opening = [
-            0x2018, 0x201C, 0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014,
-            0x3016, 0x3018, 0x301A, 0x301D, 0xFF08, 0xFF3B, 0xFF5B, 0xFF5F
-        ]
-        closing = [
-            0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 0x3019,
-            0x301B, 0x301E, 0x301F, 0xFF09, 0xFF3D, 0xFF5D, 0xFF60
-        ]
+    async def get_opening_closing(font, config):
+        opening = config.cjk_opening + config.quotes_opening
+        closing = config.cjk_closing
         if font.is_vertical:
             debug_name = font.debug_name(1)
             if debug_name.startswith("Meiryo"):
@@ -92,15 +106,13 @@ class GlyphSetTrio(object):
                 opening.append(0x2019)
                 opening.append(0x201D)
             else:
-                closing.append(0x2019)
-                closing.append(0x201D)
+                closing.extend(config.quotes_closing)
         else:
-            closing.append(0x2019)
-            closing.append(0x201D)
+            closing.extend(config.quotes_closing)
         left, right, middle = await asyncio.gather(
             Shaper(font, closing).glyph_set(),
             Shaper(font, opening).glyph_set(),
-            Shaper(font, [0x3000, 0x30FB]).glyph_set())
+            Shaper(font, config.cjk_middle).glyph_set())
         result = GlyphSetTrio(font, left, right, middle)
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
@@ -113,11 +125,11 @@ class GlyphSetTrio(object):
         return result
 
     @staticmethod
-    async def get_period_comma(font):
+    async def get_period_comma(font, config):
         # Fullwidth period/comma are centered in ZHT but on left in other languages.
         # ZHT-variants (placed at middle) belong to middle.
         # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
-        text = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
+        text = config.cjk_period_comma
         ja, zht = await asyncio.gather(
             Shaper(font, text, language="JAN", script="hani").glyph_set(),
             Shaper(font, text, language="ZHT", script="hani").glyph_set())
@@ -142,9 +154,9 @@ class GlyphSetTrio(object):
         return result
 
     @staticmethod
-    async def get_colon_semicolon(font):
+    async def get_colon_semicolon(font, config):
         # Colon/semicolon are at middle for Japanese, left in ZHS.
-        text = [0xFF1A, 0xFF1B]
+        text = config.cjk_column_semicolon
         ja, zhs = await asyncio.gather(
             Shaper(font, text, language="JAN", script="hani").glyph_set(),
             Shaper(font, text, language="ZHS", script="hani").glyph_set())
@@ -185,11 +197,11 @@ class GlyphSetTrio(object):
         return result
 
     @staticmethod
-    async def get_exclam_question(font):
+    async def get_exclam_question(font, config):
         if font.is_vertical:
             return None
         # Fullwidth exclamation mark and question mark are on left only in ZHS.
-        text = [0xFF01, 0xFF1F]
+        text = config.cjk_exclam_question
         ja, zhs = await asyncio.gather(
             Shaper(font, text, language="JAN", script="hani").glyph_set(),
             Shaper(font, text, language="ZHS", script="hani").glyph_set())
@@ -352,10 +364,12 @@ class EastAsianSpacing(object):
             if vertical_font:
                 self.vertical = GlyphSetTrio(vertical_font)
 
-    def save_glyph_ids(self, output):
-        self.horizontal.save_glyph_ids(output)
+    def save_glyph_ids(self, output, separator='\n'):
+        self.horizontal.save_glyph_ids(output, separator=separator)
         if self.vertical:
-            self.vertical.save_glyph_ids(output, 'vertical.')
+            self.vertical.save_glyph_ids(output,
+                                         prefix='vertical.',
+                                         separator=separator)
 
     def unite(self, other):
         self.horizontal.unite(other.horizontal)
@@ -363,9 +377,10 @@ class EastAsianSpacing(object):
             self.vertical.unite(other.vertical)
 
     async def add_glyphs(self):
-        await self.horizontal.add_glyphs()
+        config = EastAsianSpacingConfig()
+        await self.horizontal.add_glyphs(config)
         if self.vertical:
-            await self.vertical.add_glyphs()
+            await self.vertical.add_glyphs(config)
 
     def add_to_font(self):
         font = self.font
@@ -403,9 +418,7 @@ async def main():
         font = font.vertical_font
     spacing = EastAsianSpacing(font)
     await spacing.add_glyphs()
-    print("left:", sorted(spacing.left.glyph_ids))
-    print("right:", sorted(spacing.right.glyph_ids))
-    print("middle:", sorted(spacing.middle.glyph_ids))
+    spacing.save_glyph_ids(sys.stdout, separator=', ')
 
 
 if __name__ == '__main__':
