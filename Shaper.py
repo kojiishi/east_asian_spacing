@@ -6,7 +6,6 @@ import itertools
 import json
 import logging
 from pathlib import Path
-import subprocess
 
 from Font import Font
 
@@ -62,7 +61,23 @@ class GlyphSet(object):
         self.glyph_ids = self.glyph_ids.difference(other.glyph_ids)
 
 
-class TextRun(object):
+class GlyphData(object):
+    def __init__(self, glyph_id, cluster_index, advance, offset):
+        self.glyph_id = glyph_id
+        self.cluster_index = cluster_index
+        self.advance = advance
+        self.offset = offset
+
+    @staticmethod
+    def from_json(g):
+        return GlyphData(g["g"], g["cl"], g["ax"], g["dx"])
+
+    @staticmethod
+    def from_json_vertical(g):
+        return GlyphData(g["g"], g["cl"], -g["ay"], -g["dy"])
+
+
+class Shaper(object):
     def __init__(self, font, text, language=None, script=None):
         assert isinstance(font.path, Path)
         self.font = font
@@ -72,13 +87,12 @@ class TextRun(object):
             text = list(ord(c) for c in text)
         self.text = text
 
-    async def glyph_set(self):
+    async def shape(self):
         args = ["--output-format=json", "--no-glyph-names"]
         self.append_hb_args(self.text, args)
         logging.debug("subprocess.run: %s", args)
-        proc = await asyncio.create_subprocess_exec("hb-shape",
-                                                    *args,
-                                                    stdout=subprocess.PIPE)
+        proc = await asyncio.create_subprocess_exec(
+            "hb-shape", *args, stdout=asyncio.subprocess.PIPE)
         stdout, _ = await proc.communicate()
         with io.BytesIO(stdout) as file:
             glyphs = json.load(file)
@@ -86,21 +100,28 @@ class TextRun(object):
         if dump_images:
             await self.dump()
 
+        font = self.font
+        is_vertical = font.is_vertical
+        if is_vertical:
+            glyphs = (GlyphData.from_json_vertical(g) for g in glyphs)
+        else:
+            glyphs = (GlyphData.from_json(g) for g in glyphs)
+        return glyphs
+
+    async def glyph_set(self):
+        glyphs = await self.shape()
+
         # East Asian spacing applies only to fullwidth glyphs.
         font = self.font
         units_per_em = font.units_per_em
         if isinstance(units_per_em, int):
-            if font.is_vertical:
-                glyphs = filter(lambda glyph: glyph["ay"] == -units_per_em,
-                                glyphs)
-            else:
-                glyphs = filter(lambda glyph: glyph["ax"] == units_per_em,
-                                glyphs)
+            glyphs = filter(lambda g: g.advance == units_per_em, glyphs)
 
-        glyph_ids = (glyph["g"] for glyph in glyphs)
+        glyph_ids = (g.glyph_id for g in glyphs)
         # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
         # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
         glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
+
         return GlyphSet(self.font, set(glyph_ids))
 
     async def dump(self):
@@ -155,33 +176,33 @@ async def main():
     if args.is_vertical:
         font = font.vertical_font
     if args.text:
-        glyphs = await TextRun(font,
-                               args.text,
-                               language=args.language,
-                               script=args.script).glyph_set()
+        glyphs = await Shaper(font,
+                              args.text,
+                              language=args.language,
+                              script=args.script).glyph_set()
         print("glyph_id=", glyphs.glyph_ids)
     else:
         # Print samples.
-        await TextRun(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
-        await TextRun(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
-        await TextRun(
+        await Shaper(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
+        await Shaper(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
+        await Shaper(
             font,
             [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F]).glyph_set()
-        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="JAN",
-                      script="hani").glyph_set()
-        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="ZHS",
-                      script="hani").glyph_set()
-        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="ZHH",
-                      script="hani").glyph_set()
-        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="ZHT",
-                      script="hani").glyph_set()
-        await TextRun(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                      language="KOR",
-                      script="hani").glyph_set()
+        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                     language="JAN",
+                     script="hani").glyph_set()
+        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                     language="ZHS",
+                     script="hani").glyph_set()
+        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                     language="ZHH",
+                     script="hani").glyph_set()
+        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                     language="ZHT",
+                     script="hani").glyph_set()
+        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                     language="KOR",
+                     script="hani").glyph_set()
 
 
 if __name__ == '__main__':

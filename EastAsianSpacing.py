@@ -5,7 +5,6 @@ import io
 import itertools
 import json
 import logging
-import subprocess
 
 from fontTools.otlLib.builder import buildValue
 from fontTools.otlLib.builder import ChainContextPosBuilder
@@ -15,9 +14,9 @@ from fontTools.otlLib.builder import SinglePosBuilder
 from fontTools.ttLib.tables import otTables
 
 from Font import Font
-from TextRun import GlyphSet
-from TextRun import TextRun
-from TextRun import show_dump_images
+from Shaper import GlyphSet
+from Shaper import Shaper
+from Shaper import show_dump_images
 
 
 class GlyphSetTrio(object):
@@ -99,15 +98,15 @@ class GlyphSetTrio(object):
             closing.append(0x2019)
             closing.append(0x201D)
         left, right, middle = await asyncio.gather(
-            TextRun(font, closing).glyph_set(),
-            TextRun(font, opening).glyph_set(),
-            TextRun(font, [0x3000, 0x30FB]).glyph_set())
+            Shaper(font, closing).glyph_set(),
+            Shaper(font, opening).glyph_set(),
+            Shaper(font, [0x3000, 0x30FB]).glyph_set())
         result = GlyphSetTrio(font, left, right, middle)
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
-            horizontal = await TextRun(font.horizontal_font,
-                                       opening + closing).glyph_set()
+            horizontal = await Shaper(font.horizontal_font,
+                                      opening + closing).glyph_set()
             result.left.subtract(horizontal)
             result.right.subtract(horizontal)
         result.assert_glyphs_are_disjoint()
@@ -120,17 +119,17 @@ class GlyphSetTrio(object):
         # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
         text = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
         ja, zht = await asyncio.gather(
-            TextRun(font, text, language="JAN", script="hani").glyph_set(),
-            TextRun(font, text, language="ZHT", script="hani").glyph_set())
+            Shaper(font, text, language="JAN", script="hani").glyph_set(),
+            Shaper(font, text, language="ZHT", script="hani").glyph_set())
         if __debug__:
             zhs, kor = await asyncio.gather(
-                TextRun(font, text, language="ZHS", script="hani").glyph_set(),
-                TextRun(font, text, language="KOR", script="hani").glyph_set())
+                Shaper(font, text, language="ZHS", script="hani").glyph_set(),
+                Shaper(font, text, language="KOR", script="hani").glyph_set())
             assert zhs == ja
             assert kor == ja
             # Some fonts do not support ZHH, in that case, it may be the same as JAN.
             # For example, NotoSansCJK supports ZHH but NotoSerifCJK does not.
-            # assert TextRun(font, text, language="ZHH", script="hani").glyph_set() == zht
+            # assert Shaper(font, text, language="ZHH", script="hani").glyph_set() == zht
         if ja == zht:
             if not font.language: font.raise_require_language()
             if font.language == "ZHT" or font.language_ == "ZHH":
@@ -147,12 +146,12 @@ class GlyphSetTrio(object):
         # Colon/semicolon are at middle for Japanese, left in ZHS.
         text = [0xFF1A, 0xFF1B]
         ja, zhs = await asyncio.gather(
-            TextRun(font, text, language="JAN", script="hani").glyph_set(),
-            TextRun(font, text, language="ZHS", script="hani").glyph_set())
+            Shaper(font, text, language="JAN", script="hani").glyph_set(),
+            Shaper(font, text, language="ZHS", script="hani").glyph_set())
         if __debug__ and not font.is_vertical:
             zht, kor = await asyncio.gather(
-                TextRun(font, text, language="ZHT", script="hani").glyph_set(),
-                TextRun(font, text, language="KOR", script="hani").glyph_set())
+                Shaper(font, text, language="ZHT", script="hani").glyph_set(),
+                Shaper(font, text, language="KOR", script="hani").glyph_set())
             assert zht == ja
             assert kor == ja
         result = GlyphSetTrio(font)
@@ -173,10 +172,10 @@ class GlyphSetTrio(object):
             # may not be upright. Vertical alternate glyphs indicate they are rotated.
             # In ZHT, they may be upright even when there are vertical glyphs.
             if font.language is None or font.language == "JAN":
-                ja_horizontal = await TextRun(font.horizontal_font,
-                                              text,
-                                              language="JAN",
-                                              script="hani").glyph_set()
+                ja_horizontal = await Shaper(font.horizontal_font,
+                                             text,
+                                             language="JAN",
+                                             script="hani").glyph_set()
                 ja.subtract(ja_horizontal)
                 result.middle.unite(ja)
             return result
@@ -192,12 +191,12 @@ class GlyphSetTrio(object):
         # Fullwidth exclamation mark and question mark are on left only in ZHS.
         text = [0xFF01, 0xFF1F]
         ja, zhs = await asyncio.gather(
-            TextRun(font, text, language="JAN", script="hani").glyph_set(),
-            TextRun(font, text, language="ZHS", script="hani").glyph_set())
+            Shaper(font, text, language="JAN", script="hani").glyph_set(),
+            Shaper(font, text, language="ZHS", script="hani").glyph_set())
         if __debug__:
             zht, kor = await asyncio.gather(
-                TextRun(font, text, language="ZHT", script="hani").glyph_set(),
-                TextRun(font, text, language="KOR", script="hani").glyph_set())
+                Shaper(font, text, language="ZHT", script="hani").glyph_set(),
+                Shaper(font, text, language="KOR", script="hani").glyph_set())
             assert zht == ja
             assert kor == ja
         if ja == zhs:

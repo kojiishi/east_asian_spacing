@@ -13,7 +13,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 
 from EastAsianSpacing import EastAsianSpacing
 from Font import Font
-from TextRun import show_dump_images
+from Shaper import show_dump_images
 
 
 class Builder(object):
