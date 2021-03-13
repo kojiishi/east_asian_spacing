@@ -27,6 +27,7 @@ class Font(object):
             self.language_ = args.language_
             self.path = args.path
             self.ttfont = args.ttfont
+            self.ttcollection = args.ttcollection
             self.units_per_em_ = args.units_per_em_
             return
         self.load(args.path)
@@ -123,7 +124,15 @@ class Font(object):
         return name.getDebugName(name_id)
 
     def __str__(self):
-        return self.debug_name(4)
+        name = self.debug_name(4)
+        attributes = []
+        if self.ttcollection:
+            attributes.append(str(self.face_index))
+        if self.is_vertical:
+            attributes.append('vertical')
+        if len(attributes):
+            return f'{name} ({", ".join(attributes)})'
+        return name
 
     @property
     def language(self):

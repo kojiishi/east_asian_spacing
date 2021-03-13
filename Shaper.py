@@ -68,6 +68,10 @@ class GlyphData(object):
         self.advance = advance
         self.offset = offset
 
+    def __str__(self):
+        return (f'{{g={self.glyph_id},c={self.cluster_index}'
+                f',a={self.advance},o={self.offset}}}')
+
     @staticmethod
     def from_json(g):
         return GlyphData(g["g"], g["cl"], g["ax"], g["dx"])
@@ -78,11 +82,19 @@ class GlyphData(object):
 
 
 class Shaper(object):
-    def __init__(self, font, text, language=None, script=None):
+    def __init__(self, font, text, language=None, script=None, features=None):
         assert isinstance(font.path, Path)
         self.font = font
         self.language = language
         self.script = script
+        if features is None:
+            # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
+            # Enable "fwid" feature to get fullwidth glyphs.
+            if font.is_vertical:
+                features = ['fwid', 'vert']
+            else:
+                features = ['fwid']
+        self.features = features
         if isinstance(text, str):
             text = list(ord(c) for c in text)
         self.text = text
@@ -141,13 +153,10 @@ class Shaper(object):
             args.append("--language=x-hbot" + self.language)
         if self.script:
             args.append("--script=" + self.script)
-        # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
-        # Enable "fwid" feature to get fullwidth glyphs.
-        features = ["fwid"]
         if font.is_vertical:
             args.append("--direction=ttb")
-            features.append("vert")
-        args.append("--features=" + ",".join(features))
+        if self.features:
+            args.append("--features=" + ",".join(self.features))
         unicodes_as_hex_string = ",".join(hex(c) for c in text)
         args.append("--unicodes=" + unicodes_as_hex_string)
 
