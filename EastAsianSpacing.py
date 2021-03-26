@@ -5,6 +5,7 @@ import io
 import itertools
 import json
 import logging
+import math
 import sys
 
 from fontTools.otlLib.builder import buildValue
@@ -36,6 +37,18 @@ class EastAsianSpacingConfig(object):
         self.cjk_period_comma = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
         self.cjk_column_semicolon = [0xFF1A, 0xFF1B]
         self.cjk_exclam_question = [0xFF01, 0xFF1F]
+
+    def down_sample_to(self, max):
+        """Reduce the number of code points for testing."""
+        def down_sample(input):
+            if len(input) <= max:
+                return input
+            interval = math.ceil(len(input) / max)
+            return list(v for (i, v) in (
+                filter(lambda v: (v[0] % interval) == 0, enumerate(input))))
+
+        self.cjk_opening = down_sample(self.cjk_opening)
+        self.cjk_closing = down_sample(self.cjk_closing)
 
 
 class GlyphSetTrio(object):

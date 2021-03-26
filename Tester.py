@@ -21,6 +21,7 @@ class EastAsianSpacingTester(object):
 
     async def test(self):
         config = EastAsianSpacingConfig()
+        config.down_sample_to(3)
         coros = []
         coros.append(
             self.test_cut_right(

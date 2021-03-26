@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from Builder import Builder
+from EastAsianSpacing import EastAsianSpacingConfig
 
 
 def test_calc_indices_and_languages():
@@ -39,3 +40,15 @@ def test_calc_output_path(data_dir):
 
     assert call(Path('a/b/c.otf'), Path('build'),
                 '-xyz') == Path('build/c-xyz.otf')
+
+
+def test_down_sample_to():
+    def call(list, max):
+        config = EastAsianSpacingConfig()
+        config.cjk_opening = list
+        config.down_sample_to(max)
+        return config.cjk_opening
+
+    assert call(list(range(8)), 3) == [0, 3, 6]
+    assert call(list(range(9)), 3) == [0, 3, 6]
+    assert call(list(range(10)), 3) == [0, 4, 8]
