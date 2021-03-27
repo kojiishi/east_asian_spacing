@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import argparse
+import copy
 import io
 import itertools
 import json
@@ -37,6 +38,31 @@ class EastAsianSpacingConfig(object):
         self.cjk_period_comma = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
         self.cjk_column_semicolon = [0xFF1A, 0xFF1B]
         self.cjk_exclam_question = [0xFF01, 0xFF1F]
+
+    def tweaked_for(self, font):
+        """Returns a tweaked copy when the `font` needs special treatments.
+        Otherwise returns `self`."""
+        if font.is_vertical:
+            name = font.debug_name(1)
+            if name.startswith("Meiryo"):
+                config = copy.deepcopy(self)
+                config.change_quotes_closing_to_opening(0x2019)
+                return config
+            if name.startswith("Microsoft JhengHei"):
+                config = copy.deepcopy(self)
+                config.change_quotes_closing_to_opening(0x2019)
+                config.change_quotes_closing_to_opening(0x201D)
+                return config
+        return self
+
+    def change_quotes_closing_to_opening(self, code):
+        """Changes the `code` from `quotes_closing` to `quotes_opening`.
+        Does nothing if the `code` is not in `quotes_closing`."""
+        try:
+            self.quotes_closing.remove(code)
+            self.quotes_opening.append(code)
+        except ValueError:
+            pass
 
     def down_sample_to(self, max):
         """Reduce the number of code points for testing."""
@@ -96,6 +122,7 @@ class GlyphSetTrio(object):
 
     async def add_glyphs(self, config):
         font = self.font
+        config = config.tweaked_for(font)
         results = await asyncio.gather(self.get_opening_closing(font, config),
                                        self.get_period_comma(font, config),
                                        self.get_colon_semicolon(font, config),
@@ -109,19 +136,7 @@ class GlyphSetTrio(object):
     @staticmethod
     async def get_opening_closing(font, config):
         opening = config.cjk_opening + config.quotes_opening
-        closing = config.cjk_closing
-        if font.is_vertical:
-            debug_name = font.debug_name(1)
-            if debug_name.startswith("Meiryo"):
-                opening.append(0x2019)
-                closing.append(0x201D)
-            elif debug_name.startswith("Microsoft JhengHei"):
-                opening.append(0x2019)
-                opening.append(0x201D)
-            else:
-                closing.extend(config.quotes_closing)
-        else:
-            closing.extend(config.quotes_closing)
+        closing = config.cjk_closing + config.quotes_closing
         left, right, middle = await asyncio.gather(
             Shaper(font, closing).glyph_set(),
             Shaper(font, opening).glyph_set(),
