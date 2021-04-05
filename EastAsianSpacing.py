@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import argparse
+import contextlib
 import copy
 import io
 import itertools
@@ -47,6 +48,10 @@ class EastAsianSpacingConfig(object):
             if name.startswith("Meiryo"):
                 config = copy.deepcopy(self)
                 config.change_quotes_closing_to_opening(0x2019)
+                with contextlib.suppress(ValueError):
+                    config.cjk_period_comma.remove(0xFF0C)
+                with contextlib.suppress(ValueError):
+                    config.cjk_period_comma.remove(0xFF0E)
                 return config
             if name.startswith("Microsoft JhengHei"):
                 config = copy.deepcopy(self)
@@ -58,11 +63,9 @@ class EastAsianSpacingConfig(object):
     def change_quotes_closing_to_opening(self, code):
         """Changes the `code` from `quotes_closing` to `quotes_opening`.
         Does nothing if the `code` is not in `quotes_closing`."""
-        try:
+        with contextlib.suppress(ValueError):
             self.quotes_closing.remove(code)
             self.quotes_opening.append(code)
-        except ValueError:
-            pass
 
     def down_sample_to(self, max):
         """Reduce the number of code points for testing."""
