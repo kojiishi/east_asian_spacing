@@ -115,6 +115,10 @@ both determined by the font name.
 ```sh
 % python3 NotoCJKBuilder.py NotoSansCJK.ttc
 ```
+You can also run it for a directory to find all font files recursively.
+```sh
+% python3 NotoCJKBuilder.py ~/googlefonts/noto-cjk
+```
 
 [Noto CJK]: https://www.google.com/get/noto/help/cjk/
 

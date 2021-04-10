@@ -11,10 +11,20 @@ from Builder import init_logging
 
 class NotoCJKBuilder(Builder):
     @staticmethod
+    def is_font_path(path):
+        if not path.name.startswith('Noto'):
+            return False
+        if 'Mono' in path.name:
+            return False
+        if not path.suffix.casefold() in (ext.casefold()
+                                          for ext in ('.otf', '.ttc')):
+            return False
+        return True
+
+    @staticmethod
     def lang_from_ttfont(ttfont):
         name = ttfont.get('name').getDebugName(1)
         assert name.startswith('Noto ')
-        assert ' CJK ' in name
         if 'Mono' in name:
             return None
         if 'JP' in name:
@@ -69,10 +79,8 @@ class NotoCJKBuilder(Builder):
         for path in paths:
             path = Path(path)
             if path.is_dir():
-                child_paths = path.glob('Noto*CJK*')
-                child_paths = filter(
-                    lambda path: path.suffix.casefold() in
-                    (ext.casefold() for ext in ('.otf', '.ttc')), child_paths)
+                child_paths = path.rglob('Noto*')
+                child_paths = filter(NotoCJKBuilder.is_font_path, child_paths)
                 yield from child_paths
                 continue
             yield path
