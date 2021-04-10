@@ -119,6 +119,12 @@ You can also run it for a directory to find all font files recursively.
 ```sh
 % python3 NotoCJKBuilder.py ~/googlefonts/noto-cjk
 ```
+Also, 3 small shell scripts are available to build, dump,
+and compare with reference files (see [Dump and diff] below):
+`make-noto-cjk.sh`, `make-android.sh`, and `make-chromeos.sh`.
+```sh
+% SRCDIR=~/android-noto-cjk ./make-android.sh -v
+```
 
 [Noto CJK]: https://www.google.com/get/noto/help/cjk/
 
@@ -132,6 +138,7 @@ to check the behavior on browsers.
 [test HTML]: https://kojiishi.github.io/chws/test.html
 
 ### Dump and Diff
+[Dump and diff]: #dump-and-diff
 
 `Dump.py` can create various types of text dump files.
 ```sh
