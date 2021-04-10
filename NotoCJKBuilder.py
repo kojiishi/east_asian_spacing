@@ -10,34 +10,13 @@ from Builder import init_logging
 
 
 class NotoCJKBuilder(Builder):
-    @staticmethod
-    def is_font_path(path):
-        if not path.name.startswith('Noto'):
-            return False
-        if 'Mono' in path.name:
-            return False
-        if not path.suffix.casefold() in (ext.casefold()
-                                          for ext in ('.otf', '.ttc')):
-            return False
-        return True
-
-    @staticmethod
-    def lang_from_ttfont(ttfont):
-        name = ttfont.get('name').getDebugName(1)
-        assert name.startswith('Noto ')
-        if 'Mono' in name:
-            return None
-        if 'JP' in name:
-            return 'JAN'
-        if 'KR' in name:
-            return 'KOR'
-        if 'SC' in name:
-            return 'ZHS'
-        if 'TC' in name:
-            return 'ZHT'
-        if 'HK' in name:
-            return 'ZHH'
-        assert False, name
+    async def build_and_save(self, output, gids_dir):
+        await self.build()
+        output_path = self.save(output)
+        self.save_glyph_ids(gids_dir)
+        # Flush, for the better parallelism when piping.
+        print(output_path, flush=True)
+        await self.test()
 
     @staticmethod
     def calc_indices_and_languages(font):
@@ -65,25 +44,50 @@ class NotoCJKBuilder(Builder):
         await self.build_indices_and_languages(indices_and_languages)
 
     @staticmethod
-    async def build_and_save(input_path, output, gids_dir):
-        builder = NotoCJKBuilder(input_path)
-        await builder.build()
-        output_path = builder.save(output)
-        builder.save_glyph_ids(gids_dir)
-        # Flush, for the better parallelism when piping.
-        print(output_path, flush=True)
-        await builder.test()
-
-    @staticmethod
     def expand_paths(paths):
         for path in paths:
             path = Path(path)
             if path.is_dir():
-                child_paths = path.rglob('Noto*')
-                child_paths = filter(NotoCJKBuilder.is_font_path, child_paths)
-                yield from child_paths
+                yield from NotoCJKBuilder.expand_dir(path)
                 continue
             yield path
+
+    @staticmethod
+    def expand_dir(path):
+        assert path.is_dir()
+        child_paths = path.rglob('Noto*')
+        child_paths = filter(NotoCJKBuilder.is_font_path, child_paths)
+        return child_paths
+
+    @staticmethod
+    def is_font_path(path):
+        assert path.is_file()
+        if not path.name.startswith('Noto'):
+            return False
+        if 'Mono' in path.name:
+            return False
+        if not path.suffix.casefold() in (ext.casefold()
+                                          for ext in ('.otf', '.ttc')):
+            return False
+        return True
+
+    @staticmethod
+    def lang_from_ttfont(ttfont):
+        name = ttfont.get('name').getDebugName(1)
+        assert name.startswith('Noto ')
+        if 'Mono' in name:
+            return None
+        if 'JP' in name:
+            return 'JAN'
+        if 'KR' in name:
+            return 'KOR'
+        if 'SC' in name:
+            return 'ZHS'
+        if 'TC' in name:
+            return 'ZHT'
+        if 'HK' in name:
+            return 'ZHH'
+        assert False, name
 
 
 async def main():
@@ -105,7 +109,8 @@ async def main():
         args.output = Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
     for path in NotoCJKBuilder.expand_paths(args.path):
-        await NotoCJKBuilder.build_and_save(path, args.output, args.gids_dir)
+        builder = NotoCJKBuilder(path)
+        await builder.build_and_save(args.output, args.gids_dir)
 
 
 if __name__ == '__main__':
