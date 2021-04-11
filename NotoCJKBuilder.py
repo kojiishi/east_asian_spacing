@@ -10,14 +10,6 @@ from Builder import init_logging
 
 
 class NotoCJKBuilder(Builder):
-    async def build_and_save(self, output, glyphs):
-        await self.build()
-        output_path = self.save(output)
-        self.save_glyphs(glyphs)
-        # Flush, for the better parallelism when piping.
-        print(output_path, flush=True)
-        await self.test()
-
     @staticmethod
     def calc_indices_and_languages(font):
         num_fonts = font.num_fonts_in_collection
@@ -95,6 +87,9 @@ async def main():
     parser.add_argument("path", nargs="+")
     parser.add_argument("-g", "--glyphs", default='build/dump')
     parser.add_argument("-o", "--output", default='build')
+    parser.add_argument("--print",
+                        action='store_true',
+                        help="Print the output file names.")
     parser.add_argument("-v",
                         "--verbose",
                         help="increase output verbosity",
@@ -110,7 +105,13 @@ async def main():
         args.output.mkdir(exist_ok=True, parents=True)
     for path in NotoCJKBuilder.expand_paths(args.path):
         builder = NotoCJKBuilder(path)
-        await builder.build_and_save(args.output, args.glyphs)
+        await builder.build()
+        output_path = builder.save(args.output)
+        builder.save_glyphs(args.glyphs)
+        if args.print:
+            # Flush, for the better parallelism when piping.
+            print(output_path, flush=True)
+        await builder.test()
 
 
 if __name__ == '__main__':

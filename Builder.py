@@ -112,21 +112,20 @@ class Builder(object):
             return itertools.zip_longest(indices, languages)
         return itertools.zip_longest(indices, ())
 
-    def save_glyphs(self, file):
+    def save_glyphs(self, output):
         font = self.font
-        if isinstance(file, Path):
-            path = file
-            if path.is_dir():
-                path = path / (font.path.name + '-glyphs')
-            with path.open('w') as file:
+        if isinstance(output, Path):
+            if output.is_dir():
+                output = output / (font.path.name + '-glyphs')
+            with output.open('w') as file:
                 self.save_glyphs(file)
             return
 
-        logging.info("Saving glyph IDs to %s", file)
+        logging.info("Saving glyphs to %s", output)
         united_spacing = EastAsianSpacing(font)
         for spacing in self.spacings:
             united_spacing.unite(spacing)
-        united_spacing.save_glyphs(file)
+        united_spacing.save_glyphs(output)
 
     async def test(self):
         font = self.font
@@ -169,6 +168,9 @@ async def main():
                         "--output",
                         default="build",
                         help="The output directory.")
+    parser.add_argument("--print",
+                        action='store_true',
+                        help="Print the output file name.")
     parser.add_argument("-s",
                         "--suffix",
                         help="Suffix to add to the output file name.")
@@ -184,9 +186,12 @@ async def main():
         args.output.mkdir(exist_ok=True, parents=True)
     builder = Builder(args.path)
     await builder.build(language=args.language, indices=args.index)
-    builder.save(args.output, args.suffix)
+    output_path = builder.save(args.output, args.suffix)
     if args.glyphs:
         builder.save_glyphs(Path(args.glyphs))
+    if args.print:
+        # Flush, for the better parallelism when piping.
+        print(output_path, flush=True)
     await builder.test()
 
 

@@ -119,14 +119,20 @@ You can also run it for a directory to find all font files recursively.
 ```sh
 % python3 NotoCJKBuilder.py ~/googlefonts/noto-cjk
 ```
-Also, 3 small shell scripts are available to build, dump,
-and compare with reference files (see [Dump and diff] below):
-`make-noto-cjk.sh`, `make-android.sh`, and `make-chromeos.sh`.
-```sh
-% SRCDIR=~/android-noto-cjk ./make-android.sh -v
-```
 
 [Noto CJK]: https://www.google.com/get/noto/help/cjk/
+
+### Scripts
+
+Small shell scripts are available in the `scripts` directory.
+
+`build*.sh` scripts are useful to build fonts, dump them, and
+compare the dump files with reference files (see [Dump and diff] below).
+Followings are example usages.
+```sh
+% ./scripts/build.sh input-font-file.otf -v
+% SRCDIR=~/fonts/noto-cjk ./scripts/build-android.sh -v
+```
 
 ## Testing
 
