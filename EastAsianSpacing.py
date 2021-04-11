@@ -48,15 +48,14 @@ class EastAsianSpacingConfig(object):
             if name.startswith("Meiryo"):
                 config = copy.deepcopy(self)
                 config.change_quotes_closing_to_opening(0x2019)
-                with contextlib.suppress(ValueError):
-                    config.cjk_period_comma.remove(0xFF0C)
-                with contextlib.suppress(ValueError):
-                    config.cjk_period_comma.remove(0xFF0E)
+                for period_comma in [0xFF0C, 0xFF0E]:
+                    with contextlib.suppress(ValueError):
+                        config.cjk_period_comma.remove(period_comma)
                 return config
             if name.startswith("Microsoft JhengHei"):
                 config = copy.deepcopy(self)
-                config.change_quotes_closing_to_opening(0x2019)
-                config.change_quotes_closing_to_opening(0x201D)
+                for quotes in [0x2019, 0x201D]:
+                    config.change_quotes_closing_to_opening(quotes)
                 return config
         return self
 
