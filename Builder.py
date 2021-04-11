@@ -112,20 +112,21 @@ class Builder(object):
             return itertools.zip_longest(indices, languages)
         return itertools.zip_longest(indices, ())
 
-    def save_glyph_ids(self, gids_file):
+    def save_glyphs(self, file):
         font = self.font
-        if isinstance(gids_file, Path):
-            if gids_file.is_dir():
-                gids_file = gids_file / (font.path.name + '-gids')
-            with gids_file.open('w') as file:
-                self.save_glyph_ids(file)
+        if isinstance(file, Path):
+            path = file
+            if path.is_dir():
+                path = path / (font.path.name + '-glyphs')
+            with path.open('w') as file:
+                self.save_glyphs(file)
             return
 
-        logging.info("Saving glyph IDs to %s", gids_file)
+        logging.info("Saving glyph IDs to %s", file)
         united_spacing = EastAsianSpacing(font)
         for spacing in self.spacings:
             united_spacing.unite(spacing)
-        united_spacing.save_glyph_ids(gids_file)
+        united_spacing.save_glyphs(file)
 
     async def test(self):
         font = self.font
@@ -155,9 +156,9 @@ async def main():
                         "--index",
                         help="For a font collection (TTC), "
                         "specify a list of indices.")
-    parser.add_argument("--gids-file",
-                        type=argparse.FileType("w"),
-                        help="Outputs glyph IDs for `pyftsubset`")
+    parser.add_argument("-g",
+                        "--glyphs",
+                        help="Outputs glyphs for `pyftsubset`")
     parser.add_argument("-l",
                         "--language",
                         help="language if the font is language-specific. "
@@ -184,8 +185,8 @@ async def main():
     builder = Builder(args.path)
     await builder.build(language=args.language, indices=args.index)
     builder.save(args.output, args.suffix)
-    if args.gids_file:
-        builder.save_glyph_ids(args.gids_file)
+    if args.glyphs:
+        builder.save_glyphs(Path(args.glyphs))
     await builder.test()
 
 

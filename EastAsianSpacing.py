@@ -98,11 +98,12 @@ class GlyphSetTrio(object):
         return ', '.join(
             (f'{name}={glyphs}' for name, glyphs in name_and_glyphs))
 
-    def save_glyph_ids(self, output, prefix='', separator='\n'):
+    def save_glyphs(self, output, prefix='', separator='\n'):
+        font = self.font
         for name, glyphs in self._name_and_glyphs:
             output.write(f'# {prefix}{name}\n')
-            output.write(
-                separator.join(str(g) for g in sorted(glyphs.glyph_ids)))
+            glyph_names = sorted(glyphs.glyph_names)
+            output.write(separator.join(glyph_names))
             output.write('\n')
 
     def unite(self, other):
@@ -394,12 +395,12 @@ class EastAsianSpacing(object):
             if vertical_font:
                 self.vertical = GlyphSetTrio(vertical_font)
 
-    def save_glyph_ids(self, output, separator='\n'):
-        self.horizontal.save_glyph_ids(output, separator=separator)
+    def save_glyphs(self, output, separator='\n'):
+        self.horizontal.save_glyphs(output, separator=separator)
         if self.vertical:
-            self.vertical.save_glyph_ids(output,
-                                         prefix='vertical.',
-                                         separator=separator)
+            self.vertical.save_glyphs(output,
+                                      prefix='vertical.',
+                                      separator=separator)
 
     def unite(self, other):
         self.horizontal.unite(other.horizontal)

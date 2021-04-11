@@ -48,9 +48,9 @@ create-diff () {
   DSTBASENAME=$(basename "$DSTPATH")
 
   # Check if glyph id file exists.
-  GIDSPATH=$OUTDIR$DSTBASENAME-gids
-  if [[ -f "$GIDSPATH" ]]; then
-    CHECKPATHS+=("$GIDSPATH")
+  GLYPHSPATH=$OUTDIR$DSTBASENAME-glyphs
+  if [[ -f "$GLYPHSPATH" ]]; then
+    CHECKPATHS+=("$GLYPHSPATH")
   fi
 
   # Create table lists, TTXs, and their diffs.

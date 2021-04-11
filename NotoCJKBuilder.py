@@ -10,10 +10,10 @@ from Builder import init_logging
 
 
 class NotoCJKBuilder(Builder):
-    async def build_and_save(self, output, gids_dir):
+    async def build_and_save(self, output, glyphs):
         await self.build()
         output_path = self.save(output)
-        self.save_glyph_ids(gids_dir)
+        self.save_glyphs(glyphs)
         # Flush, for the better parallelism when piping.
         print(output_path, flush=True)
         await self.test()
@@ -93,7 +93,7 @@ class NotoCJKBuilder(Builder):
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs="+")
-    parser.add_argument("-g", "--gids-dir", default='build/dump')
+    parser.add_argument("-g", "--glyphs", default='build/dump')
     parser.add_argument("-o", "--output", default='build')
     parser.add_argument("-v",
                         "--verbose",
@@ -102,15 +102,15 @@ async def main():
                         default=0)
     args = parser.parse_args()
     init_logging(args.verbose)
-    if args.gids_dir:
-        args.gids_dir = Path(args.gids_dir)
-        args.gids_dir.mkdir(exist_ok=True, parents=True)
+    if args.glyphs:
+        args.glyphs = Path(args.glyphs)
+        args.glyphs.mkdir(exist_ok=True, parents=True)
     if args.output:
         args.output = Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
     for path in NotoCJKBuilder.expand_paths(args.path):
         builder = NotoCJKBuilder(path)
-        await builder.build_and_save(args.output, args.gids_dir)
+        await builder.build_and_save(args.output, args.glyphs)
 
 
 if __name__ == '__main__':
