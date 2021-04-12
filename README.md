@@ -130,8 +130,8 @@ Small shell scripts are available in the `scripts` directory.
 compare the dump files with reference files (see [Dump and diff] below).
 Followings are example usages.
 ```sh
-% ./scripts/build.sh input-font-file.otf -v
-% SRCDIR=~/fonts/noto-cjk ./scripts/build-android.sh -v
+% ./scripts/build.sh -v input-font-file.otf
+% ./scripts/build-android.sh -v ~/fonts/noto-cjk-android
 ```
 
 ## Testing
