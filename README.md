@@ -30,17 +30,18 @@ Installation for Mac:
 % brew install harfbuzz
 ```
 Then you can use your favorite package manager to install required Python packages.
-If you use [poetry]:
+If you use [pipenv]:
 ```sh
-% poetry install --no-dev
+% pipenv install
 ```
 If you prefer using the most basic `pip3`:
 ```sh
-% pip3 install fonttools
+% pip3 install -r requirements.txt
 ```
 
 [fonttools]: https://pypi.org/project/fonttools/
 [hb-shape]: https://command-not-found.com/hb-shape
+[pipenv]: https://github.com/pypa/pipenv
 [poetry]: https://github.com/python-poetry/poetry
 
 ### Usage
