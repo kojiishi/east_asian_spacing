@@ -106,11 +106,9 @@ async def main():
     for path in NotoCJKBuilder.expand_paths(args.path):
         builder = NotoCJKBuilder(path)
         await builder.build()
-        output_path = builder.save(args.output)
-        builder.save_glyphs(args.glyphs)
-        if args.print:
-            # Flush, for the better parallelism when piping.
-            print(output_path, flush=True)
+        builder.save(args.output,
+                     glyphs=args.glyphs,
+                     print_output_path=args.print)
         await builder.test()
 
 

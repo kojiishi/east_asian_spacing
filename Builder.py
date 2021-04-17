@@ -24,11 +24,20 @@ class Builder(object):
         self.font = font
         self.built_indices = None
 
-    def save(self, output_path=None, stem_suffix=None):
+    def save(self,
+             output_path=None,
+             stem_suffix=None,
+             glyphs=None,
+             print_output_path=False):
         font = self.font
         output_path = self.calc_output_path(font.path, output_path,
                                             stem_suffix)
         font.save(output_path)
+        if glyphs:
+            self.save_glyphs(glyphs)
+        if print_output_path:
+            # Flush, for the better parallelism when piping.
+            print(output_path, flush=True)
         return output_path
 
     @staticmethod
@@ -114,6 +123,8 @@ class Builder(object):
 
     def save_glyphs(self, output):
         font = self.font
+        if isinstance(output, str):
+            output = Path(output)
         if isinstance(output, Path):
             if output.is_dir():
                 output = output / (font.path.name + '-glyphs')
@@ -186,12 +197,10 @@ async def main():
         args.output.mkdir(exist_ok=True, parents=True)
     builder = Builder(args.path)
     await builder.build(language=args.language, indices=args.index)
-    output_path = builder.save(args.output, args.suffix)
-    if args.glyphs:
-        builder.save_glyphs(Path(args.glyphs))
-    if args.print:
-        # Flush, for the better parallelism when piping.
-        print(output_path, flush=True)
+    builder.save(args.output,
+                 stem_suffix=args.suffix,
+                 glyphs=args.glyphs,
+                 print_output_path=args.print)
     await builder.test()
 
 
