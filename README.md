@@ -32,9 +32,9 @@ Installation for Mac:
 Then you can use your favorite package manager to install required Python packages.
 If you use [pipenv]:
 ```sh
-% pipenv install
+% pipenv install -d
 ```
-If you prefer using the most basic `pip3`:
+If you prefer to use `pip3`:
 ```sh
 % pip3 install -r requirements.txt
 ```
