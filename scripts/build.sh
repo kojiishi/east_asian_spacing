@@ -5,15 +5,23 @@ BUILDER=${BUILDER:-Builder.py}
 LOG=${LOG:-build/log/build.log}
 GLYPHSDIR=${GLYPHSDIR:-build/dump}
 
-SRCDIR=$1
-if [[ -z "$SRCDIR" ]]; then
-  echo "Usage: $0 source-dir" >&2
-  exit 1
-fi
-shift
+# Analyze argments.
+SRCDIR=
+BUILDER_ARGS=('--print' '--glyphs' "$GLYPHSDIR")
+for ARG in "$@"; do
+  if [[ "$ARG" == \-* ]]; then
+    BUILDER_ARGS+=("$ARG")
+    continue
+  fi
+  if [[ -z "$SRCDIR" ]]; then
+    SRCDIR=$ARG
+    continue
+  fi
+  BUILDER_ARGS+=("$ARG")
+done
 mkdir -p "$(dirname $LOG)"
 mkdir -p "$GLYPHSDIR"
 
-time "$PYDIR/$BUILDER" --print --glyphs "$GLYPHSDIR" "$SRCDIR" $* |
-     "$PYDIR/diff-ref.sh" "$SRCDIR" |
+time (set -x; "$PYDIR/$BUILDER" "$SRCDIR" "${BUILDER_ARGS[@]}") |
+     (set -x; "$PYDIR/diff-ref.sh" "$SRCDIR") |
      tee "$LOG"
