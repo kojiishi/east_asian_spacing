@@ -128,7 +128,7 @@ You can also run it for a directory to find all font files recursively.
 Small shell scripts are available in the `scripts` directory.
 
 `build*.sh` scripts are useful to build fonts, dump them, and
-compare the dump files with reference files (see [Dump and diff] below).
+compare the dump files with reference files (see [Dump and Diff] below).
 Followings are example usages.
 ```sh
 % ./scripts/build.sh input-font-file.otf -v
@@ -140,28 +140,33 @@ Followings are example usages.
 ### Test HTML
 
 A [test HTML] is available
-to check the behavior on browsers.
+to check the behavior of fonts on browsers.
 
 [test HTML]: https://kojiishi.github.io/chws/test.html
 
 ### Dump and Diff
-[Dump and diff]: #dump-and-diff
+[Dump and Diff]: #dump-and-diff
 
 `Dump.py` can create various types of text dump files.
+The following example creates dump files in the `build/dump` directory.
 ```sh
-% python3 Dump.py build/NotoSansCJK-Regular.ttc
+% python3 Dump.py -o build/dump build/NotoSansCJK-Regular.ttc
 ```
 
-It can also create text dump files of two fonts, and
-create diff files between the two sets of dump files.
+`Dump.py` can also create text dump files of two font files and compare them.
 This helps visualizing changes in the font files you created.
+The following example creates 3 sets of files:
 ```sh
 % python3 Dump.py -o build/dump --diff fonts build/NotoSansCJK.ttc
 ```
+1. Dump files for `build/NotoSansCJK.ttc` in the `build/dump` directory.
+2. Dump files for `fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
+3. Diff files of each dump file in the `build/dump/diff` directory.
 
-`diff-ref.sh` can create diff files between two sets of diff files.
-By placing once-reviewed diff files into the `reference` directory,
-this tool can visualize differences in subsequent builds.
+`diff-ref.sh` creates diff files between two font files using `Dump.py`
+and compare them with once-reviewed diff files in the `reference` directory.
+This tool can visualize differences in subsequent builds.
+`script/build.sh` automatically invokes this script.
 
 ### Shape Tests
 
