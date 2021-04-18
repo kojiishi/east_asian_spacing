@@ -24,27 +24,9 @@ ensure-end-slash() {
 OUTDIR=$(ensure-end-slash $OUTDIR)
 REFDIR=$(ensure-end-slash $REFDIR)
 
-# Analyze argments.
-# * If it starts with '-', add to DUMPOPTS.
-# * The first argment is set to SRC.
-# * The rests are set to DSTS.
-DUMPOPTS=${DUMPOPTS:-}
-SRC=
-DSTS=()
-for ARG in "$@"; do
-  if [[ "$ARG" == \-* ]]; then
-    DUMPOPTS="$DUMPOPTS $ARG"
-    continue
-  fi
-  if [[ -z "$SRC" ]]; then
-    SRC=$ARG
-    continue
-  fi
-  DSTS+=("$ARG")
-done
-
 create-diff () {
-  DSTPATH=$1
+  SRC=$1
+  DSTPATH=$2
   DSTBASENAME=$(basename "$DSTPATH")
 
   # Check if glyph id file exists.
@@ -59,14 +41,29 @@ create-diff () {
   CHECKPATHS+=("${DIFFS[@]}")
 }
 
+# Analyze argments.
+# * If it starts with '-', add to DUMPOPTS.
+# * The first argment is set to SRC.
+# * The rests are set to DSTS.
 CHECKPATHS=()
-if [[ ${#DSTS[@]} -ne 0 ]]; then
-  for DST in "${DSTS[@]}"; do
-    create-diff "$DST"
-  done
-else
-  while read DST; do
-    create-diff "$DST"
+DUMPOPTS=${DUMPOPTS:-}
+SRC=
+for ARG in "$@"; do
+  if [[ "$ARG" == \-* ]]; then
+    DUMPOPTS="$DUMPOPTS $ARG"
+    continue
+  fi
+  if [[ -z "$SRC" ]]; then
+    SRC=$ARG
+    continue
+  fi
+  create-diff "$SRC" "$ARG"
+done
+
+# If no arguments, read the paths from stdin.
+if [[ -z "$SRC" ]]; then
+  while IFS=$'\t' read SRC DST; do
+    create-diff "$SRC" "$DST"
   done
 fi
 

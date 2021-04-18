@@ -84,12 +84,12 @@ class NotoCJKBuilder(Builder):
 
 async def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", nargs="+")
-    parser.add_argument("-g", "--glyphs", default='build/dump')
+    parser.add_argument("inputs", nargs="+")
+    parser.add_argument("-g", "--glyph-out", default='build/dump')
     parser.add_argument("-o", "--output", default='build')
-    parser.add_argument("--print",
-                        action='store_true',
-                        help="Print the output file names.")
+    parser.add_argument("--path-out",
+                        type=argparse.FileType('w'),
+                        help="Output the input and output path information.")
     parser.add_argument("-v",
                         "--verbose",
                         help="increase output verbosity",
@@ -97,18 +97,16 @@ async def main():
                         default=0)
     args = parser.parse_args()
     init_logging(args.verbose)
-    if args.glyphs:
-        args.glyphs = Path(args.glyphs)
-        args.glyphs.mkdir(exist_ok=True, parents=True)
+    if args.glyph_out:
+        args.glyph_out = Path(args.glyph_out)
+        args.glyph_out.mkdir(exist_ok=True, parents=True)
     if args.output:
         args.output = Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
-    for path in NotoCJKBuilder.expand_paths(args.path):
-        builder = NotoCJKBuilder(path)
+    for input in NotoCJKBuilder.expand_paths(args.inputs):
+        builder = NotoCJKBuilder(input)
         await builder.build()
-        builder.save(args.output,
-                     glyphs=args.glyphs,
-                     print_output_path=args.print)
+        builder.save(args.output, glyph_out=args.glyph_out, path_out=args.path_out)
         await builder.test()
 
 

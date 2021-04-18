@@ -27,17 +27,18 @@ class Builder(object):
     def save(self,
              output_path=None,
              stem_suffix=None,
-             glyphs=None,
-             print_output_path=False):
+             glyph_out=None,
+             path_out=None):
         font = self.font
         output_path = self.calc_output_path(font.path, output_path,
                                             stem_suffix)
         font.save(output_path)
-        if glyphs:
-            self.save_glyphs(glyphs)
-        if print_output_path:
-            # Flush, for the better parallelism when piping.
-            print(output_path, flush=True)
+        if glyph_out:
+            self.save_glyphs(glyph_out)
+        if path_out:
+            print('\t'.join((str(font.path), str(output_path))),
+                  file=path_out,
+                  flush=True)  # Flush, for better parallelism when piping.
         return output_path
 
     @staticmethod
@@ -127,7 +128,7 @@ class Builder(object):
             output = Path(output)
         if isinstance(output, Path):
             if output.is_dir():
-                output = output / (font.path.name + '-glyphs')
+                output = output / f'{font.path.name}-glyphs'
             with output.open('w') as file:
                 self.save_glyphs(file)
             return
@@ -161,13 +162,13 @@ def init_logging(verbose):
 
 async def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("path")
+    parser.add_argument("inputs", nargs="+")
     parser.add_argument("-i",
                         "--index",
                         help="For a font collection (TTC), "
                         "specify a list of indices.")
     parser.add_argument("-g",
-                        "--glyphs",
+                        "--glyph-out",
                         help="Outputs glyphs for `pyftsubset`")
     parser.add_argument("-l",
                         "--language",
@@ -179,9 +180,9 @@ async def main():
                         "--output",
                         default="build",
                         help="The output directory.")
-    parser.add_argument("--print",
-                        action='store_true',
-                        help="Print the output file name.")
+    parser.add_argument("--path-out",
+                        type=argparse.FileType('w'),
+                        help="Output the input and output path information.")
     parser.add_argument("-s",
                         "--suffix",
                         help="Suffix to add to the output file name.")
@@ -195,13 +196,14 @@ async def main():
     if args.output:
         args.output = Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
-    builder = Builder(args.path)
-    await builder.build(language=args.language, indices=args.index)
-    builder.save(args.output,
-                 stem_suffix=args.suffix,
-                 glyphs=args.glyphs,
-                 print_output_path=args.print)
-    await builder.test()
+    for input in args.inputs:
+        builder = Builder(input)
+        await builder.build(language=args.language, indices=args.index)
+        builder.save(args.output,
+                    stem_suffix=args.suffix,
+                    glyph_out=args.glyph_out,
+                    path_out=args.path_out)
+        await builder.test()
 
 
 if __name__ == '__main__':
