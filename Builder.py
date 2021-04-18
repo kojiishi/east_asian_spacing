@@ -200,9 +200,9 @@ async def main():
         builder = Builder(input)
         await builder.build(language=args.language, indices=args.index)
         builder.save(args.output,
-                    stem_suffix=args.suffix,
-                    glyph_out=args.glyph_out,
-                    path_out=args.path_out)
+                     stem_suffix=args.suffix,
+                     glyph_out=args.glyph_out,
+                     path_out=args.path_out)
         await builder.test()
 
 
