@@ -4,6 +4,9 @@ PYDIR="$(cd "$SCRIPTDIR/.." &>/dev/null && pwd)"
 BUILDER=${BUILDER:-Builder.py}
 LOG=${LOG:-build/log/build.log}
 GLYPHSDIR=${GLYPHSDIR:-build/dump}
+mkdir -p "$(dirname $LOG)"
+mkdir -p "$GLYPHSDIR"
+
 BUILDER_ARGS=('--path-out=-' '--glyph-out' "$GLYPHSDIR")
 time (set -x; "$PYDIR/$BUILDER" "${BUILDER_ARGS[@]}" "$@") |
      (set -x; "$PYDIR/diff-ref.sh") |
