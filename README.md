@@ -175,16 +175,3 @@ and by checking whether the contextual spacing is applied or not.
 
 `Builder.py` and `NotoCJKBuilder.py` call it automtically
 for all fonts they built.
-
-## Appendix
-
-### Data Comparisons and Analysis
-
-The [data comparison report]
-of [CSS Text 4] and
-[feature file] at [Adobe CJK Type blog article].
-
-[data comparison report]: https://colab.research.google.com/github/kojiishi/contextual-spacing/blob/master/contextual_spacing_analysis.ipynb
-[Adobe CJK Type blog article]: https://blogs.adobe.com/CCJKType/2018/04/contextual-spacing.html
-[CSS Text 4]: https://drafts.csswg.org/css-text-4/#text-spacing-classes
-[feature file]: http://blogs.adobe.com/CCJKType/files/2018/04/features.txt
