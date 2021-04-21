@@ -155,10 +155,10 @@ The following example creates dump files in the `build/dump` directory.
 
 `Dump.py` can also create text dump files of two font files and compare them.
 This helps visualizing changes in the font files you created.
-The following example creates 3 sets of files:
 ```sh
 % python3 Dump.py -o build/dump --diff fonts build/NotoSansCJK.ttc
 ```
+This example creates following 3 sets of files:
 1. Dump files for `build/NotoSansCJK.ttc` in the `build/dump` directory.
 2. Dump files for `fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
 3. Diff files of each dump file in the `build/dump/diff` directory.
