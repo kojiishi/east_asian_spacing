@@ -5,9 +5,11 @@ the OpenType [Contextual Half-width Spacing] feature
 for Japanese/Chinese/Korean typography.
 This feature enables the typography described in
 [JLREQ 3.1.2 Positioning of Punctuation Marks (Commas, Periods and Brackets)
-句読点や，括弧類などの基本的な配置方法](https://w3c.github.io/jlreq/#positioning_of_punctuation_marks)
+<span lang="ja">句読点や，括弧類などの基本的な配置方法</span>](https://w3c.github.io/jlreq/#positioning_of_punctuation_marks)
 and [CLREQ 3.1.6.1 Punctuation Adjustment Space
-标点符号的调整空间 標點符號的調整空間](https://w3c.github.io/clreq/?lang=en#h-punctuation_adjustment_space).
+<span lang="zh">标点符号的调整空间 標點符號的調整空間</span>](https://w3c.github.io/clreq/?lang=en#h-punctuation_adjustment_space).
+
+You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
 
 [Contextual Half-width Spacing]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
 
@@ -163,15 +165,15 @@ This example creates following 3 sets of files:
 2. Dump files for `fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
 3. Diff files of each dump file in the `build/dump/diff` directory.
 
-`diff-ref.sh` creates diff files between two font files using `Dump.py`
+`diff-ref.sh` creates diff files between two font files using `Dump.py`,
 and compare them with once-reviewed diff files in the `reference` directory.
 This tool can visualize differences in subsequent builds.
-`script/build.sh` automatically invokes this script.
+`scripts/build.sh` automatically invokes this script.
 
 ### Shape Tests
 
 `Tester.py` can test fonts by shaping several strings
 and by checking whether the contextual spacing is applied or not.
 
-`Builder.py` and `NotoCJKBuilder.py` call it automtically
+`Builder.py` and `NotoCJKBuilder.py` call this automtically
 for all fonts they built.
