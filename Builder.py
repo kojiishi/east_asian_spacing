@@ -20,9 +20,9 @@ from Tester import EastAsianSpacingTester
 class Builder(object):
     def __init__(self, font):
         if not isinstance(font, Font):
-            font = Font(font)
+            font = Font.load(font)
         self.font = font
-        self.built_indices = None
+        self.built_fonts = None
 
     def save(self,
              output_path=None,
@@ -61,7 +61,7 @@ class Builder(object):
 
     async def build_single(self, language=None):
         font = self.font
-        logging.info(f'Font "{font}" lang={language}')
+        logging.info('Font "%s" lang=%s', font, language)
         font.language = language
         spacing = EastAsianSpacing(font)
         await spacing.add_glyphs()
@@ -71,40 +71,44 @@ class Builder(object):
     async def build_collection(self, language=None, indices=None):
         font = self.font
         indices_and_languages = self.calc_indices_and_languages(
-            font.num_fonts_in_collection, indices, language)
+            len(font.fonts_in_collection), indices, language)
         await self.build_indices_and_languages(indices_and_languages)
 
     async def build_indices_and_languages(self, indices_and_languages):
-        font = self.font
+        assert self.font.is_collection
+        collection = self.font
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
         spacing_by_offset = {}
         for face_index, language in indices_and_languages:
-            font.set_face_index(face_index)
+            font = collection.fonts_in_collection[face_index]
             font.language = language
-            logging.info(
-                f'Font index {face_index + 1} "{font}" lang={font.language}')
             reader_offset = font.reader_offset("GPOS")
             spacing_entry = spacing_by_offset.get(reader_offset)
+            logging.info('%d "%s" lang=%s GPOS=%d%s', face_index, font,
+                         font.language, reader_offset,
+                         ' (shared)' if spacing_entry else '')
             if spacing_entry:
-                spacing, face_indices = spacing_entry
+                spacing, fonts = spacing_entry
                 # Different faces may have different set of glyphs. Unite them.
+                spacing.font = font
                 await spacing.add_glyphs()
-                face_indices.append(face_index)
+                fonts.append(font)
                 continue
             spacing = EastAsianSpacing(font)
             await spacing.add_glyphs()
-            spacing_by_offset[reader_offset] = (spacing, [face_index])
+            spacing_by_offset[reader_offset] = (spacing, [font])
 
         # Add to each font using the united `EastAsianSpacing`s.
-        for spacing, face_indices in spacing_by_offset.values():
-            logging.info("Adding features to face {}".format(face_indices))
-            for face_index in face_indices:
-                font.set_face_index(face_index)
+        for spacing, fonts in spacing_by_offset.values():
+            logging.info('Adding feature to: %s',
+                         list(font.font_index for font in fonts))
+            for font in fonts:
+                spacing.font = font
                 spacing.add_to_font()
-            if self.built_indices is None:
-                self.built_indices = []
-            self.built_indices.extend(face_indices)
+            if self.built_fonts is None:
+                self.built_fonts = []
+            self.built_fonts.extend(fonts)
 
         self.spacings = (i[0] for i in spacing_by_offset.values())
 
@@ -134,18 +138,19 @@ class Builder(object):
             return
 
         logging.info("Saving glyphs to %s", output)
+        if font.is_collection:
+            font = font.fonts_in_collection[0]
         united_spacing = EastAsianSpacing(font)
         for spacing in self.spacings:
             united_spacing.unite(spacing)
         united_spacing.save_glyphs(output)
 
     async def test(self):
-        font = self.font
-        if self.built_indices:
-            for index in self.built_indices:
-                font.set_face_index(index)
+        if self.built_fonts:
+            for font in self.built_fonts:
                 await EastAsianSpacingTester(font).test()
             return
+        font = self.font
         await EastAsianSpacingTester(font).test()
 
 

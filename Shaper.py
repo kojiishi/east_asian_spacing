@@ -36,11 +36,13 @@ class GlyphSet(object):
     def __len__(self):
         return len(self.glyph_ids)
 
-    @property
-    def glyph_names(self):
+    def glyph_names(self, font=None):
         assert isinstance(self.glyph_ids, set)
-        ttfont = self.font.ttfont
-        return (ttfont.getGlyphName(glyph_id) for glyph_id in self.glyph_ids)
+        glyph_ids = sorted(self.glyph_ids)
+        if font:
+            font = font.ttfont
+            return (font.getGlyphName(glyph_id) for glyph_id in glyph_ids)
+        return (f'glyph{glyph_id:05}' for glyph_id in glyph_ids)
 
     def isdisjoint(self, other):
         assert isinstance(self.glyph_ids, set)
@@ -146,19 +148,19 @@ class Shaper(object):
 
     def append_hb_args(self, text, args):
         font = self.font
-        args.append("--font-file=" + str(font.path))
-        if font.face_index is not None:
-            args.append("--face-index=" + str(font.face_index))
+        args.append(f'--font-file={font.path}')
+        if font.font_index is not None:
+            args.append(f'--face-index={font.font_index}')
         if self.language:
-            args.append("--language=x-hbot" + self.language)
+            args.append(f'--language=x-hbot{self.language}')
         if self.script:
-            args.append("--script=" + self.script)
+            args.append(f'--script={self.script}')
         if font.is_vertical:
             args.append("--direction=ttb")
         if self.features:
-            args.append("--features=" + ",".join(self.features))
+            args.append(f'--features={",".join(self.features)}')
         unicodes_as_hex_string = ",".join(hex(c) for c in text)
-        args.append("--unicodes=" + unicodes_as_hex_string)
+        args.append(f'--unicodes={unicodes_as_hex_string}')
 
 
 async def main():

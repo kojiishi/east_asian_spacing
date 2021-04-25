@@ -11,21 +11,23 @@ from Font import Font
 
 
 class TableEntry(object):
-    def __init__(self, tag, offset, size, indices):
+    def __init__(self, reader, tag, offset, size, indices):
+        self.reader = reader
         self.tag = tag
         self.offset = offset
         self.size = size
         self.indices = indices
 
-    def read_data(self, file):
+    def read_data(self):
+        file = self.reader.file
         file.seek(self.offset)
         return file.read(self.size)
 
-    def equal_binary(self, file, other, other_file):
+    def equal_binary(self, other):
         if self.size != other.size:
             return False
-        data = self.read_data(file)
-        other_data = other.read_data(other_file)
+        data = self.read_data()
+        other_data = other.read_data()
         return data == other_data
 
     @staticmethod
@@ -43,7 +45,7 @@ class TableEntry(object):
         tags = reader.keys()
         for tag in tags:
             entry = reader.tables[tag]
-            yield TableEntry(tag, entry.offset, entry.length, [index])
+            yield TableEntry(reader, tag, entry.offset, entry.length, [index])
 
     @staticmethod
     def merge_indices(rows):
@@ -66,7 +68,7 @@ class TableEntry(object):
         return merged
 
     @staticmethod
-    def filter_entries_by_binary_diff(entries, src_entries, file, src_file):
+    def filter_entries_by_binary_diff(entries, src_entries):
         """Remove entries that are binary-equal from `entries` and `src_entries`."""
         src_entry_by_tag = {}
         for entry in src_entries:
@@ -76,7 +78,7 @@ class TableEntry(object):
         for entry in entries:
             key = (entry.tag, tuple(entry.indices))
             src_entry = src_entry_by_tag.get(key)
-            if src_entry and entry.equal_binary(file, src_entry, src_file):
+            if src_entry and entry.equal_binary(src_entry):
                 logging.debug("Ignored because binary-equal: %s", key)
                 del src_entry_by_tag[key]
                 continue
@@ -172,10 +174,13 @@ class Dump(object):
         if ttx_path.is_dir():
             ttx_path = ttx_path / (font.path.name + '.ttx')
 
-        num_fonts = font.num_fonts_in_collection
+        if font.is_collection:
+            num_fonts = len(font.fonts_in_collection)
+        else:
+            num_fonts = 1
         ttx_paths = []
         procs = []
-        for index in range(num_fonts if num_fonts else 1):
+        for index in range(num_fonts):
             tables = []
             remaining = []
             for entry in entries:
@@ -279,7 +284,7 @@ class Dump(object):
             src_font = Path(src_font)
         if src_font.is_dir():
             src_font = src_font / font.path.name
-        src_font = Font(src_font)
+        src_font = Font.load(src_font)
         if isinstance(out_file, str):
             out_file = Path(out_file)
         src_out_dir = out_file / 'src'
@@ -304,7 +309,7 @@ class Dump(object):
 
         # Dump TTX files.
         entries, src_entries = TableEntry.filter_entries_by_binary_diff(
-            entries, src_entries, font.file, src_font.file)
+            entries, src_entries)
         ttx_paths, src_ttx_paths = await asyncio.gather(
             Dump.dump_ttx(font, out_file, entries),
             Dump.dump_ttx(src_font, src_out_dir, src_entries))
@@ -365,7 +370,7 @@ class Dump(object):
             args.output.mkdir(exist_ok=True, parents=True)
         num_files = len(args.path)
         for i, path in enumerate(args.path):
-            font = Font(path)
+            font = Font.load(path)
             if args.diff:
                 assert args.output, "output is required for diff"
                 await Dump.diff_font(font, args)

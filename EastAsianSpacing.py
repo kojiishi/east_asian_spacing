@@ -102,7 +102,7 @@ class GlyphSetTrio(object):
         font = self.font
         for name, glyphs in self._name_and_glyphs:
             output.write(f'# {prefix}{name}\n')
-            glyph_names = sorted(glyphs.glyph_names)
+            glyph_names = glyphs.glyph_names(font)
             output.write(separator.join(glyph_names))
             output.write('\n')
 
@@ -175,7 +175,7 @@ class GlyphSetTrio(object):
             # assert Shaper(font, text, language="ZHH", script="hani").glyph_set() == zht
         if ja == zht:
             if not font.language: font.raise_require_language()
-            if font.language == "ZHT" or font.language_ == "ZHH":
+            if font.language == "ZHT" or font.language == "ZHH":
                 ja.clear()
             else:
                 zht.clear()
@@ -267,6 +267,9 @@ class GlyphSetTrio(object):
 
     def get_cache(self, create=False):
         font = self.font
+        if font.parent_collection:
+            font = font.parent_collection
+        assert font.font_index is None
         if hasattr(font, "east_asian_spacing_"):
             return font.east_asian_spacing_
         if not create:
@@ -330,9 +333,9 @@ class GlyphSetTrio(object):
 
     def build_lookup(self, lookups):
         font = self.font
-        left = tuple(self.left.glyph_names)
-        right = tuple(self.right.glyph_names)
-        middle = tuple(self.middle.glyph_names)
+        left = tuple(self.left.glyph_names(font))
+        right = tuple(self.right.glyph_names(font))
+        middle = tuple(self.middle.glyph_names(font))
         logging.info("Adding Lookups for %d left, %d right, %d middle glyphs",
                      len(left), len(right), len(middle))
         half_em = int(font.units_per_em / 2)
@@ -387,13 +390,26 @@ class GlyphSetTrio(object):
 
 class EastAsianSpacing(object):
     def __init__(self, font):
-        self.font = font
+        assert not font.is_vertical
+        self._font = font
         self.horizontal = GlyphSetTrio(font)
         self.vertical = None
         if not font.is_vertical:
             vertical_font = font.vertical_font
             if vertical_font:
                 self.vertical = GlyphSetTrio(vertical_font)
+
+    @property
+    def font(self):
+        return self._font
+
+    @font.setter
+    def font(self, font):
+        assert not font.is_vertical
+        self._font = font
+        self.horizontal.font = font
+        if self.vertical:
+            self.vertical.font = font.vertical_font
 
     def save_glyphs(self, output, separator='\n'):
         self.horizontal.save_glyphs(output, separator=separator)
@@ -430,7 +446,7 @@ class EastAsianSpacing(object):
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path")
-    parser.add_argument("--face-index", type=int)
+    parser.add_argument("-i", "--index", type=int, default=0)
     parser.add_argument("-v",
                         "--verbose",
                         help="increase output verbosity",
@@ -444,12 +460,13 @@ async def main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
-    font = Font(args)
+    font = Font.load(args.path)
+    font = font.fonts[args.index]
     if args.is_vertical:
         font = font.vertical_font
     spacing = EastAsianSpacing(font)
     await spacing.add_glyphs()
-    spacing.save_glyph_ids(sys.stdout, separator=', ')
+    spacing.save_glyphs(sys.stdout, separator=', ')
 
 
 if __name__ == '__main__':

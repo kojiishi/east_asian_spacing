@@ -12,43 +12,74 @@ from fontTools.ttLib.ttCollection import TTCollection
 
 
 class Font(object):
-    def __init__(self, args):
-        self.is_vertical_ = False
-        self.language_ = None
-        if isinstance(args, Path):
-            self.load(args)
-            return
-        if isinstance(args, str):
-            self.load(Path(args))
-            return
-        if isinstance(args, Font):
-            self.face_index = args.face_index
-            self.is_vertical_ = args.is_vertical_
-            self.language_ = args.language_
-            self.path = args.path
-            self.ttfont = args.ttfont
-            self.ttcollection = args.ttcollection
-            self.units_per_em_ = args.units_per_em_
-            return
-        self.load(args.path)
-        face_index = getattr(args, "face_index", None)
-        if face_index is not None:
-            self.set_face_index(face_index)
+    def __init__(self):
+        pass
 
-    def load(self, path):
+    @staticmethod
+    def load(path):
         logging.info("Reading font file: \"%s\"", path)
         if isinstance(path, str):
             path = Path(path)
+        self = Font()
+        self.font_index = None
+        self.is_vertical = False
+        self._language = None
+        self.parent_collection = None
         self.path = path
+        self._units_per_em = None
+        self._vertical_font = None
         if self.path.suffix == ".ttc":
-            self.ttcollection = TTCollection(str(path))
+            self.ttcollection = TTCollection(path, allowVID=True)
+            self.ttfont = None
+            self.fonts_in_collection = tuple(
+                self._create_font_in_collection(index, ttfont)
+                for index, ttfont in enumerate(self.ttcollection))
+            # self.ttfont = self.fonts[0].ttfont
             logging.info("%d fonts found in the collection",
-                         len(self.ttcollection.fonts))
-            self.set_face_index(0)
-            return
+                         len(self.ttcollection))
+            return self
+        self.ttfont = TTFont(path, allowVID=True)
         self.ttcollection = None
-        self.face_index = None
-        self.set_ttfont(TTFont(str(path)))
+        return self
+
+    def _clone(self):
+        clone = Font()
+        clone.font_index = self.font_index
+        clone.is_vertical = self.is_vertical
+        clone._language = self._language
+        clone.parent_collection = self.parent_collection
+        clone.path = self.path
+        clone.ttcollection = self.ttcollection
+        clone.ttfont = self.ttfont
+        clone._units_per_em = self._units_per_em
+        clone._vertical_font = None
+        return clone
+
+    def _create_font_in_collection(self, font_index, ttfont):
+        font = self._clone()
+        font.font_index = font_index
+        font.parent_collection = self
+        font.ttfont = ttfont
+        font.fonts_in_collection = None
+        font.ttcollection = None
+        font._vertical_font = None
+        return font
+
+    @property
+    def vertical_font(self):
+        assert not self.is_vertical
+        if self._vertical_font:
+            assert self._vertical_font.is_vertical
+            return self._vertical_font
+        if not self.is_collection and not self.has_gsub_feature("vert"):
+            return None
+        vertical_font = self._clone()
+        vertical_font.is_vertical = True
+        vertical_font.horizontal_font = self
+        if self.parent_collection:
+            vertical_font.parent_collection = self.parent_collection.vertical_font
+        self._vertical_font = vertical_font
+        return vertical_font
 
     def save(self, out_path=None):
         if not out_path:
@@ -57,11 +88,11 @@ class Font(object):
             out_path = Path(out_path)
         logging.info("Saving to: \"%s\"", out_path)
         if self.ttcollection:
-            for font in self.ttcollection.fonts:
-                Font.before_save(font)
+            for ttfont in self.ttcollection:
+                self._before_save(ttfont)
             self.ttcollection.save(str(out_path))
         else:
-            Font.before_save(self.ttfont)
+            self._before_save(self.ttfont)
             self.ttfont.save(str(out_path))
         size_before = self.path.stat().st_size
         size_after = out_path.stat().st_size
@@ -69,34 +100,16 @@ class Font(object):
                      size_after - size_before)
 
     @staticmethod
-    def before_save(ttfont):
+    def _before_save(ttfont):
         # `TTFont.save()` compiles all loaded tables. Unload tables we know we did
         # not modify, so that it copies instead of re-compile.
         for key in ("CFF ", "GSUB", "name"):
             if ttfont.isLoaded(key):
                 del ttfont.tables[key]
 
-    def set_ttfont(self, font):
-        self.ttfont = font
-        self.units_per_em_ = None
-        vertical_font = getattr(self, "vertical_font_", None)
-        if vertical_font:
-            vertical_font.set_ttfont(font)
-            vertical_font.face_index = self.face_index
-
     @property
     def is_collection(self):
         return self.ttcollection is not None
-
-    @property
-    def num_fonts_in_collection(self):
-        if self.ttcollection:
-            return len(self.ttcollection.fonts)
-        return 0
-
-    def set_face_index(self, face_index):
-        self.face_index = face_index
-        self.set_ttfont(self.ttcollection.fonts[face_index])
 
     @property
     def ttfonts(self):
@@ -109,6 +122,8 @@ class Font(object):
 
     @property
     def reader(self):
+        # if self.is_collection:
+        #     return self.ttfonts[0].reader
         return self.ttfont.reader
 
     @property
@@ -140,22 +155,23 @@ class Font(object):
 
     @property
     def language(self):
-        if self.language_:
-            return self.language_
-        return None
+        return self._language
 
     @language.setter
     def language(self, language):
-        self.language_ = language
+        self._language = language
+        if self.is_collection:
+            for font in self.fonts:
+                font.language = language
         assert not self.is_vertical
-        if hasattr(self, "vertical_font_"):
-            self.vertical_font_.language_ = language
+        if self._vertical_font:
+            self._vertical_font._language = language
 
     @property
     def units_per_em(self):
-        if self.units_per_em_ is None:
-            self.units_per_em_ = self.tttable('head').unitsPerEm
-        return self.units_per_em_
+        if self._units_per_em is None:
+            self._units_per_em = self.tttable('head').unitsPerEm
+        return self._units_per_em
 
     @property
     def script_and_langsys_tags(self, tags=("GSUB", "GPOS")):
@@ -195,24 +211,6 @@ class Font(object):
                 return True
         return False
 
-    @property
-    def is_vertical(self):
-        return self.is_vertical_
-
-    @property
-    def vertical_font(self):
-        assert not self.is_vertical
-        if hasattr(self, "vertical_font_"):
-            return self.vertical_font_
-        if self.has_gsub_feature("vert"):
-            font = Font(self)
-            font.is_vertical_ = True
-            font.horizontal_font = self
-            self.vertical_font_ = font
-            return font
-        self.vertical_font_ = None
-        return None
-
     def add_gpos_table(self):
         logging.info("Adding GPOS table")
         ttfont = self.ttfont
@@ -245,9 +243,10 @@ class Font(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("path")
-    parser.add_argument("--face-index", type=int)
+    parser.add_argument("-i", "--index", type=int, default=0)
     args = parser.parse_args()
-    font = Font(args)
+    font = Font.load(args.path)
+    font = font.fonts[args.index]
     print("debug_name:", font.debug_name)
     for tag in ("GSUB", "GPOS"):
         tttable = font.ttfont.get(tag)

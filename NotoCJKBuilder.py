@@ -12,10 +12,8 @@ from Builder import init_logging
 class NotoCJKBuilder(Builder):
     @staticmethod
     def calc_indices_and_languages(font):
-        num_fonts = font.num_fonts_in_collection
-        assert num_fonts > 0
-        for index in range(num_fonts):
-            font.set_face_index(index)
+        assert len(font.fonts_in_collection) > 0
+        for index, font in enumerate(font.fonts_in_collection):
             lang = NotoCJKBuilder.lang_from_ttfont(font.ttfont)
             if lang is None:
                 logging.info(f'Font index {index + 1} "{font}" skipped')
