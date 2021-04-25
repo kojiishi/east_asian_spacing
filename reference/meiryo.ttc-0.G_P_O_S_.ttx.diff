@@ -111,42 +111,6 @@
          <LookupType value="2"/>
          <LookupFlag value="0"/>
 @@
-         <!-- SubTableCount=1 -->
-         <ChainContextPos index="0" Format="3">
-           <!-- BacktrackGlyphCount=1 -->
--          <BacktrackCoverage index="0" Format="2">
-+          <BacktrackCoverage index="0" Format="1">
-             <Glyph value="uni25CC"/>
-             <Glyph value="glyph23723"/>
-             <Glyph value="glyph23724"/>
-@@
-             <Glyph value="glyph23809"/>
-             <Glyph value="glyph23810"/>
-           </MarkCoverage>
--          <BaseCoverage Format="2">
-+          <BaseCoverage Format="1">
-             <Glyph value="uni25CC"/>
-             <Glyph value="glyph23723"/>
-             <Glyph value="glyph23724"/>
-@@
-         <!-- SubTableCount=1 -->
-         <ChainContextPos index="0" Format="3">
-           <!-- BacktrackGlyphCount=1 -->
--          <BacktrackCoverage index="0" Format="2">
-+          <BacktrackCoverage index="0" Format="1">
-             <Glyph value="uni309D"/>
-             <Glyph value="uni3041"/>
-             <Glyph value="uni3042"/>
-@@
-             <Glyph value="uni3099"/>
-             <Glyph value="uni309A"/>
-           </MarkCoverage>
--          <BaseCoverage Format="2">
-+          <BaseCoverage Format="1">
-             <Glyph value="uni309D"/>
-             <Glyph value="uni3041"/>
-             <Glyph value="uni3042"/>
-@@
            <Value XAdvance="-2048"/>
          </SinglePos>
        </Lookup>
@@ -155,7 +119,7 @@
 +        <LookupFlag value="0"/>
 +        <!-- SubTableCount=1 -->
 +        <PairPos index="0" Format="2">
-+          <Coverage Format="1">
++          <Coverage>
 +            <Glyph value="uni3001"/>
 +            <Glyph value="uni3002"/>
 +            <Glyph value="uniFF0C"/>
@@ -180,9 +144,9 @@
 +          </Coverage>
 +          <ValueFormat1 value="4"/>
 +          <ValueFormat2 value="0"/>
-+          <ClassDef1 Format="2">
++          <ClassDef1>
 +          </ClassDef1>
-+          <ClassDef2 Format="2">
++          <ClassDef2>
 +            <ClassDef glyph="glyph01598" class="1"/>
 +            <ClassDef glyph="glyph01599" class="1"/>
 +            <ClassDef glyph="glyph01600" class="1"/>
@@ -242,7 +206,7 @@
 +        <LookupFlag value="0"/>
 +        <!-- SubTableCount=1 -->
 +        <SinglePos index="0" Format="1">
-+          <Coverage Format="1">
++          <Coverage>
 +            <Glyph value="glyph01598"/>
 +            <Glyph value="glyph01600"/>
 +            <Glyph value="uniFF08"/>
@@ -270,7 +234,7 @@
 +        <!-- SubTableCount=1 -->
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
-+          <BacktrackCoverage index="0" Format="1">
++          <BacktrackCoverage index="0">
 +            <Glyph value="uni2003"/>
 +            <Glyph value="uni30FB"/>
 +            <Glyph value="uniFE13"/>
@@ -293,7 +257,7 @@
 +            <Glyph value="uni301A"/>
 +          </BacktrackCoverage>
 +          <!-- InputGlyphCount=1 -->
-+          <InputCoverage index="0" Format="1">
++          <InputCoverage index="0">
 +            <Glyph value="glyph01598"/>
 +            <Glyph value="glyph01600"/>
 +            <Glyph value="uniFF08"/>
@@ -324,7 +288,7 @@
 +        <LookupFlag value="0"/>
 +        <!-- SubTableCount=1 -->
 +        <PairPos index="0" Format="2">
-+          <Coverage Format="1">
++          <Coverage>
 +            <Glyph value="glyph00444"/>
 +            <Glyph value="uniFE11"/>
 +            <Glyph value="uniFE12"/>
@@ -345,9 +309,9 @@
 +          </Coverage>
 +          <ValueFormat1 value="8"/>
 +          <ValueFormat2 value="0"/>
-+          <ClassDef1 Format="2">
++          <ClassDef1>
 +          </ClassDef1>
-+          <ClassDef2 Format="2">
++          <ClassDef2>
 +            <ClassDef glyph="glyph00418" class="1"/>
 +            <ClassDef glyph="glyph00444" class="1"/>
 +            <ClassDef glyph="glyph09251" class="1"/>
@@ -403,7 +367,7 @@
 +        <LookupFlag value="0"/>
 +        <!-- SubTableCount=1 -->
 +        <SinglePos index="0" Format="1">
-+          <Coverage Format="1">
++          <Coverage>
 +            <Glyph value="glyph00418"/>
 +            <Glyph value="uniFE35"/>
 +            <Glyph value="uniFE39"/>
@@ -432,7 +396,7 @@
 +        <!-- SubTableCount=1 -->
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
-+          <BacktrackCoverage index="0" Format="1">
++          <BacktrackCoverage index="0">
 +            <Glyph value="glyph00418"/>
 +            <Glyph value="uni2003"/>
 +            <Glyph value="uni30FB"/>
@@ -455,7 +419,7 @@
 +            <Glyph value="glyph23942"/>
 +          </BacktrackCoverage>
 +          <!-- InputGlyphCount=1 -->
-+          <InputCoverage index="0" Format="1">
++          <InputCoverage index="0">
 +            <Glyph value="glyph00418"/>
 +            <Glyph value="uniFE35"/>
 +            <Glyph value="uniFE39"/>

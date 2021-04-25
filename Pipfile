@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fonttools = {version = "==4.21.1", extras = ["woff"]}
+fonttools = {extras = ["woff"]}
 
 [dev-packages]
 pytest = "*"

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "48ec3c51e8584d93d1e50c863a98b8dd4049b5ded502a87e69af18483ec0b0a6"
+            "sha256": "3f933ec948350cf735ee5d0134e7b612fb4ccc16a3a664e9e6c4e2bf2039b966"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -58,11 +58,11 @@
                 "woff"
             ],
             "hashes": [
-                "sha256:3e990e6de10c2d708fa79f1d0d93022d7e5fae1ff8cb94f69ee8d916e2512df8",
-                "sha256:d9cf618ab76afb42a79dcc0b4b5e5ee7ec1534f7ad9da3809bb15ddfcedc073d"
+                "sha256:4ed7a4c1bba3b76aea0338184671ff091603c788d17b76d0aa0183c8b78b947c",
+                "sha256:5777efffcd7559163af4497464ee451392a940681682a452b54897bc02e070d7"
             ],
             "index": "pypi",
-            "version": "==4.21.1"
+            "version": "==4.22.0"
         },
         "zopfli": {
             "hashes": [
