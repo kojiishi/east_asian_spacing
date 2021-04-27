@@ -7,7 +7,7 @@ import json
 import logging
 from pathlib import Path
 
-from Font import Font
+from font import Font
 
 dump_images = False
 

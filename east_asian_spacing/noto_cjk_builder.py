@@ -4,9 +4,9 @@ import argparse
 import logging
 from pathlib import Path
 
-from Builder import Builder
-from Builder import Font
-from Builder import init_logging
+from builder import Builder
+from builder import Font
+from builder import init_logging
 
 
 class NotoCJKBuilder(Builder):

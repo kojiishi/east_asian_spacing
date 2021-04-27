@@ -11,7 +11,10 @@
 # 3. Compare the diff files with the ones in the reference directory.
 #
 OUTDIR=${OUTDIR:-build/dump}
-REFDIR=${REFDIR:-reference/}
+REFDIR=${REFDIR:-references/}
+SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ROOTDIR="$(cd "$SCRIPTDIR/.." &>/dev/null && pwd)"
+PYDIR="$(cd "$ROOTDIR/east_asian_spacing" &>/dev/null && pwd)"
 
 # Make sure directory names end with a slash to make joining easier.
 ensure-end-slash() {
@@ -37,7 +40,7 @@ create-diff () {
 
   # Create table lists, TTXs, and their diffs.
   mapfile -t DIFFS < <(set -x;
-      python3 Dump.py "$DSTPATH" -o "$OUTDIR" --diff "$SRC" $DUMPOPTS)
+      python3 "$PYDIR/dump.py" "$DSTPATH" -o "$OUTDIR" --diff "$SRC" $DUMPOPTS)
   CHECKPATHS+=("${DIFFS[@]}")
 }
 

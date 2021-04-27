@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import sys
 
-from Font import Font
+from font import Font
 
 
 class TableEntry(object):

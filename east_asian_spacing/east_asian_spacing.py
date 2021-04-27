@@ -17,10 +17,10 @@ from fontTools.otlLib.builder import PairPosBuilder
 from fontTools.otlLib.builder import SinglePosBuilder
 from fontTools.ttLib.tables import otTables
 
-from Font import Font
-from Shaper import GlyphSet
-from Shaper import Shaper
-from Shaper import show_dump_images
+from font import Font
+from shaper import GlyphSet
+from shaper import Shaper
+from shaper import show_dump_images
 
 
 class EastAsianSpacingConfig(object):

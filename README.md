@@ -51,10 +51,13 @@ If you prefer to use `pip3`:
 The following example adds the feature table to `input-font-file`
 and saves it to the `build` directory.
 ```sh
-% python3 Builder.py -o build input-font-file
+% python3 builder.py -o build input-font-file
 ```
 Please use the `--help` option
 to see the full list of options.
+
+Also there are some [scripts](#scripts) that can help using the tools
+in the `scripts` directory.
 
 ### Languages
 
@@ -69,7 +72,7 @@ You need to specify the [OpenType language system tag] of the font.
 
 The following example specifies that the font is a Japanese font.
 ```sh
-% python3 Builder.py --language=JAN input-font-file
+% python3 builder.py --language=JAN input-font-file
 ```
 
 [OpenType language system tag]: https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
@@ -84,7 +87,7 @@ you can specify a comma-separated list of font indexes.
 
 The following example adds the table to font index 0 and 1, but not to other fonts.
 ```sh
-% python3 Builder.py --index=0,1 input-font-file.ttc
+% python3 builder.py --index=0,1 input-font-file.ttc
 ```
 
 The language option applies to all fonts in the collection by default.
@@ -95,7 +98,7 @@ Korean for the font index 1,
 Simplified Chinese for the font index 2,
 and automatic for all other fonts.
 ```sh
-% python3 Builder.py --language=,KOR,ZHS input-font-file.ttc
+% python3 builder.py --language=,KOR,ZHS input-font-file.ttc
 ```
 
 You can combine these two options.
@@ -104,23 +107,23 @@ The following example applies
 and `ZHS` to the index 3.
 Other fonts are not changed.
 ```sh
-% python3 Builder.py --index=2,3 --language=JAN,ZHS input-font-file.ttc
+% python3 builder.py --index=2,3 --language=JAN,ZHS input-font-file.ttc
 ```
 
 ### Noto CJK
 
 For [Noto CJK] fonts,
-`NotoCJKBuilder.py` can determine the font indices and the languages automatically.
-It is equivalent to `Builder.py`, except that
+`noto_cjk_builder.py` can determine the font indices and the languages automatically.
+It is equivalent to `builder.py`, except that
 a) it computes the appropriate language for each font, and
 b) it skips `Mono` fonts,
 both determined by the font name.
 ```sh
-% python3 NotoCJKBuilder.py NotoSansCJK.ttc
+% python3 noto_cjk_builder.py NotoSansCJK.ttc
 ```
 You can also run it for a directory to find all font files recursively.
 ```sh
-% python3 NotoCJKBuilder.py ~/googlefonts/noto-cjk
+% python3 noto_cjk_builder.py ~/googlefonts/noto-cjk
 ```
 
 [Noto CJK]: https://www.google.com/get/noto/help/cjk/
@@ -134,6 +137,7 @@ compare the dump files with reference files (see [Dump and Diff] below).
 Followings are example usages.
 ```sh
 % ./scripts/build.sh input-font-file.otf -v
+% ./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
 % ./scripts/build-android.sh ~/fonts/noto-cjk-android -v
 ```
 
@@ -149,31 +153,31 @@ to check the behavior of fonts on browsers.
 ### Dump and Diff
 [Dump and Diff]: #dump-and-diff
 
-`Dump.py` can create various types of text dump files.
+`dump.py` can create various types of text dump files.
 The following example creates dump files in the `build/dump` directory.
 ```sh
-% python3 Dump.py -o build/dump build/NotoSansCJK-Regular.ttc
+% python3 dump.py -o build/dump build/NotoSansCJK-Regular.ttc
 ```
 
-`Dump.py` can also create text dump files of two font files and compare them.
+`dump.py` can also create text dump files of two font files and compare them.
 This helps visualizing changes in the font files you created.
 ```sh
-% python3 Dump.py -o build/dump --diff fonts build/NotoSansCJK.ttc
+% python3 dump.py -o build/dump --diff fonts build/NotoSansCJK.ttc
 ```
 This example creates following 3 sets of files:
 1. Dump files for `build/NotoSansCJK.ttc` in the `build/dump` directory.
 2. Dump files for `fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
 3. Diff files of each dump file in the `build/dump/diff` directory.
 
-`diff-ref.sh` creates diff files between two font files using `Dump.py`,
+`diff-ref.sh` creates diff files between two font files using `dump.py`,
 and compare them with once-reviewed diff files in the `reference` directory.
 This tool can visualize differences in subsequent builds.
 `scripts/build.sh` automatically invokes this script.
 
 ### Shape Tests
 
-`Tester.py` can test fonts by shaping several strings
+`tester.py` can test fonts by shaping several strings
 and by checking whether the contextual spacing is applied or not.
 
-`Builder.py` and `NotoCJKBuilder.py` call this automtically
+`builder.py` and `noto_cjk_builder.py` call this automtically
 for all fonts they built.

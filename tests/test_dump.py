@@ -1,4 +1,4 @@
-from Dump import Dump
+from dump import Dump
 
 
 def test_has_table_diff_head(data_dir):
