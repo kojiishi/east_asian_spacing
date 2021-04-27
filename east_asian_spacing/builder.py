@@ -22,6 +22,7 @@ class Builder(object):
         if not isinstance(font, Font):
             font = Font.load(font)
         self.font = font
+        self.fonts_in_collection = font.fonts_in_collection
         self.built_fonts = None
 
     def save(self,
@@ -52,40 +53,32 @@ class Builder(object):
         return (output_path.parent /
                 f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
-    async def build(self, language=None, indices=None):
+    async def build(self):
         font = self.font
         if font.is_collection:
-            await self.build_collection(language, indices)
+            await self.build_collection()
             return
-        await self.build_single(language=language)
+        await self.build_single()
 
-    async def build_single(self, language=None):
+    async def build_single(self):
         font = self.font
-        logging.info('Font "%s" lang=%s', font, language)
+        logging.info('Font "%s" lang=%s', font, font.language)
         font.language = language
         spacing = EastAsianSpacing(font)
         await spacing.add_glyphs()
         spacing.add_to_font()
         self.spacings = (spacing, )
 
-    async def build_collection(self, language=None, indices=None):
-        font = self.font
-        indices_and_languages = self.calc_indices_and_languages(
-            len(font.fonts_in_collection), indices, language)
-        await self.build_indices_and_languages(indices_and_languages)
-
-    async def build_indices_and_languages(self, indices_and_languages):
+    async def build_collection(self):
         assert self.font.is_collection
-        collection = self.font
+        fonts_in_collection = self.fonts_in_collection
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
         spacing_by_offset = {}
-        for face_index, language in indices_and_languages:
-            font = collection.fonts_in_collection[face_index]
-            font.language = language
+        for font in fonts_in_collection:
             reader_offset = font.reader_offset("GPOS")
             spacing_entry = spacing_by_offset.get(reader_offset)
-            logging.info('%d "%s" lang=%s GPOS=%d%s', face_index, font,
+            logging.info('%d "%s" lang=%s GPOS=%d%s', font.font_index, font,
                          font.language, reader_offset,
                          ' (shared)' if spacing_entry else '')
             if spacing_entry:
@@ -106,11 +99,27 @@ class Builder(object):
             for font in fonts:
                 spacing.font = font
                 spacing.add_to_font()
-            if self.built_fonts is None:
-                self.built_fonts = []
-            self.built_fonts.extend(fonts)
 
         self.spacings = (i[0] for i in spacing_by_offset.values())
+
+    def apply_language_and_indices(self, language=None, indices=None):
+        font = self.font
+        if not font.is_collection:
+            font.language = language
+            assert indices is None
+            return
+        self.fonts_in_collection = tuple(
+            self.calc_fonts_in_collection(font.fonts_in_collection, language,
+                                          indices))
+
+    @staticmethod
+    def calc_fonts_in_collection(fonts_in_collection, language, indices):
+        indices_and_languages = Builder.calc_indices_and_languages(
+            len(fonts_in_collection), indices, language)
+        for index, language in indices_and_languages:
+            font = fonts_in_collection[index]
+            font.language = language
+            yield font
 
     @staticmethod
     def calc_indices_and_languages(num_fonts, indices, language):
@@ -146,8 +155,8 @@ class Builder(object):
         united_spacing.save_glyphs(output)
 
     async def test(self):
-        if self.built_fonts:
-            for font in self.built_fonts:
+        if self.fonts_in_collection:
+            for font in self.fonts_in_collection:
                 await EastAsianSpacingTester(font).test()
             return
         font = self.font
@@ -203,7 +212,9 @@ async def main():
         args.output.mkdir(exist_ok=True, parents=True)
     for input in args.inputs:
         builder = Builder(input)
-        await builder.build(language=args.language, indices=args.index)
+        builder.apply_language_and_indices(language=args.language,
+                                           indices=args.index)
+        await builder.build()
         builder.save(args.output,
                      stem_suffix=args.suffix,
                      glyph_out=args.glyph_out,

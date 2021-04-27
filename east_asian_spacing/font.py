@@ -34,12 +34,12 @@ class Font(object):
             self.fonts_in_collection = tuple(
                 self._create_font_in_collection(index, ttfont)
                 for index, ttfont in enumerate(self.ttcollection))
-            # self.ttfont = self.fonts[0].ttfont
             logging.info("%d fonts found in the collection",
                          len(self.ttcollection))
             return self
         self.ttfont = TTFont(path, allowVID=True)
         self.ttcollection = None
+        self.fonts_in_collection = None
         return self
 
     def _clone(self):

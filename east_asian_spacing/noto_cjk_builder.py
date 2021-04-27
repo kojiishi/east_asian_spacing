@@ -10,28 +10,25 @@ from builder import init_logging
 
 
 class NotoCJKBuilder(Builder):
+    def __init__(self, font):
+        super().__init__(font)
+        font = self.font
+        if font.is_collection:
+            self.fonts_in_collection = tuple(
+                self.calc_fonts_in_collection(font))
+        else:
+            font.language = self.lang_from_ttfont(font.ttfont)
+
     @staticmethod
-    def calc_indices_and_languages(font):
+    def calc_fonts_in_collection(font):
         assert len(font.fonts_in_collection) > 0
         for index, font in enumerate(font.fonts_in_collection):
             lang = NotoCJKBuilder.lang_from_ttfont(font.ttfont)
             if lang is None:
-                logging.info(f'Font index {index + 1} "{font}" skipped')
+                logging.info(f'Font index {index} "{font}" skipped')
                 continue
-            yield (index, lang)
-
-    async def build_single(self, language=None):
-        assert language is None
-        font = self.font
-        language = self.lang_from_ttfont(font.ttfont)
-        await super().build_single(language=language)
-
-    async def build_collection(self, language=None, indices=None):
-        assert language is None
-        assert indices is None
-        font = self.font
-        indices_and_languages = self.calc_indices_and_languages(font)
-        await self.build_indices_and_languages(indices_and_languages)
+            font.language = lang
+            yield font
 
     @staticmethod
     def expand_paths(paths):
