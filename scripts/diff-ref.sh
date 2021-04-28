@@ -39,9 +39,10 @@ create-diff () {
   fi
 
   # Create table lists, TTXs, and their diffs.
-  mapfile -t DIFFS < <(set -x;
-      python3 "$PYDIR/dump.py" "$DSTPATH" -o "$OUTDIR" --diff "$SRC" $DUMPOPTS)
-  CHECKPATHS+=("${DIFFS[@]}")
+  while IFS= read DIFF; do
+    CHECKPATHS+=("$DIFF")
+  done < <(set -x;
+    python3 "$PYDIR/dump.py" "$DSTPATH" -o "$OUTDIR" --diff "$SRC" $DUMPOPTS)
 }
 
 # Analyze argments.
