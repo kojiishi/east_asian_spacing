@@ -139,14 +139,16 @@ class Font(object):
     def debug_name(self, name_id):
         # name_id:
         # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-id-examples
-        name = self.tttable("name")
-        return name.getDebugName(name_id)
+        if self.ttfont:
+            name = self.tttable("name")
+            return name.getDebugName(name_id)
+        return None
 
     def __str__(self):
-        name = self.debug_name(4)
+        name = self.debug_name(4) or self.path.name
         attributes = []
-        if self.ttcollection:
-            attributes.append(str(self.face_index))
+        if self.font_index is not None:
+            attributes.append(f'#{self.font_index}')
         if self.is_vertical:
             attributes.append('vertical')
         if len(attributes):

@@ -9,6 +9,8 @@ import sys
 
 from font import Font
 
+logger = logging.getLogger('dump')
+
 
 class TableEntry(object):
     def __init__(self, reader, tag, offset, size, indices):
@@ -79,7 +81,7 @@ class TableEntry(object):
             key = (entry.tag, tuple(entry.indices))
             src_entry = src_entry_by_tag.get(key)
             if src_entry and entry.equal_binary(src_entry):
-                logging.debug("Ignored because binary-equal: %s", key)
+                logger.debug("Ignored because binary-equal: %s", key)
                 del src_entry_by_tag[key]
                 continue
             filtered.append(entry)
@@ -191,7 +193,9 @@ class Dump(object):
             entries = remaining
             assert len(tables)
             args = ['-sf']
-            if num_fonts:
+            if logger.getEffectiveLevel() >= logging.WARNING:
+                args.append('-q')
+            if font.is_collection:
                 indexed_ttx_path = ttx_path.parent / f'{ttx_path.stem}-{index}{ttx_path.suffix}'
                 args.append(f'-y{index}')
                 args.append(f'-o{indexed_ttx_path}')
@@ -201,12 +205,12 @@ class Dump(object):
                 ttx_paths.append(ttx_path)
             args.extend((f'-t{table}' for table in tables))
             args.append(str(font.path))
-            logging.debug('ttx %s', args)
+            logger.debug('ttx %s', args)
             procs.append(await asyncio.create_subprocess_exec('ttx', *args))
-        logging.debug("Awaiting %d dump_ttx for %s", len(procs), font)
+        logger.debug("Awaiting %d dump_ttx for %s", len(procs), font)
         tasks = list((asyncio.create_task(p.wait()) for p in procs))
         await asyncio.wait(tasks)
-        logging.debug("dump_ttx completed: %s", font)
+        logger.debug("dump_ttx completed: %s", font)
         return ttx_paths
 
     @staticmethod
@@ -232,7 +236,7 @@ class Dump(object):
         Dump.dump_tables(font, args, entries=entries, out_file=args.output)
         if args.ttx:
             await Dump.dump_ttx(font, args.ttx, entries)
-        logging.debug("dump_font completed: %s", font)
+        logger.debug("dump_font completed: %s", font)
 
     @staticmethod
     async def diff(src, dst, out_dir, ignore_line_numbers=False):
@@ -241,7 +245,7 @@ class Dump(object):
         if ignore_line_numbers:
             cmd += " | sed -e 's/^@@ -.*/@@/'"
         cmd += f" >'{out_path}'"
-        logging.debug("run_diff: %s", cmd)
+        logger.debug("run_diff: %s", cmd)
         p = await asyncio.create_subprocess_shell(cmd)
         await p.wait()
         return out_path
@@ -258,7 +262,7 @@ class Dump(object):
                 path = match.group(2)
                 path = dir / path if dir else Path(path)
                 tables[match.group(1)] = path
-        logging.debug("Read TTX: %s has %d tables", input, len(tables))
+        logger.debug("Read TTX: %s has %d tables", input, len(tables))
         return tables
 
     @staticmethod
@@ -328,12 +332,12 @@ class Dump(object):
                                            diff_out_dir,
                                            ignore_line_numbers=True)
                 if not Dump.has_table_diff(ttx_diff, table_name):
-                    logging.debug('No diff for %s', table_name)
+                    logger.debug('No diff for %s', table_name)
                     ttx_diff.unlink()
                     continue
-                logging.debug('Diff found for %s', table_name)
+                logger.debug('Diff found for %s', table_name)
                 print(ttx_diff)
-        logging.debug("diff completed: %s", font)
+        logger.debug("diff completed: %s", font)
 
     @staticmethod
     async def main():
@@ -382,10 +386,10 @@ class Dump(object):
                         print()
                     print(f'File: {font.path.name}')
                 await Dump.dump_font(font, args)
-            logging.debug("dump %d completed: %s", i, font)
-        logging.debug("main completed")
+            logger.debug("dump %d completed: %s", i, font)
+        logger.debug("main completed")
 
 
 if __name__ == '__main__':
     asyncio.run(Dump.main())
-    logging.debug("All completed")
+    logger.debug("All completed")
