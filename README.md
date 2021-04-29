@@ -167,11 +167,21 @@ This helps visualizing changes in the font files you created.
 This example creates following 3 sets of files:
 1. Dump files for `build/NotoSansCJK.ttc` in the `build/dump` directory.
 2. Dump files for `fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
-3. Diff files of each dump file in the `build/dump/diff` directory.
+3. Diff files of the two sets of dump files in the `build/dump/diff` directory.
+
+### References
+
+Once you reviewed the diff files created above,
+or tested fonts you build,
+you can copy the diff files into the `references` directory.
 
 `diff-ref.sh` creates diff files between two font files using `dump.py`,
-and compare them with once-reviewed diff files in the `reference` directory.
-This tool can visualize differences in subsequent builds.
+and compare them with once-reviewed diff files in the `references` directory.
+This tool can visualize differences from previous builds if any,
+such as when the source fonts were updated,
+this tool was updated,
+or when the build environment changed.
+
 `scripts/build.sh` automatically invokes this script.
 
 ### Shape Tests
