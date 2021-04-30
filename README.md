@@ -19,26 +19,25 @@ You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
 
 This tool requires following packages.
 
+* [hb-shape]
 * Python3
 * [fonttools]
-* [hb-shape]
 
-Installation for Linux:
+Install [hb-shape] for Linux:
 ```sh
 % sudo apt get libharfbuzz-bin
 ```
-Installation for Mac:
+Install [hb-shape] for Mac:
 ```sh
 % brew install harfbuzz
 ```
-Then you can use your favorite package manager to install required Python packages.
-If you use [pipenv]:
+
+Then install required Python packages.
+The use of [pipenv] is recommended:
 ```sh
-% pipenv install -d
-```
-If you prefer to use `pip3`:
-```sh
-% pip3 install -r requirements.txt
+% pipenv shell
+% pipenv sync -d
+% pip install -e .
 ```
 
 [fonttools]: https://pypi.org/project/fonttools/
@@ -138,7 +137,6 @@ Followings are example usages.
 ```sh
 % ./scripts/build.sh input-font-file.otf -v
 % ./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
-% ./scripts/build-android.sh ~/fonts/noto-cjk-android -v
 ```
 
 ## Testing

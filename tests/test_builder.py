@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from builder import Builder
-from east_asian_spacing import EastAsianSpacingConfig
+from spacing import EastAsianSpacingConfig
 
 
 def test_calc_indices_and_languages():

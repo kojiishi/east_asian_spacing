@@ -7,7 +7,7 @@ import json
 import logging
 from pathlib import Path
 
-from font import Font
+from east_asian_spacing.font import Font
 
 dump_images = False
 

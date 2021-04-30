@@ -11,10 +11,10 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 
-from east_asian_spacing import EastAsianSpacing
-from font import Font
-from shaper import show_dump_images
-from tester import EastAsianSpacingTester
+from east_asian_spacing.spacing import EastAsianSpacing
+from east_asian_spacing.font import Font
+from east_asian_spacing.shaper import show_dump_images
+from east_asian_spacing.tester import EastAsianSpacingTester
 
 
 class Builder(object):

@@ -4,9 +4,9 @@ import argparse
 import itertools
 import logging
 
-from east_asian_spacing import EastAsianSpacingConfig
-from font import Font
-from shaper import Shaper
+from east_asian_spacing.spacing import EastAsianSpacingConfig
+from east_asian_spacing.font import Font
+from east_asian_spacing.shaper import Shaper
 
 
 class EastAsianSpacingTester(object):

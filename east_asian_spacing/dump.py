@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import sys
 
-from font import Font
+from east_asian_spacing.font import Font
 
 logger = logging.getLogger('dump')
 

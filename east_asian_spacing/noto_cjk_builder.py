@@ -4,9 +4,9 @@ import argparse
 import logging
 from pathlib import Path
 
-from builder import Builder
-from builder import Font
-from builder import init_logging
+from east_asian_spacing.builder import Builder
+from east_asian_spacing.builder import Font
+from east_asian_spacing.builder import init_logging
 
 
 class NotoCJKBuilder(Builder):
