@@ -58,11 +58,11 @@
                 "woff"
             ],
             "hashes": [
-                "sha256:4ed7a4c1bba3b76aea0338184671ff091603c788d17b76d0aa0183c8b78b947c",
-                "sha256:5777efffcd7559163af4497464ee451392a940681682a452b54897bc02e070d7"
+                "sha256:cd9bb655261d85ff530eced8b1bc128d6f132415aad24ba03bc8e673235428e4",
+                "sha256:fea6bb9d1d23a94d5e8fa6238214538a89d4333e340025a95a16b77ddb191e6f"
             ],
             "index": "pypi",
-            "version": "==4.22.0"
+            "version": "==4.22.1"
         },
         "zopfli": {
             "hashes": [
