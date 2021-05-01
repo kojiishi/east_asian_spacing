@@ -62,8 +62,7 @@ class Builder(object):
 
     async def build_single(self):
         font = self.font
-        logging.info('Font "%s" lang=%s', font, font.language)
-        font.language = language
+        logging.info('Font "%s"', font)
         spacing = EastAsianSpacing(font)
         await spacing.add_glyphs()
         spacing.add_to_font()
@@ -78,9 +77,8 @@ class Builder(object):
         for font in fonts_in_collection:
             reader_offset = font.reader_offset("GPOS")
             spacing_entry = spacing_by_offset.get(reader_offset)
-            logging.info('%d "%s" lang=%s GPOS=%d%s', font.font_index, font,
-                         font.language, reader_offset,
-                         ' (shared)' if spacing_entry else '')
+            logging.info('%d "%s" GPOS=%d%s', font.font_index, font,
+                         reader_offset, ' (shared)' if spacing_entry else '')
             if spacing_entry:
                 spacing, fonts = spacing_entry
                 # Different faces may have different set of glyphs. Unite them.

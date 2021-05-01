@@ -149,6 +149,8 @@ class Font(object):
         attributes = []
         if self.font_index is not None:
             attributes.append(f'#{self.font_index}')
+        if self.language:
+            attributes.append(f'lang={self.language}')
         if self.is_vertical:
             attributes.append('vertical')
         if len(attributes):
