@@ -8,7 +8,8 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='east_asian_spacing',
-    version='1.0.0',
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     description='East Asian Contextual Spacing Build Tools',
     long_description=long_description,
     long_description_content_type='text/markdown',
