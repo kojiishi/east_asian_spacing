@@ -20,7 +20,7 @@ You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
 This tool requires following packages.
 
 * [hb-shape]
-* Python3
+* Python 3.8 or later
 * [fonttools]
 
 Install [hb-shape] for Linux:

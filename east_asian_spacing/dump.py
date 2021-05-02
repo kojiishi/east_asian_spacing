@@ -392,9 +392,7 @@ class Dump(object):
                     if i:
                         print()
                     print(f'File: {font.path.name}')
-                await Dump.dump_font(font,
-                                     out_file=args.output,
-                                     **vars(args))
+                await Dump.dump_font(font, out_file=args.output, **vars(args))
             logger.debug("dump %d completed: %s", i, font)
         logger.debug("main completed")
 
