@@ -30,13 +30,6 @@ REFDIR=$(ensure-end-slash $REFDIR)
 create-diff () {
   SRC=$1
   DSTPATH=$2
-  DSTBASENAME=$(basename "$DSTPATH")
-
-  # Check if glyph id file exists.
-  GLYPHSPATH=$OUTDIR$DSTBASENAME-glyphs
-  if [[ -f "$GLYPHSPATH" ]]; then
-    CHECKPATHS+=("$GLYPHSPATH")
-  fi
 
   # Create table lists, TTXs, and their diffs.
   while IFS= read DIFF; do
@@ -62,12 +55,23 @@ for ARG in "$@"; do
     continue
   fi
   create-diff "$SRC" "$ARG"
+
+  # Check if glyph id file exists.
+  DSTBASENAME=$(basename "$ARG")
+  GLYPHSPATH=$OUTDIR$DSTBASENAME-glyphs
+  if [[ -f "$GLYPHSPATH" ]]; then
+    CHECKPATHS+=("$GLYPHSPATH")
+  fi
 done
 
 # If no arguments, read the paths from stdin.
 if [[ -z "$SRC" ]]; then
-  while IFS=$'\t' read SRC DST; do
+  while IFS=$'\t' read SRC DST GLYPHS; do
     create-diff "$SRC" "$DST"
+
+    if [[ -n "$GLYPHS" ]]; then
+      CHECKPATHS+=("$GLYPHS")
+    fi
   done
 fi
 

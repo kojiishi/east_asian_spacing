@@ -33,10 +33,12 @@ class Builder(object):
         output_path = self.calc_output_path(font.path, output_path,
                                             stem_suffix)
         font.save(output_path)
+        paths = [font.path, output_path]
         if glyph_out:
-            self.save_glyphs(glyph_out)
+            glyphs_path = self.save_glyphs(glyph_out)
+            paths.append(glyphs_path)
         if path_out:
-            print('\t'.join((str(font.path), str(output_path))),
+            print('\t'.join(str(path) for path in paths),
                   file=path_out,
                   flush=True)  # Flush, for better parallelism when piping.
         return output_path
@@ -149,9 +151,9 @@ class Builder(object):
         if isinstance(output, pathlib.Path):
             if output.is_dir():
                 output = output / f'{font.path.name}-glyphs'
-            with output.open('w') as file:
-                self.save_glyphs(file)
-            return
+            with output.open('w') as out_file:
+                self.save_glyphs(out_file)
+            return output
 
         logging.info("Saving glyphs to %s", output)
         if font.is_collection:
