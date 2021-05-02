@@ -2,7 +2,7 @@
 import asyncio
 import argparse
 import logging
-from pathlib import Path
+import pathlib
 
 from east_asian_spacing.builder import Builder
 from east_asian_spacing.builder import Font
@@ -33,7 +33,7 @@ class NotoCJKBuilder(Builder):
     @staticmethod
     def expand_paths(paths):
         for path in paths:
-            path = Path(path)
+            path = pathlib.Path(path)
             if path.is_dir():
                 yield from NotoCJKBuilder.expand_dir(path)
                 continue
@@ -93,10 +93,10 @@ async def main():
     args = parser.parse_args()
     init_logging(args.verbose)
     if args.glyph_out:
-        args.glyph_out = Path(args.glyph_out)
+        args.glyph_out = pathlib.Path(args.glyph_out)
         args.glyph_out.mkdir(exist_ok=True, parents=True)
     if args.output:
-        args.output = Path(args.output)
+        args.output = pathlib.Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
     for input in NotoCJKBuilder.expand_paths(args.inputs):
         builder = NotoCJKBuilder(input)

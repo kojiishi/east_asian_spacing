@@ -5,7 +5,7 @@ import io
 import itertools
 import json
 import logging
-from pathlib import Path
+import pathlib
 
 from east_asian_spacing.font import Font
 
@@ -85,7 +85,7 @@ class GlyphData(object):
 
 class Shaper(object):
     def __init__(self, font, text, language=None, script=None, features=None):
-        assert isinstance(font.path, Path)
+        assert isinstance(font.path, pathlib.Path)
         self.font = font
         self.language = language
         self.script = script

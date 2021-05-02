@@ -1,4 +1,4 @@
-from pathlib import Path
+import pathlib
 import pytest
 import tempfile
 
@@ -32,19 +32,22 @@ def test_calc_indices_and_languages():
 
 def test_calc_output_path(data_dir):
     def call(input_path, output_path, stem_suffix=None):
-        return Builder.calc_output_path(input_path, output_path, stem_suffix)
+        input_path = pathlib.Path(input_path)
+        if output_path:
+            output_path = pathlib.Path(output_path)
+        result = Builder.calc_output_path(input_path, output_path, stem_suffix)
+        return str(result)
 
-    assert call(Path('c.otf'), None) == Path('c.otf')
-    assert call(Path('a/b/c.otf'), None) == Path('a/b/c.otf')
+    assert call('c.otf', None) == 'c.otf'
+    assert call('a/b/c.otf', None) == 'a/b/c.otf'
 
-    assert call(Path('c.otf'), None, '-chws') == Path('c-chws.otf')
-    assert call(Path('a/b/c.otf'), None, '-chws') == Path('a/b/c-chws.otf')
+    assert call('c.otf', None, '-chws') == 'c-chws.otf'
+    assert call('a/b/c.otf', None, '-chws') == 'a/b/c-chws.otf'
 
-    assert call(Path('c.otf'), Path('build')) == Path('build/c.otf')
-    assert call(Path('a/b/c.otf'), Path('build')) == Path('build/c.otf')
+    assert call('c.otf', 'build') == 'build/c.otf'
+    assert call('a/b/c.otf', 'build') == 'build/c.otf'
 
-    assert call(Path('a/b/c.otf'), Path('build'),
-                '-xyz') == Path('build/c-xyz.otf')
+    assert call('a/b/c.otf', 'build', '-xyz') == 'build/c-xyz.otf'
 
 
 def test_down_sample_to():
@@ -89,7 +92,7 @@ async def test_build_and_diff(fonts_dir, refs_dir, capsys):
     builder = NotoCJKBuilder(in_path)
     await builder.build()
     with tempfile.TemporaryDirectory() as _out_dir:
-        out_dir = Path(_out_dir)
+        out_dir = pathlib.Path(_out_dir)
         out_path = builder.save(out_dir)
 
         await builder.test()

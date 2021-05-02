@@ -1,9 +1,9 @@
 import os
 import sys
-from pathlib import Path
+import pathlib
 import pytest
 
-_test_dir = Path(__file__).resolve().parent
+_test_dir = pathlib.Path(__file__).resolve().parent
 _root_dir = _test_dir.parent
 _data_dir = _test_dir / 'data'
 _package_dir = _root_dir / 'east_asian_spacing'
