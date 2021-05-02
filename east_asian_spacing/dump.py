@@ -247,16 +247,27 @@ class Dump(object):
         logger.debug("dump_font completed: %s", font)
 
     @staticmethod
-    async def diff(src, dst, out_dir, ignore_line_numbers=False):
-        out_path = out_dir / (dst.name + '.diff')
-        cmd = f"diff -u '{src}' '{dst}' | tail -n +3"
+    async def diff(src, dst, out_dir=None, ignore_line_numbers=False):
+        args = ['diff', '-u', src, dst]
+        logger.debug("run_diff: %s", args)
+        proc = await asyncio.create_subprocess_exec(
+            *args, stdout=asyncio.subprocess.PIPE)
+        stdout, _ = await proc.communicate()
+        stdout = stdout.decode('utf-8')
+        lines = stdout.splitlines(keepends=True)
+
+        # Skip the diff headers.
+        lines = itertools.islice(lines, 2, None)
         if ignore_line_numbers:
-            cmd += " | sed -e 's/^@@ -.*/@@/'"
-        cmd += f" >'{out_path}'"
-        logger.debug("run_diff: %s", cmd)
-        p = await asyncio.create_subprocess_shell(cmd)
-        await p.wait()
-        return out_path
+            lines = ('@@\n' if re.match(r'@@ -.', line) else line
+                     for line in lines)
+
+        if out_dir:
+            out_path = out_dir / f'{dst.name}.diff'
+            with out_path.open('w') as out_file:
+                out_file.writelines(lines)
+            return out_path
+        return lines
 
     @staticmethod
     def read_split_table_ttx(input, dir=None):

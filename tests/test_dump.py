@@ -1,4 +1,15 @@
+import pytest
+
 from dump import Dump
+
+
+@pytest.mark.asyncio
+async def test_diff(data_dir, capsys):
+    lines = await Dump.diff(data_dir / 'head.ttx',
+                            data_dir / 'head-modified.ttx')
+    lines = list(lines)
+    diff_lines = [line for line in lines if line[0] == '-' or line[0] == '+']
+    assert len(diff_lines) == 4, ''.join(lines)
 
 
 def test_has_table_diff_head(data_dir):
