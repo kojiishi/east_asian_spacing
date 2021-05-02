@@ -4,7 +4,6 @@ import asyncio
 import itertools
 import logging
 import pathlib
-from pathlib import Path
 import re
 import sys
 
@@ -178,7 +177,7 @@ class Dump(object):
         1. Dumps all fonts in TTC, with the index in the output file name.
         2. Eliminates dumping shared files multiple times."""
         if isinstance(ttx_path, str):
-            ttx_path = Path(ttx_path)
+            ttx_path = pathlib.Path(ttx_path)
         if ttx_path.is_dir():
             ttx_path = ttx_path / (font.path.name + '.ttx')
 
@@ -225,8 +224,8 @@ class Dump(object):
 
         This includes `dump_font_list` and `dump_table_entries`."""
         if isinstance(out_file, str):
-            out_file = Path(out_file)
-        if isinstance(out_file, Path):
+            out_file = pathlib.Path(out_file)
+        if isinstance(out_file, pathlib.Path):
             out_path = out_file / (font.path.name + '.tables')
             with out_path.open('w') as out_file:
                 Dump.dump_tables(font,
@@ -261,7 +260,7 @@ class Dump(object):
 
     @staticmethod
     def read_split_table_ttx(input, dir=None):
-        if isinstance(input, Path):
+        if isinstance(input, pathlib.Path):
             with input.open() as file:
                 return Dump.read_split_table_ttx(file, input.parent)
         tables = {}
@@ -269,7 +268,7 @@ class Dump(object):
             match = re.search(r'<(\S+) src="(.+)"', line)
             if match:
                 path = match.group(2)
-                path = dir / path if dir else Path(path)
+                path = dir / path if dir else pathlib.Path(path)
                 tables[match.group(1)] = path
         logger.debug("Read TTX: %s has %d tables", input, len(tables))
         return tables
@@ -295,12 +294,12 @@ class Dump(object):
             font = Font.load(font)
         if not isinstance(src_font, Font):
             if isinstance(src_font, str):
-                src_font = pahtlib.Path(src_font)
+                src_font = pathlib.Path(src_font)
             if src_font.is_dir():
                 src_font = src_font / font.path.name
             src_font = Font.load(src_font)
         if isinstance(out_dir, str):
-            out_dir = Path(out_dir)
+            out_dir = pathlib.Path(out_dir)
         src_out_dir = out_dir / 'src'
         src_out_dir.mkdir(exist_ok=True, parents=True)
 
@@ -379,7 +378,7 @@ class Dump(object):
             else:
                 logging.basicConfig(level=logging.INFO)
         if args.output:
-            args.output = Path(args.output)
+            args.output = pathlib.Path(args.output)
             args.output.mkdir(exist_ok=True, parents=True)
         num_files = len(args.path)
         for i, path in enumerate(args.path):

@@ -2,7 +2,7 @@
 import argparse
 import itertools
 import logging
-from pathlib import Path
+import pathlib
 import sys
 
 from fontTools.ttLib import newTable
@@ -19,7 +19,7 @@ class Font(object):
     def load(path):
         logging.info("Reading font file: \"%s\"", path)
         if isinstance(path, str):
-            path = Path(path)
+            path = pathlib.Path(path)
         self = Font()
         self.font_index = None
         self.is_vertical = False
@@ -83,9 +83,9 @@ class Font(object):
 
     def save(self, out_path=None):
         if not out_path:
-            out_path = Path("out" + self.path.suffix)
+            out_path = pathlib.Path("out" + self.path.suffix)
         elif isinstance(out_path, str):
-            out_path = Path(out_path)
+            out_path = pathlib.Path(out_path)
         logging.info("Saving to: \"%s\"", out_path)
         if self.ttcollection:
             for ttfont in self.ttcollection:

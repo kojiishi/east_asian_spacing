@@ -3,7 +3,7 @@ import asyncio
 import argparse
 import itertools
 import logging
-from pathlib import Path
+import pathlib
 import re
 import sys
 
@@ -22,8 +22,7 @@ class Builder(object):
         if not isinstance(font, Font):
             font = Font.load(font)
         self.font = font
-        self.fonts_in_collection = font.fonts_in_collection
-        self.built_fonts = None
+        self._fonts_in_collection = None
 
     def save(self,
              output_path=None,
@@ -53,11 +52,22 @@ class Builder(object):
         return (output_path.parent /
                 f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
+    @property
+    def fonts_in_collection(self):
+        if self._fonts_in_collection:
+            assert self.font.is_collection
+            return self._fonts_in_collection
+        if self.font.is_collection:
+            return self.font.fonts_in_collection
+        return None
+
     async def build(self):
         font = self.font
-        if font.is_collection:
-            await self.build_collection()
+        fonts_in_collection = self.fonts_in_collection
+        if fonts_in_collection is not None:
+            await self.build_collection(fonts_in_collection)
             return
+        assert self.fonts_in_collection is None
         await self.build_single()
 
     async def build_single(self):
@@ -68,9 +78,8 @@ class Builder(object):
         spacing.add_to_font()
         self.spacings = (spacing, )
 
-    async def build_collection(self):
+    async def build_collection(self, fonts_in_collection):
         assert self.font.is_collection
-        fonts_in_collection = self.fonts_in_collection
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
         spacing_by_offset = {}
@@ -106,7 +115,7 @@ class Builder(object):
             font.language = language
             assert indices is None
             return
-        self.fonts_in_collection = tuple(
+        self._fonts_in_collection = tuple(
             self.calc_fonts_in_collection(font.fonts_in_collection, language,
                                           indices))
 
@@ -136,8 +145,8 @@ class Builder(object):
     def save_glyphs(self, output):
         font = self.font
         if isinstance(output, str):
-            output = Path(output)
-        if isinstance(output, Path):
+            output = pathlib.Path(output)
+        if isinstance(output, pathlib.Path):
             if output.is_dir():
                 output = output / f'{font.path.name}-glyphs'
             with output.open('w') as file:
@@ -153,8 +162,9 @@ class Builder(object):
         united_spacing.save_glyphs(output)
 
     async def test(self):
-        if self.fonts_in_collection:
-            for font in self.fonts_in_collection:
+        fonts_in_collection = self.fonts_in_collection
+        if fonts_in_collection is not None:
+            for font in fonts_in_collection:
                 await EastAsianSpacingTester(font).test()
             return
         font = self.font
@@ -206,7 +216,7 @@ async def main():
     args = parser.parse_args()
     init_logging(args.verbose)
     if args.output:
-        args.output = Path(args.output)
+        args.output = pathlib.Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
     for input in args.inputs:
         builder = Builder(input)

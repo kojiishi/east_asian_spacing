@@ -14,7 +14,7 @@ class NotoCJKBuilder(Builder):
         super().__init__(font)
         font = self.font
         if font.is_collection:
-            self.fonts_in_collection = tuple(
+            self._fonts_in_collection = tuple(
                 self.calc_fonts_in_collection(font))
         else:
             font.language = self.lang_from_ttfont(font.ttfont)
