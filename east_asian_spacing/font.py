@@ -243,6 +243,13 @@ class Font(object):
         script_record.Script = script
         return script_record
 
+    _casefolded_font_extensions = set(ext.casefold()
+                                      for ext in ('.otf', '.ttc', '.ttf'))
+
+    @staticmethod
+    def is_font_extension(extension):
+        return extension.casefold() in Font._casefolded_font_extensions
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

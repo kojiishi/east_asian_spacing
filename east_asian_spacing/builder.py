@@ -170,6 +170,17 @@ class Builder(object):
         font = self.font
         await EastAsianSpacingTester(font).test()
 
+    @staticmethod
+    def iterate_or_stdin(items):
+        any = False
+        for item in items:
+            yield item
+            any = True
+        if any:
+            return
+        for line in sys.stdin:
+            yield line.rstrip()
+
 
 def init_logging(verbose):
     if verbose <= 0:
@@ -184,7 +195,7 @@ def init_logging(verbose):
 
 async def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("inputs", nargs="+")
+    parser.add_argument("inputs", nargs="*")
     parser.add_argument("-i",
                         "--index",
                         help="For a font collection (TTC), "
@@ -218,7 +229,7 @@ async def main():
     if args.output:
         args.output = pathlib.Path(args.output)
         args.output.mkdir(exist_ok=True, parents=True)
-    for input in args.inputs:
+    for input in Builder.iterate_or_stdin(args.inputs):
         builder = Builder(input)
         builder.apply_language_and_indices(language=args.language,
                                            indices=args.index)

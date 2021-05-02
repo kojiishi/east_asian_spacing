@@ -1,3 +1,4 @@
+import io
 import pathlib
 import pytest
 import tempfile
@@ -72,6 +73,15 @@ def test_change_quotes_closing_to_opening():
     config.change_quotes_closing_to_opening(0xFFFF)
     assert config.quotes_opening == [0x2018, 0x201C, 0x2019]
     assert config.quotes_closing == [0x201D]
+
+
+def test_iterate_or_stdin(monkeypatch):
+    def call(items):
+        return list(Builder.iterate_or_stdin(items))
+
+    assert call([1, 2]) == [1, 2]
+    monkeypatch.setattr('sys.stdin', io.StringIO('line1\nline2\n'))
+    assert call([]) == ['line1', 'line2']
 
 
 @pytest.mark.asyncio
