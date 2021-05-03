@@ -172,21 +172,30 @@ class Builder(object):
         font = self.font
         await EastAsianSpacingTester(font).test()
 
-    @staticmethod
-    def iterate_or_stdin(items):
-        any = False
-        for item in items:
-            yield item
-            any = True
-        if any:
-            return
-        for line in sys.stdin:
-            yield line.rstrip()
+    @classmethod
+    def expand_paths(cls, paths):
+        for path in paths:
+            if path == '-':
+                yield from cls.expand_paths(line.rstrip()
+                                            for line in sys.stdin)
+                continue
+            path = pathlib.Path(path)
+            if path.is_dir():
+                yield from cls.expand_dir(path)
+                continue
+            yield path
+
+    @classmethod
+    def expand_dir(cls, path):
+        assert path.is_dir()
+        child_paths = path.rglob('*')
+        child_paths = filter(Font.is_font_extension, child_paths)
+        return child_paths
 
     @staticmethod
     async def main():
         parser = argparse.ArgumentParser()
-        parser.add_argument("inputs", nargs="*")
+        parser.add_argument("inputs", nargs="+")
         parser.add_argument("-i",
                             "--index",
                             help="For a font collection (TTC), "

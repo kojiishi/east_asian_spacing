@@ -31,17 +31,8 @@ class NotoCJKBuilder(Builder):
             font.language = lang
             yield font
 
-    @staticmethod
-    def expand_paths(paths):
-        for path in Builder.iterate_or_stdin(paths):
-            path = pathlib.Path(path)
-            if path.is_dir():
-                yield from NotoCJKBuilder.expand_dir(path)
-                continue
-            yield path
-
-    @staticmethod
-    def expand_dir(path):
+    @classmethod
+    def expand_dir(cls, path):
         assert path.is_dir()
         child_paths = path.rglob('Noto*')
         child_paths = filter(NotoCJKBuilder.is_font_path, child_paths)
@@ -79,7 +70,7 @@ class NotoCJKBuilder(Builder):
     @staticmethod
     async def main():
         parser = argparse.ArgumentParser()
-        parser.add_argument("inputs", nargs="*")
+        parser.add_argument("inputs", nargs="+")
         parser.add_argument("-g", "--glyph-out", default='build/dump')
         parser.add_argument("-o", "--output", default='build')
         parser.add_argument(

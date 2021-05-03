@@ -50,13 +50,14 @@ def test_calc_output_path(data_dir):
     assert call('a/b/c.otf', 'build', '-xyz') == 'build/c-xyz.otf'
 
 
-def test_iterate_or_stdin(monkeypatch):
+def test_expand_paths(monkeypatch):
     def call(items):
-        return list(Builder.iterate_or_stdin(items))
+        return list(str(path) for path in Builder.expand_paths(items))
 
-    assert call([1, 2]) == [1, 2]
+    assert call(['a', 'b']) == ['a', 'b']
+
     monkeypatch.setattr('sys.stdin', io.StringIO('line1\nline2\n'))
-    assert call([]) == ['line1', 'line2']
+    assert call(['-']) == ['line1', 'line2']
 
 
 @pytest.mark.asyncio
