@@ -196,8 +196,11 @@ class Dump(object):
                 else:
                     remaining.append(entry)
             entries = remaining
-            assert len(tables)
-            args = ['-sf']
+            # Skip ttx if there are no unique tables for this font.
+            if len(tables) == 0:
+                ttx_paths.append(None)
+                continue
+            args = ['ttx', '-sf']
             if logger.getEffectiveLevel() >= logging.WARNING:
                 args.append('-q')
             if font.is_collection:
@@ -210,8 +213,8 @@ class Dump(object):
                 ttx_paths.append(ttx_path)
             args.extend((f'-t{table}' for table in tables))
             args.append(str(font.path))
-            logger.debug('ttx %s', args)
-            procs.append(await asyncio.create_subprocess_exec('ttx', *args))
+            logger.debug('run_ttx: %s', args)
+            procs.append(await asyncio.create_subprocess_exec(*args))
         logger.debug("Awaiting %d dump_ttx for %s", len(procs), font)
         tasks = list((asyncio.create_task(p.wait()) for p in procs))
         await asyncio.wait(tasks)
@@ -248,7 +251,11 @@ class Dump(object):
 
     @staticmethod
     async def diff(src, dst, out_dir=None, ignore_line_numbers=False):
-        args = ['diff', '-u', src, dst]
+        assert src or dst
+        args = [
+            'diff', '-u', src if src else '/dev/null',
+            dst if dst else '/dev/null'
+        ]
         logger.debug("run_diff: %s", args)
         proc = await asyncio.create_subprocess_exec(
             *args, stdout=asyncio.subprocess.PIPE)
@@ -263,7 +270,7 @@ class Dump(object):
                      for line in lines)
 
         if out_dir:
-            out_path = out_dir / f'{dst.name}.diff'
+            out_path = out_dir / f'{(dst or src).name}.diff'
             with out_path.open('w') as out_file:
                 out_file.writelines(lines)
             return out_path
@@ -271,6 +278,8 @@ class Dump(object):
 
     @staticmethod
     def read_split_table_ttx(input, dir=None):
+        if input is None:
+            return {}
         if isinstance(input, pathlib.Path):
             with input.open() as file:
                 return Dump.read_split_table_ttx(file, input.parent)
@@ -342,8 +351,8 @@ class Dump(object):
             tables = Dump.read_split_table_ttx(ttx_path)
             src_tables = Dump.read_split_table_ttx(src_ttx_path)
             for table_name in set(tables.keys()).union(src_tables.keys()):
-                table = tables.get(table_name, '/dev/null')
-                src_table = src_tables.get(table_name, '/dev/null')
+                table = tables.get(table_name)
+                src_table = src_tables.get(table_name)
                 ttx_diff = await Dump.diff(src_table,
                                            table,
                                            diff_out_dir,

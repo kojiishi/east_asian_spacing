@@ -25,46 +25,66 @@ from east_asian_spacing.shaper import show_dump_images
 
 class EastAsianSpacingConfig(object):
     def __init__(self):
-        self.cjk_opening = [
+        self.cjk_opening = {
             0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014, 0x3016, 0x3018,
             0x301A, 0x301D, 0xFF08, 0xFF3B, 0xFF5B, 0xFF5F
-        ]
-        self.cjk_closing = [
+        }
+        self.cjk_closing = {
             0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 0x3019,
             0x301B, 0x301E, 0x301F, 0xFF09, 0xFF3D, 0xFF5D, 0xFF60
-        ]
-        self.quotes_opening = [0x2018, 0x201C]
-        self.quotes_closing = [0x2019, 0x201D]
-        self.cjk_middle = [0x3000, 0x30FB]
-        self.cjk_period_comma = [0x3001, 0x3002, 0xFF0C, 0xFF0E]
-        self.cjk_column_semicolon = [0xFF1A, 0xFF1B]
-        self.cjk_exclam_question = [0xFF01, 0xFF1F]
+        }
+        self.quotes_opening = {0x2018, 0x201C}
+        self.quotes_closing = {0x2019, 0x201D}
+        self.cjk_middle = {0x3000, 0x30FB}
+        self.cjk_period_comma = {0x3001, 0x3002, 0xFF0C, 0xFF0E}
+        self.cjk_column_semicolon = {0xFF1A, 0xFF1B}
+        self.cjk_exclam_question = {0xFF01, 0xFF1F}
+
+    def clone(self):
+        return copy.deepcopy(self)
 
     def tweaked_for(self, font):
         """Returns a tweaked copy when the `font` needs special treatments.
         Otherwise returns `self`."""
+        name = font.debug_name(1)
         if font.is_vertical:
-            name = font.debug_name(1)
             if name.startswith("Meiryo"):
-                config = copy.deepcopy(self)
-                config.change_quotes_closing_to_opening(0x2019)
-                for period_comma in [0xFF0C, 0xFF0E]:
-                    with contextlib.suppress(ValueError):
-                        config.cjk_period_comma.remove(period_comma)
-                return config
-            if name.startswith("Microsoft JhengHei"):
-                config = copy.deepcopy(self)
-                for quotes in [0x2019, 0x201D]:
-                    config.change_quotes_closing_to_opening(quotes)
-                return config
+                clone = self.clone()
+                clone.change_quotes_closing_to_opening(0x2019)
+                clone.remove(0xFF0C, 0xFF0E)
+                return clone
+            if name.startswith("Microsoft YaHei"):
+                clone = self.clone()
+                clone.remove(0x3001, 0x3002, 0x3018, 0x3019, 0x301A, 0x301B,
+                             0xFF08, 0xFF09, 0xFF0C, 0xFF0E)
+                return clone
+        if name.startswith("Microsoft JhengHei"):
+            clone = self.clone()
+            clone.remove(0xFF08, 0xFF09, 0xFF3B, 0xFF3D, 0xFF5B, 0xFF5D,
+                         0xFF5F, 0xFF60)
+            if font.is_vertical:
+                clone.change_quotes_closing_to_opening(0x2019, 0x201D)
+            return clone
         return self
 
-    def change_quotes_closing_to_opening(self, code):
+    def remove(self, *codes):
+        for code in codes:
+            self.cjk_opening.discard(code)
+            self.cjk_closing.discard(code)
+            self.quotes_opening.discard(code)
+            self.quotes_closing.discard(code)
+            self.cjk_middle.discard(code)
+            self.cjk_period_comma.discard(code)
+            self.cjk_column_semicolon.discard(code)
+            self.cjk_exclam_question.discard(code)
+
+    def change_quotes_closing_to_opening(self, *codes):
         """Changes the `code` from `quotes_closing` to `quotes_opening`.
         Does nothing if the `code` is not in `quotes_closing`."""
-        with contextlib.suppress(ValueError):
-            self.quotes_closing.remove(code)
-            self.quotes_opening.append(code)
+        for code in codes:
+            with contextlib.suppress(KeyError):
+                self.quotes_closing.remove(code)
+                self.quotes_opening.add(code)
 
     def down_sample_to(self, max):
         """Reduce the number of code points for testing."""
@@ -137,8 +157,8 @@ class GlyphSetTrio(object):
 
     @staticmethod
     async def get_opening_closing(font, config):
-        opening = config.cjk_opening + config.quotes_opening
-        closing = config.cjk_closing + config.quotes_closing
+        opening = config.cjk_opening | config.quotes_opening
+        closing = config.cjk_closing | config.quotes_closing
         left, right, middle = await asyncio.gather(
             Shaper(font, closing).glyph_set(),
             Shaper(font, opening).glyph_set(),
@@ -148,7 +168,7 @@ class GlyphSetTrio(object):
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
             horizontal = await Shaper(font.horizontal_font,
-                                      opening + closing).glyph_set()
+                                      opening | closing).glyph_set()
             result.left.subtract(horizontal)
             result.right.subtract(horizontal)
         result.assert_glyphs_are_disjoint()
@@ -160,6 +180,8 @@ class GlyphSetTrio(object):
         # ZHT-variants (placed at middle) belong to middle.
         # https://w3c.github.io/clreq/#h-punctuation_adjustment_space
         text = config.cjk_period_comma
+        if not text:
+            return None
         ja, zht = await asyncio.gather(
             Shaper(font, text, language="JAN", script="hani").glyph_set(),
             Shaper(font, text, language="ZHT", script="hani").glyph_set())

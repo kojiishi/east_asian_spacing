@@ -87,9 +87,12 @@ class Builder(object):
         spacing_by_offset = {}
         for font in fonts_in_collection:
             reader_offset = font.reader_offset("GPOS")
+            # If the font does not have `GPOS`, `reader_offset` is `None`.
+            # Create a shared `GPOS` for all fonts in the case. e.g., BIZ-UD.
             spacing_entry = spacing_by_offset.get(reader_offset)
             logging.info('%d "%s" GPOS=%d%s', font.font_index, font,
-                         reader_offset, ' (shared)' if spacing_entry else '')
+                         reader_offset if reader_offset else 0,
+                         ' (shared)' if spacing_entry else '')
             if spacing_entry:
                 spacing, fonts = spacing_entry
                 # Different faces may have different set of glyphs. Unite them.
@@ -231,7 +234,7 @@ class Builder(object):
         if args.output:
             args.output = pathlib.Path(args.output)
             args.output.mkdir(exist_ok=True, parents=True)
-        for input in Builder.iterate_or_stdin(args.inputs):
+        for input in Builder.expand_paths(args.inputs):
             builder = Builder(input)
             builder.apply_language_and_indices(language=args.language,
                                                indices=args.index)

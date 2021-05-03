@@ -15,11 +15,11 @@ def test_down_sample_to():
 
 def test_change_quotes_closing_to_opening():
     config = EastAsianSpacingConfig()
-    config.quotes_opening = [0x2018, 0x201C]
-    config.quotes_closing = [0x2019, 0x201D]
+    config.quotes_opening = {0x2018, 0x201C}
+    config.quotes_closing = {0x2019, 0x201D}
     config.change_quotes_closing_to_opening(0x2019)
-    assert config.quotes_opening == [0x2018, 0x201C, 0x2019]
-    assert config.quotes_closing == [0x201D]
+    assert config.quotes_opening == {0x2018, 0x201C, 0x2019}
+    assert config.quotes_closing == {0x201D}
     config.change_quotes_closing_to_opening(0xFFFF)
-    assert config.quotes_opening == [0x2018, 0x201C, 0x2019]
-    assert config.quotes_closing == [0x201D]
+    assert config.quotes_opening == {0x2018, 0x201C, 0x2019}
+    assert config.quotes_closing == {0x201D}

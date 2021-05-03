@@ -165,8 +165,8 @@ class Shaper(object):
     @staticmethod
     async def main():
         parser = argparse.ArgumentParser()
-        parser.add_argument("path")
-        parser.add_argument("--face-index")
+        parser.add_argument("font_path")
+        parser.add_argument("-i", "--index", type=int, default=0)
         parser.add_argument("text", nargs="?")
         parser.add_argument("-l", "--language")
         parser.add_argument("-s", "--script")
@@ -185,7 +185,9 @@ class Shaper(object):
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.INFO)
-        font = Font(args)
+        font = Font.load(args.font_path)
+        if font.is_collection:
+            font = font.fonts_in_collection[args.index]
         if args.is_vertical:
             font = font.vertical_font
         if args.text:
