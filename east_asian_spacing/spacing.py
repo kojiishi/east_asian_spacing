@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import asyncio
 import argparse
+import asyncio
 import contextlib
 import copy
 import io
@@ -441,32 +441,34 @@ class EastAsianSpacing(object):
         if self.vertical:
             self.vertical.add_to_table(table, 'vchw')
 
-
-async def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("path")
-    parser.add_argument("-i", "--index", type=int, default=0)
-    parser.add_argument("-v",
-                        "--verbose",
-                        help="increase output verbosity",
-                        action="count",
-                        default=0)
-    parser.add_argument("--vertical", dest="is_vertical", action="store_true")
-    args = parser.parse_args()
-    if args.verbose:
-        if args.verbose >= 2:
-            show_dump_images()
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
-    font = Font.load(args.path)
-    font = font.fonts[args.index]
-    if args.is_vertical:
-        font = font.vertical_font
-    spacing = EastAsianSpacing(font)
-    await spacing.add_glyphs()
-    spacing.save_glyphs(sys.stdout, separator=', ')
+    @staticmethod
+    async def main():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("path")
+        parser.add_argument("-i", "--index", type=int, default=0)
+        parser.add_argument("-v",
+                            "--verbose",
+                            help="increase output verbosity",
+                            action="count",
+                            default=0)
+        parser.add_argument("--vertical",
+                            dest="is_vertical",
+                            action="store_true")
+        args = parser.parse_args()
+        if args.verbose:
+            if args.verbose >= 2:
+                show_dump_images()
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.INFO)
+        font = Font.load(args.path)
+        font = font.fonts[args.index]
+        if args.is_vertical:
+            font = font.vertical_font
+        spacing = EastAsianSpacing(font)
+        await spacing.add_glyphs()
+        spacing.save_glyphs(sys.stdout, separator=', ')
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(EastAsianSpacing.main())

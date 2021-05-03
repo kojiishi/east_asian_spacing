@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import asyncio
 import argparse
+import asyncio
 import itertools
 import logging
 import pathlib
@@ -11,9 +11,9 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 
-from east_asian_spacing.spacing import EastAsianSpacing
 from east_asian_spacing.font import Font
-from east_asian_spacing.shaper import show_dump_images
+from east_asian_spacing.log_utils import init_logging
+from east_asian_spacing.spacing import EastAsianSpacing
 from east_asian_spacing.tester import EastAsianSpacingTester
 
 
@@ -183,65 +183,56 @@ class Builder(object):
         for line in sys.stdin:
             yield line.rstrip()
 
-
-def init_logging(verbose):
-    if verbose <= 0:
-        return
-    if verbose <= 1:
-        logging.basicConfig(level=logging.INFO)
-        return
-    logging.basicConfig(level=logging.DEBUG)
-    if verbose >= 3:
-        show_dump_images()
-
-
-async def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("inputs", nargs="*")
-    parser.add_argument("-i",
-                        "--index",
-                        help="For a font collection (TTC), "
-                        "specify a list of indices.")
-    parser.add_argument("-g",
-                        "--glyph-out",
-                        help="Outputs glyphs for `pyftsubset`")
-    parser.add_argument("-l",
-                        "--language",
-                        help="language if the font is language-specific. "
-                        "For a font collection (TTC), "
-                        "a comma separated list can specify different "
-                        "language for each font in the colletion.")
-    parser.add_argument("-o",
-                        "--output",
-                        default="build",
-                        help="The output directory.")
-    parser.add_argument("--path-out",
-                        type=argparse.FileType('w'),
-                        help="Output the input and output path information.")
-    parser.add_argument("-s",
-                        "--suffix",
-                        help="Suffix to add to the output file name.")
-    parser.add_argument("-v",
-                        "--verbose",
-                        help="increase output verbosity",
-                        action="count",
-                        default=0)
-    args = parser.parse_args()
-    init_logging(args.verbose)
-    if args.output:
-        args.output = pathlib.Path(args.output)
-        args.output.mkdir(exist_ok=True, parents=True)
-    for input in Builder.iterate_or_stdin(args.inputs):
-        builder = Builder(input)
-        builder.apply_language_and_indices(language=args.language,
-                                           indices=args.index)
-        await builder.build()
-        builder.save(args.output,
-                     stem_suffix=args.suffix,
-                     glyph_out=args.glyph_out,
-                     path_out=args.path_out)
-        await builder.test()
+    @staticmethod
+    async def main():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("inputs", nargs="*")
+        parser.add_argument("-i",
+                            "--index",
+                            help="For a font collection (TTC), "
+                            "specify a list of indices.")
+        parser.add_argument("-g",
+                            "--glyph-out",
+                            help="Outputs glyphs for `pyftsubset`")
+        parser.add_argument("-l",
+                            "--language",
+                            help="language if the font is language-specific. "
+                            "For a font collection (TTC), "
+                            "a comma separated list can specify different "
+                            "language for each font in the colletion.")
+        parser.add_argument("-o",
+                            "--output",
+                            default="build",
+                            help="The output directory.")
+        parser.add_argument(
+            "-p",
+            "--path-out",
+            type=argparse.FileType('w'),
+            help="Output the input and output path information.")
+        parser.add_argument("-s",
+                            "--suffix",
+                            help="Suffix to add to the output file name.")
+        parser.add_argument("-v",
+                            "--verbose",
+                            help="increase output verbosity",
+                            action="count",
+                            default=0)
+        args = parser.parse_args()
+        init_logging(args.verbose)
+        if args.output:
+            args.output = pathlib.Path(args.output)
+            args.output.mkdir(exist_ok=True, parents=True)
+        for input in Builder.iterate_or_stdin(args.inputs):
+            builder = Builder(input)
+            builder.apply_language_and_indices(language=args.language,
+                                               indices=args.index)
+            await builder.build()
+            builder.save(args.output,
+                         stem_suffix=args.suffix,
+                         glyph_out=args.glyph_out,
+                         path_out=args.path_out)
+            await builder.test()
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(Builder.main())

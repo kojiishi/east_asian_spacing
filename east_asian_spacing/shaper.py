@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import asyncio
 import argparse
+import asyncio
 import io
 import itertools
 import json
@@ -162,59 +162,66 @@ class Shaper(object):
         unicodes_as_hex_string = ",".join(hex(c) for c in text)
         args.append(f'--unicodes={unicodes_as_hex_string}')
 
-
-async def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("path")
-    parser.add_argument("--face-index")
-    parser.add_argument("text", nargs="?")
-    parser.add_argument("-l", "--language")
-    parser.add_argument("-s", "--script")
-    parser.add_argument("--units-per-em", type=int)
-    parser.add_argument("--vertical", dest="is_vertical", action="store_true")
-    parser.add_argument("-v",
-                        "--verbose",
-                        help="increase output verbosity",
-                        action="count",
-                        default=0)
-    args = parser.parse_args()
-    show_dump_images()
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
-    font = Font(args)
-    if args.is_vertical:
-        font = font.vertical_font
-    if args.text:
-        glyphs = await Shaper(font,
-                              args.text,
-                              language=args.language,
-                              script=args.script).glyph_set()
-        print("glyph_id=", glyphs.glyph_ids)
-    else:
-        # Print samples.
-        await Shaper(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
-        await Shaper(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
-        await Shaper(
-            font,
-            [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F]).glyph_set()
-        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                     language="JAN",
-                     script="hani").glyph_set()
-        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                     language="ZHS",
-                     script="hani").glyph_set()
-        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                     language="ZHH",
-                     script="hani").glyph_set()
-        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                     language="ZHT",
-                     script="hani").glyph_set()
-        await Shaper(font, [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
-                     language="KOR",
-                     script="hani").glyph_set()
+    @staticmethod
+    async def main():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("path")
+        parser.add_argument("--face-index")
+        parser.add_argument("text", nargs="?")
+        parser.add_argument("-l", "--language")
+        parser.add_argument("-s", "--script")
+        parser.add_argument("--units-per-em", type=int)
+        parser.add_argument("--vertical",
+                            dest="is_vertical",
+                            action="store_true")
+        parser.add_argument("-v",
+                            "--verbose",
+                            help="increase output verbosity",
+                            action="count",
+                            default=0)
+        args = parser.parse_args()
+        show_dump_images()
+        if args.verbose:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.INFO)
+        font = Font(args)
+        if args.is_vertical:
+            font = font.vertical_font
+        if args.text:
+            glyphs = await Shaper(font,
+                                  args.text,
+                                  language=args.language,
+                                  script=args.script).glyph_set()
+            print("glyph_id=", glyphs.glyph_ids)
+        else:
+            # Print samples.
+            await Shaper(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
+            await Shaper(font, [0x2018, 0x2019, 0x201C, 0x201D]).glyph_set()
+            await Shaper(
+                font,
+                [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F]).glyph_set()
+            await Shaper(font,
+                         [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                         language="JAN",
+                         script="hani").glyph_set()
+            await Shaper(font,
+                         [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                         language="ZHS",
+                         script="hani").glyph_set()
+            await Shaper(font,
+                         [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                         language="ZHH",
+                         script="hani").glyph_set()
+            await Shaper(font,
+                         [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                         language="ZHT",
+                         script="hani").glyph_set()
+            await Shaper(font,
+                         [0x3001, 0x3002, 0xFF01, 0xFF1A, 0xFF1B, 0xFF1F],
+                         language="KOR",
+                         script="hani").glyph_set()
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(Shaper.main())

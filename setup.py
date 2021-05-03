@@ -16,4 +16,9 @@ setup(
     url='https://github.com/kojiishi/east_asian_spacing',
     packages=find_packages(where='.'),
     install_requires=['fonttools[woff]>=4.13.0'],
+    entry_points={
+        'console_scripts': [
+            'east-asian-spacing=east_asian_spacing.__main__:main',
+        ]
+    }
 )

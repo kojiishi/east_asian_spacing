@@ -32,9 +32,11 @@ Install [hb-shape] for Mac:
 % brew install harfbuzz
 ```
 
-Then install required Python packages.
+Then install Python packages.
 The use of [pipenv] is recommended:
 ```sh
+% git clone https://github.com/kojiishi/east_asian_spacing
+% cd east_asian_spacing
 % pipenv shell
 % pipenv sync -d
 % pip install -e .
@@ -50,13 +52,14 @@ The use of [pipenv] is recommended:
 The following example adds the feature table to `input-font-file`
 and saves it to the `build` directory.
 ```sh
-% python3 builder.py -o build input-font-file
+% east-asian-spacing -o build input-font-file
 ```
 Please use the `--help` option
 to see the full list of options.
 
-Also there are some [scripts](#scripts) that can help using the tools
-in the `scripts` directory.
+Also, there are some [scripts](#scripts)
+in the `scripts` directory
+that can help using the tools.
 
 ### Languages
 
@@ -65,13 +68,12 @@ this tool need to generate different tables for different languages.
 
 When the font supports multiple East Asian languages,
 this tool can detect the languages automatically in most cases.
-
-When the language can't be detected, this tool shows an error.
+But when the language can't be detected, this tool shows an error.
 You need to specify the [OpenType language system tag] of the font.
 
 The following example specifies that the font is a Japanese font.
 ```sh
-% python3 builder.py --language=JAN input-font-file
+% east-asian-spacing --language=JAN input-font-file
 ```
 
 [OpenType language system tag]: https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
@@ -81,12 +83,12 @@ The following example specifies that the font is a Japanese font.
 When the `input-font-file` is a TrueType Collection,
 this tool adds the feature table to all fonts in the collection by default.
 
-If you don't want to add the feature table to all fonts in the collection,
+If you want to add the feature table to only some of fonts in the collection,
 you can specify a comma-separated list of font indexes.
-
-The following example adds the table to font index 0 and 1, but not to other fonts.
+The following example adds the table to the font index 0 and 1,
+but not to other fonts in the collection.
 ```sh
-% python3 builder.py --index=0,1 input-font-file.ttc
+% east-asian-spacing --index=0,1 input-font-file.ttc
 ```
 
 The language option applies to all fonts in the collection by default.
@@ -97,7 +99,7 @@ Korean for the font index 1,
 Simplified Chinese for the font index 2,
 and automatic for all other fonts.
 ```sh
-% python3 builder.py --language=,KOR,ZHS input-font-file.ttc
+% east-asian-spacing --language=,KOR,ZHS input-font-file.ttc
 ```
 
 You can combine these two options.
@@ -106,23 +108,25 @@ The following example applies
 and `ZHS` to the index 3.
 Other fonts are not changed.
 ```sh
-% python3 builder.py --index=2,3 --language=JAN,ZHS input-font-file.ttc
+% east-asian-spacing --index=2,3 --language=JAN,ZHS input-font-file.ttc
 ```
 
 ### Noto CJK
 
 For [Noto CJK] fonts,
-`noto_cjk_builder.py` can determine the font indices and the languages automatically.
-It is equivalent to `builder.py`, except that
-a) it computes the appropriate language for each font, and
-b) it skips `Mono` fonts,
+`east-asian-spacing` has a built-in support
+to determine the font indices and the languages automatically.
+
+When the first argument is `noto`, it
+a) computes the appropriate language for each font, and
+b) skips `Mono` fonts,
 both determined by the font name.
 ```sh
-% python3 noto_cjk_builder.py NotoSansCJK.ttc
+% east-asian-spacing noto NotoSansCJK.ttc
 ```
 You can also run it for a directory to find all font files recursively.
 ```sh
-% python3 noto_cjk_builder.py ~/googlefonts/noto-cjk
+% east-asian-spacing noto ~/googlefonts/noto-cjk
 ```
 
 [Noto CJK]: https://www.google.com/get/noto/help/cjk/
@@ -151,20 +155,22 @@ to check the behavior of fonts on browsers.
 ### Dump and Diff
 [Dump and Diff]: #dump-and-diff
 
-`dump.py` can create various types of text dump files.
-The following example creates dump files in the `build/dump` directory.
+The `dump` sub-command can create various types of text dump files.
+The following example creates textdump files in the `build/dump` directory.
 ```sh
-% python3 dump.py -o build/dump build/NotoSansCJK-Regular.ttc
+% east-asian-spacing dump -o build/dump build/NotoSansCJK-Regular.ttc
 ```
 
-`dump.py` can also create text dump files of two font files and compare them.
-This helps visualizing changes in the font files you created.
+The `dump` sub-command can also create
+text dump files of two font files and compare them.
+This helps visualizing changes in the font files you created
+from the original font files.
 ```sh
-% python3 dump.py -o build/dump --diff fonts build/NotoSansCJK.ttc
+% east-asian-spacing dump -o build/dump --diff source_fonts build/NotoSansCJK.ttc
 ```
 This example creates following 3 sets of files:
 1. Dump files for `build/NotoSansCJK.ttc` in the `build/dump` directory.
-2. Dump files for `fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
+2. Dump files for `source_fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
 3. Diff files of the two sets of dump files in the `build/dump/diff` directory.
 
 ### References

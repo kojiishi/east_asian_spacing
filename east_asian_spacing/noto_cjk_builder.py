@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import asyncio
 import argparse
+import asyncio
 import logging
 import pathlib
 import sys
 
 from east_asian_spacing.builder import Builder
 from east_asian_spacing.builder import Font
-from east_asian_spacing.builder import init_logging
+from east_asian_spacing.log_utils import init_logging
 
 
 class NotoCJKBuilder(Builder):
@@ -76,36 +76,38 @@ class NotoCJKBuilder(Builder):
             return 'ZHH'
         assert False, name
 
-
-async def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("inputs", nargs="*")
-    parser.add_argument("-g", "--glyph-out", default='build/dump')
-    parser.add_argument("-o", "--output", default='build')
-    parser.add_argument("--path-out",
-                        type=argparse.FileType('w'),
-                        help="Output the input and output path information.")
-    parser.add_argument("-v",
-                        "--verbose",
-                        help="increase output verbosity",
-                        action="count",
-                        default=0)
-    args = parser.parse_args()
-    init_logging(args.verbose)
-    if args.glyph_out:
-        args.glyph_out = pathlib.Path(args.glyph_out)
-        args.glyph_out.mkdir(exist_ok=True, parents=True)
-    if args.output:
-        args.output = pathlib.Path(args.output)
-        args.output.mkdir(exist_ok=True, parents=True)
-    for input in NotoCJKBuilder.expand_paths(args.inputs):
-        builder = NotoCJKBuilder(input)
-        await builder.build()
-        builder.save(args.output,
-                     glyph_out=args.glyph_out,
-                     path_out=args.path_out)
-        await builder.test()
+    @staticmethod
+    async def main():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("inputs", nargs="*")
+        parser.add_argument("-g", "--glyph-out", default='build/dump')
+        parser.add_argument("-o", "--output", default='build')
+        parser.add_argument(
+            "-p",
+            "--path-out",
+            type=argparse.FileType('w'),
+            help="Output the input and output path information.")
+        parser.add_argument("-v",
+                            "--verbose",
+                            help="increase output verbosity",
+                            action="count",
+                            default=0)
+        args = parser.parse_args()
+        init_logging(args.verbose)
+        if args.glyph_out:
+            args.glyph_out = pathlib.Path(args.glyph_out)
+            args.glyph_out.mkdir(exist_ok=True, parents=True)
+        if args.output:
+            args.output = pathlib.Path(args.output)
+            args.output.mkdir(exist_ok=True, parents=True)
+        for input in NotoCJKBuilder.expand_paths(args.inputs):
+            builder = NotoCJKBuilder(input)
+            await builder.build()
+            builder.save(args.output,
+                         glyph_out=args.glyph_out,
+                         path_out=args.path_out)
+            await builder.test()
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(NotoCJKBuilder.main())

@@ -4,7 +4,7 @@ from dump import Dump
 
 
 @pytest.mark.asyncio
-async def test_diff(data_dir, capsys):
+async def test_diff(data_dir):
     lines = await Dump.diff(data_dir / 'head.ttx',
                             data_dir / 'head-modified.ttx')
     lines = list(lines)

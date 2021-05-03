@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-import asyncio
 import argparse
+import asyncio
 import itertools
 import logging
 
-from east_asian_spacing.spacing import EastAsianSpacingConfig
 from east_asian_spacing.font import Font
 from east_asian_spacing.shaper import Shaper
+from east_asian_spacing.spacing import EastAsianSpacingConfig
 
 
 class EastAsianSpacingTester(object):
@@ -62,25 +62,25 @@ class EastAsianSpacingTester(object):
             _, right = glyphs
             assert right.offset == -half_em and right.advance == half_em, text
 
-
-async def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("path")
-    parser.add_argument("-i", "--face-index", type=int)
-    parser.add_argument("-v",
-                        "--verbose",
-                        help="increase output verbosity",
-                        action="count",
-                        default=0)
-    args = parser.parse_args()
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
-    font = Font(args)
-    await EastAsianSpacingTester(font).test()
-    logging.info('All tests pass')
+    @staticmethod
+    async def main():
+        parser = argparse.ArgumentParser()
+        parser.add_argument("path")
+        parser.add_argument("-i", "--face-index", type=int)
+        parser.add_argument("-v",
+                            "--verbose",
+                            help="increase output verbosity",
+                            action="count",
+                            default=0)
+        args = parser.parse_args()
+        if args.verbose:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.INFO)
+        font = Font(args)
+        await EastAsianSpacingTester(font).test()
+        logging.info('All tests pass')
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(EastAsianSpacingTester.main())
