@@ -8,6 +8,8 @@ from east_asian_spacing.font import Font
 from east_asian_spacing.shaper import Shaper
 from east_asian_spacing.spacing import EastAsianSpacingConfig
 
+logger = logging.getLogger('test')
+
 
 class EastAsianSpacingTester(object):
     def __init__(self, font):
@@ -31,7 +33,7 @@ class EastAsianSpacingTester(object):
                 itertools.product(config.cjk_opening, config.cjk_opening)))
         tasks = list((asyncio.create_task(coro) for coro in coros))
         await asyncio.wait(tasks)
-        logging.info(f'Tests pass: {self.font}')
+        logger.info(f'Tests pass: {self.font}')
 
         font = self.font
         if not font.is_vertical:

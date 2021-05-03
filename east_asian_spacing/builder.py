@@ -6,6 +6,7 @@ import logging
 import pathlib
 import re
 import sys
+import time
 
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
@@ -15,6 +16,8 @@ from east_asian_spacing.font import Font
 from east_asian_spacing.log_utils import init_logging
 from east_asian_spacing.spacing import EastAsianSpacing
 from east_asian_spacing.tester import EastAsianSpacingTester
+
+logger = logging.getLogger('build')
 
 
 class Builder(object):
@@ -28,18 +31,17 @@ class Builder(object):
              output_path=None,
              stem_suffix=None,
              glyph_out=None,
-             path_out=None):
+             print_path=False):
         font = self.font
         output_path = self.calc_output_path(font.path, output_path,
                                             stem_suffix)
         font.save(output_path)
-        paths = [font.path, output_path]
+        paths = [output_path, font.path]
         if glyph_out:
             glyphs_path = self.save_glyphs(glyph_out)
             paths.append(glyphs_path)
-        if path_out:
+        if print_path:
             print('\t'.join(str(path) for path in paths),
-                  file=path_out,
                   flush=True)  # Flush, for better parallelism when piping.
         return output_path
 
@@ -74,7 +76,7 @@ class Builder(object):
 
     async def build_single(self):
         font = self.font
-        logging.info('Font "%s"', font)
+        logger.info('Font "%s"', font)
         spacing = EastAsianSpacing(font)
         await spacing.add_glyphs()
         spacing.add_to_font()
@@ -90,9 +92,9 @@ class Builder(object):
             # If the font does not have `GPOS`, `reader_offset` is `None`.
             # Create a shared `GPOS` for all fonts in the case. e.g., BIZ-UD.
             spacing_entry = spacing_by_offset.get(reader_offset)
-            logging.info('%d "%s" GPOS=%d%s', font.font_index, font,
-                         reader_offset if reader_offset else 0,
-                         ' (shared)' if spacing_entry else '')
+            logger.info('%d "%s" GPOS=%d%s', font.font_index, font,
+                        reader_offset if reader_offset else 0,
+                        ' (shared)' if spacing_entry else '')
             if spacing_entry:
                 spacing, fonts = spacing_entry
                 # Different faces may have different set of glyphs. Unite them.
@@ -109,11 +111,11 @@ class Builder(object):
         built_fonts = []
         for spacing, fonts in spacing_by_offset.values():
             if not spacing.can_add_to_font:
-                logging.info('Skipping due to no pairs: %s',
-                             list(font.font_index for font in fonts))
+                logger.info('Skipping due to no pairs: %s',
+                            list(font.font_index for font in fonts))
                 continue
-            logging.info('Adding feature to: %s',
-                         list(font.font_index for font in fonts))
+            logger.info('Adding feature to: %s',
+                        list(font.font_index for font in fonts))
             for font in fonts:
                 spacing.font = font
                 spacing.add_to_font()
@@ -167,7 +169,7 @@ class Builder(object):
                 self.save_glyphs(out_file)
             return output
 
-        logging.info("Saving glyphs to %s", output)
+        logger.info("Saving glyphs to %s", output)
         if font.is_collection:
             font = font.fonts_in_collection[0]
         united_spacing = EastAsianSpacing(font)
@@ -229,8 +231,8 @@ class Builder(object):
                             type=pathlib.Path,
                             help="The output directory.")
         parser.add_argument("-p",
-                            "--path-out",
-                            type=argparse.FileType('w'),
+                            "--print-path",
+                            action="store_true",
                             help="Output the file paths.")
         parser.add_argument("-s",
                             "--suffix",
@@ -252,9 +254,12 @@ class Builder(object):
             builder.save(args.output,
                          stem_suffix=args.suffix,
                          glyph_out=args.glyph_out,
-                         path_out=args.path_out)
+                         print_path=args.print_path)
             await builder.test()
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     asyncio.run(Builder.main())
+    elapsed = time.time() - start_time
+    logger.info(f'Elapsed {elapsed:.2f}s')

@@ -4,10 +4,13 @@ import asyncio
 import logging
 import pathlib
 import sys
+import time
 
 from east_asian_spacing.builder import Builder
 from east_asian_spacing.builder import Font
 from east_asian_spacing.log_utils import init_logging
+
+logger = logging.getLogger('build')
 
 
 class NotoCJKBuilder(Builder):
@@ -26,7 +29,7 @@ class NotoCJKBuilder(Builder):
         for index, font in enumerate(font.fonts_in_collection):
             lang = NotoCJKBuilder.lang_from_ttfont(font.ttfont)
             if lang is None:
-                logging.info(f'Font index {index} "{font}" skipped')
+                logger.info(f'Font index {index} "{font}" skipped')
                 continue
             font.language = lang
             yield font
@@ -82,8 +85,8 @@ class NotoCJKBuilder(Builder):
                             type=pathlib.Path,
                             help="The output directory.")
         parser.add_argument("-p",
-                            "--path-out",
-                            type=argparse.FileType('w'),
+                            "--print-path",
+                            action="store_true",
                             help="Output the file paths.")
         parser.add_argument("-v",
                             "--verbose",
@@ -101,9 +104,12 @@ class NotoCJKBuilder(Builder):
             await builder.build()
             builder.save(args.output,
                          glyph_out=args.glyph_out,
-                         path_out=args.path_out)
+                         print_path=args.print_path)
             await builder.test()
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     asyncio.run(NotoCJKBuilder.main())
+    elapsed = time.time() - start_time
+    logger.info(f'Elapsed {elapsed:.2f}s')

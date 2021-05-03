@@ -10,6 +10,8 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 
+logger = logging.getLogger('font')
+
 
 class Font(object):
     def __init__(self):
@@ -17,7 +19,7 @@ class Font(object):
 
     @staticmethod
     def load(path):
-        logging.info("Reading font file: \"%s\"", path)
+        logger.info("Reading font file: \"%s\"", path)
         if isinstance(path, str):
             path = pathlib.Path(path)
         self = Font()
@@ -34,8 +36,8 @@ class Font(object):
             self.fonts_in_collection = tuple(
                 self._create_font_in_collection(index, ttfont)
                 for index, ttfont in enumerate(self.ttcollection))
-            logging.info("%d fonts found in the collection",
-                         len(self.ttcollection))
+            logger.info("%d fonts found in the collection",
+                        len(self.ttcollection))
             return self
         self.ttfont = TTFont(path, allowVID=True)
         self.ttcollection = None
@@ -86,7 +88,7 @@ class Font(object):
             out_path = pathlib.Path("out" + self.path.suffix)
         elif isinstance(out_path, str):
             out_path = pathlib.Path(out_path)
-        logging.info("Saving to: \"%s\"", out_path)
+        logger.info("Saving to: \"%s\"", out_path)
         if self.ttcollection:
             for ttfont in self.ttcollection:
                 self._before_save(ttfont)
@@ -96,8 +98,8 @@ class Font(object):
             self.ttfont.save(str(out_path))
         size_before = self.path.stat().st_size
         size_after = out_path.stat().st_size
-        logging.info("File sizes: %d -> %d Delta: %d", size_before, size_after,
-                     size_after - size_before)
+        logger.info("File sizes: %d -> %d Delta: %d", size_before, size_after,
+                    size_after - size_before)
 
     @staticmethod
     def _before_save(ttfont):
@@ -216,7 +218,7 @@ class Font(object):
         return False
 
     def add_gpos_table(self):
-        logging.info("Adding GPOS table")
+        logger.info("Adding GPOS table")
         ttfont = self.ttfont
         assert ttfont.get('GPOS') is None
         table = otTables.GPOS()

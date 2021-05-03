@@ -22,6 +22,8 @@ from east_asian_spacing.shaper import GlyphSet
 from east_asian_spacing.shaper import Shaper
 from east_asian_spacing.shaper import show_dump_images
 
+logger = logging.getLogger('spacing')
+
 
 class EastAsianSpacingConfig(object):
     def __init__(self):
@@ -332,8 +334,8 @@ class GlyphSetTrio(object):
 
         features = table.FeatureList.FeatureRecord
         feature_index = len(features)
-        logging.info("Adding Feature '%s' at index %d for lookup %s",
-                     feature_tag, feature_index, lookup_indices)
+        logger.info("Adding Feature '%s' at index %d for lookup %s",
+                    feature_tag, feature_index, lookup_indices)
         feature_record = otTables.FeatureRecord()
         feature_record.FeatureTag = feature_tag
         feature_record.Feature = otTables.Feature()
@@ -343,13 +345,13 @@ class GlyphSetTrio(object):
 
         scripts = table.ScriptList.ScriptRecord
         for script_record in scripts:
-            logging.debug(
+            logger.debug(
                 "Adding Feature index %d to script '%s' DefaultLangSys",
                 feature_index, script_record.ScriptTag)
             script_record.Script.DefaultLangSys.FeatureIndex.append(
                 feature_index)
             for lang_sys in script_record.Script.LangSysRecord:
-                logging.debug(
+                logger.debug(
                     "Adding Feature index %d to script '%s' LangSys '%s'",
                     feature_index, script_record.ScriptTag,
                     lang_sys.LangSysTag)
@@ -360,8 +362,8 @@ class GlyphSetTrio(object):
         left = tuple(self.left.glyph_names(font))
         right = tuple(self.right.glyph_names(font))
         middle = tuple(self.middle.glyph_names(font))
-        logging.info("Adding Lookups for %d left, %d right, %d middle glyphs",
-                     len(left), len(right), len(middle))
+        logger.info("Adding Lookups for %d left, %d right, %d middle glyphs",
+                    len(left), len(right), len(middle))
         half_em = int(font.units_per_em / 2)
         assert half_em > 0
         if font.is_vertical:

@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
+import collections
 import itertools
 import logging
+import os
 import pathlib
 import re
 import sys
 
 from east_asian_spacing.font import Font
+from east_asian_spacing.log_utils import init_logging
 
 logger = logging.getLogger('dump')
 
@@ -176,6 +179,7 @@ class Dump(object):
         """Same as `ttx -s`, except for TTC:
         1. Dumps all fonts in TTC, with the index in the output file name.
         2. Eliminates dumping shared files multiple times."""
+        logger.info('dump_ttx %s', font.path)
         if isinstance(ttx_path, str):
             ttx_path = pathlib.Path(ttx_path)
         if ttx_path.is_dir():
@@ -201,10 +205,11 @@ class Dump(object):
                 ttx_paths.append(None)
                 continue
             args = ['ttx', '-sf']
-            if logger.getEffectiveLevel() >= logging.WARNING:
+            if logger.getEffectiveLevel() >= logging.INFO:
                 args.append('-q')
             if font.is_collection:
-                indexed_ttx_path = ttx_path.parent / f'{ttx_path.stem}-{index}{ttx_path.suffix}'
+                indexed_ttx_name = f'{ttx_path.stem}-{index}{ttx_path.suffix}'
+                indexed_ttx_path = ttx_path.parent / indexed_ttx_name
                 args.append(f'-y{index}')
                 args.append(f'-o{indexed_ttx_path}')
                 ttx_paths.append(indexed_ttx_path)
@@ -242,19 +247,21 @@ class Dump(object):
         Dump.dump_table_entries(font, entries, out_file=out_file, **kwargs)
 
     @staticmethod
-    async def dump_font(font, out_file=sys.stdout, ttx=None, **kwargs):
+    async def dump_font(font, output=sys.stdout, ttx=None, **kwargs):
+        logger.info('dump_font %s', font.path)
         entries = TableEntry.read_font(font)
-        Dump.dump_tables(font, entries=entries, out_file=out_file, **kwargs)
+        Dump.dump_tables(font, entries=entries, out_file=output, **kwargs)
         if ttx:
             await Dump.dump_ttx(font, ttx, entries)
+        print(file=output)
         logger.debug("dump_font completed: %s", font)
 
     @staticmethod
     async def diff(src, dst, out_dir=None, ignore_line_numbers=False):
         assert src or dst
         args = [
-            'diff', '-u', src if src else '/dev/null',
-            dst if dst else '/dev/null'
+            'diff', '-u', src if src else os.devnull,
+            dst if dst else os.devnull
         ]
         logger.debug("run_diff: %s", args)
         proc = await asyncio.create_subprocess_exec(
@@ -310,6 +317,8 @@ class Dump(object):
 
     @staticmethod
     async def diff_font(font, src_font, out_dir):
+        logger.info('diff_font %s src=%s', font, src_font)
+        assert out_dir, 'output is required for diff'
         if not isinstance(font, Font):
             font = Font.load(font)
         if not isinstance(src_font, Font):
@@ -335,7 +344,6 @@ class Dump(object):
         tables_diff = await Dump.diff(src_tables_path, tables_path,
                                       diff_out_dir)
         diff_paths = [tables_diff]
-        print(tables_diff)
 
         # Dump TTX files.
         entries, src_entries = TableEntry.filter_entries_by_binary_diff(
@@ -363,9 +371,68 @@ class Dump(object):
                     continue
                 logger.debug('Diff found for %s', table_name)
                 diff_paths.append(ttx_diff)
-                print(ttx_diff)
         logger.debug("diff completed: %s", font)
         return diff_paths
+
+    class References(object):
+        def __init__(self, ref_dir):
+            self.ref_dir = pathlib.Path(ref_dir)
+            self.matches = []
+            self.differents = []
+            self.no_refs = []
+
+        @property
+        def has_any(self):
+            return (len(self.matches) or len(self.differents)
+                    or len(self.no_refs))
+
+        async def diff_with_references(self, targets):
+            logger.info('Comparing %d files with reference files',
+                        len(targets))
+            for target in targets:
+                target = pathlib.Path(target)
+                ref = self.ref_dir / target.name
+                if not ref.is_file():
+                    self.no_refs.append(target)
+                    print(f'+ diff: No reference file for {target}')
+                    continue
+                print(f'+ diff {ref} {target}')
+                diff_lines = list(await Dump.diff(ref, target))
+                if len(diff_lines) == 0:
+                    self.matches.append(target)
+                    continue
+                self.differents.append(target)
+                sys.stdout.writelines(diff_lines)
+            sys.stdout.flush()
+
+        def print_stats(self):
+            print(f'Matches={len(self.matches)}, '
+                  f'Diffs={len(self.differents)}, '
+                  f'No-references={len(self.no_refs)}')
+
+        def write_update_script(self, output):
+            if isinstance(output, str):
+                output = pathlib.Path(output)
+            if isinstance(output, os.PathLike):
+                with output.open('w') as file:
+                    self.write_update_script(file)
+                output.chmod(0o755)
+                return
+
+            for path in self.differents + self.no_refs:
+                output.write(f'${{CP:-cp}} "{path}" "{self.ref_dir}"\n')
+
+    @staticmethod
+    def expand_paths(args):
+        for path in args.path:
+            if path == '-':
+                for line in sys.stdin:
+                    fields = line.rstrip().split('\t')
+                    if len(fields) < 3:
+                        fields.extend([None] * (3 - len(fields)))
+                    yield fields
+                continue
+            yield [path, args.diff, None]
 
     @staticmethod
     async def main():
@@ -383,6 +450,10 @@ class Dump(object):
                             "--output",
                             type=pathlib.Path,
                             help="The output directory.")
+        parser.add_argument("-r",
+                            "--ref",
+                            type=Dump.References,
+                            help="The reference directory.")
         parser.add_argument("-s",
                             "--sort",
                             default="tag",
@@ -397,26 +468,28 @@ class Dump(object):
                             action="count",
                             default=0)
         args = parser.parse_args()
-        if args.verbose:
-            if args.verbose >= 2:
-                logging.basicConfig(level=logging.DEBUG)
-            else:
-                logging.basicConfig(level=logging.INFO)
+        init_logging(args.verbose)
         if args.output:
             args.output.mkdir(exist_ok=True, parents=True)
-        num_files = len(args.path)
-        for i, path in enumerate(args.path):
-            font = Font.load(path)
-            if args.diff:
-                assert args.output, "output is required for diff"
-                await Dump.diff_font(font, args.diff, args.output)
+        dump_file_name = args.output is None and len(args.path) > 1
+        for path, diff_src, glyphs in Dump.expand_paths(args):
+            if diff_src:
+                diffs = await Dump.diff_font(path, diff_src, args.output)
+                if glyphs:
+                    diffs.append(glyphs)
+                if args.ref:
+                    await args.ref.diff_with_references(diffs)
             else:
-                if args.output is None and num_files > 1:
-                    if i:
-                        print()
+                font = Font.load(path)
+                if dump_file_name:
                     print(f'File: {font.path.name}')
-                await Dump.dump_font(font, out_file=args.output, **vars(args))
-            logger.debug("dump %d completed: %s", i, font)
+                await Dump.dump_font(font, **vars(args))
+                logger.debug("dump %d completed: %s", i, font)
+        if args.ref and args.ref.has_any:
+            script = args.output / 'update-ref.sh'
+            args.ref.write_update_script(script)
+            print(f'A script to update reference files created at "{script}".')
+            args.ref.print_stats()
         logger.debug("main completed")
 
 

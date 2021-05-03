@@ -51,22 +51,16 @@ def test_expand_paths(monkeypatch):
     def call(items):
         return list(str(path) for path in Builder.expand_paths(items))
 
-    def create_file(path):
-        with path.open('w'):
-            pass
-
     assert call(['a', 'b']) == ['a', 'b']
 
-    with tempfile.TemporaryDirectory() as _dir:
-        dir = pathlib.Path(_dir)
+    with tempfile.TemporaryDirectory() as dir_str:
+        dir = pathlib.Path(dir_str)
         fonts = [dir / 'a.otf', dir / 'a.ttf', dir / 'a.ttc']
-        for font in fonts:
-            create_file(font)
-        create_file(dir / 'a.txt')
-        create_file(dir / 'a.doc')
+        for path in fonts + [dir / 'a.txt', dir / 'a.doc']:
+            path.touch()
         fonts = [str(font) for font in fonts]
-        assert call([_dir]) == fonts
-        assert call(['x', _dir, 'y']) == ['x', *fonts, 'y']
+        assert call([dir_str]) == fonts
+        assert call(['x', dir_str, 'y']) == ['x', *fonts, 'y']
 
     monkeypatch.setattr('sys.stdin', io.StringIO('line1\nline2\n'))
     assert call(['-']) == ['line1', 'line2']

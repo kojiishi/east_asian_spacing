@@ -57,8 +57,7 @@ and saves it to the `build` directory.
 Please use the `--help` option
 to see the full list of options.
 
-Also, there are some [scripts](#scripts)
-in the `scripts` directory
+Also, there are some [scripts] in the `scripts` directory
 that can help using the tools.
 
 ### Languages
@@ -132,8 +131,9 @@ You can also run it for a directory to find all font files recursively.
 [Noto CJK]: https://www.google.com/get/noto/help/cjk/
 
 ### Scripts
+[scripts]: (#scripts)
 
-Small shell scripts are available in the `scripts` directory.
+Some small shell scripts are available in the `scripts` directory.
 
 `build*.sh` scripts are useful to build fonts, dump them, and
 compare the dump files with reference files (see [Dump and Diff] below).
@@ -156,7 +156,7 @@ to check the behavior of fonts on browsers.
 [Dump and Diff]: #dump-and-diff
 
 The `dump` sub-command can create various types of text dump files.
-The following example creates textdump files in the `build/dump` directory.
+The following example creates text dump files in the `build/dump` directory.
 ```sh
 % east-asian-spacing dump -o build/dump build/NotoSansCJK-Regular.ttc
 ```
@@ -173,20 +173,40 @@ This example creates following 3 sets of files:
 2. Dump files for `source_fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
 3. Diff files of the two sets of dump files in the `build/dump/diff` directory.
 
+To create dump and diff files for all fonts you bulit,
+pipe the output as below:
+```sh
+% east-asian-spacing -p *.otf | east-asian-spacing dump -o=build/dump -
+```
+The "`-p`" option prints the font paths to `stdout`
+in the tab-separated-values format.
+The `dump` sub-command with the "`-`" argument reads this list from `stdin`,
+and creates text dump and diff files in the `build/dump` directory.
+The "`--diff`" option is not necessary in this case,
+because the path of source fonts are also provided from the pipe.
+
 ### References
 
 Once you reviewed the diff files created above,
 or tested fonts you build,
 you can copy the diff files into the `references` directory.
+Then when you want to build them again,
+such as when the fonts are updated or when the build environment is changed,
+you can compare the diff files with the reference files
+to know how new fonts are different from previous builds.
 
-`diff-ref.sh` creates diff files between two font files using `dump.py`,
+With the "`-r`" option, the `dump` sub-command
+creates diff files between two font files as explained in [dump and diff],
 and compare them with once-reviewed diff files in the `references` directory.
-This tool can visualize differences from previous builds if any,
-such as when the source fonts were updated,
-this tool was updated,
-or when the build environment changed.
 
-`scripts/build.sh` automatically invokes this script.
+The typical usage of this option is as below:
+```sh
+% east-asian-spacing -p -g=build/glyphs *.otf |
+    east-asian-spacing dump -o=build/dump -r=references -
+```
+Please see the [dump and diff] section for the "`-p`" option and piping.
+
+The `scripts/build*.sh` [scripts] include this option.
 
 ### Shape Tests
 
