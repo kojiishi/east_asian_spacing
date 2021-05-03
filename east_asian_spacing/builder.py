@@ -105,14 +105,23 @@ class Builder(object):
             spacing_by_offset[reader_offset] = (spacing, [font])
 
         # Add to each font using the united `EastAsianSpacing`s.
+        built_spacings = []
+        built_fonts = []
         for spacing, fonts in spacing_by_offset.values():
+            if not spacing.can_add_to_font:
+                logging.info('Skipping due to no pairs: %s',
+                             list(font.font_index for font in fonts))
+                continue
             logging.info('Adding feature to: %s',
                          list(font.font_index for font in fonts))
             for font in fonts:
                 spacing.font = font
                 spacing.add_to_font()
+            built_spacings.append(spacing)
+            built_fonts.extend(fonts)
 
-        self.spacings = (i[0] for i in spacing_by_offset.values())
+        self.spacings = built_spacings
+        self._fonts_in_collection = built_fonts
 
     def apply_language_and_indices(self, language=None, indices=None):
         font = self.font
@@ -192,7 +201,8 @@ class Builder(object):
     def expand_dir(cls, path):
         assert path.is_dir()
         child_paths = path.rglob('*')
-        child_paths = filter(Font.is_font_extension, child_paths)
+        child_paths = filter(lambda path: Font.is_font_extension(path.suffix),
+                             child_paths)
         return child_paths
 
     @staticmethod
@@ -205,7 +215,8 @@ class Builder(object):
                             "specify a list of indices.")
         parser.add_argument("-g",
                             "--glyph-out",
-                            help="Outputs glyphs for `pyftsubset`")
+                            type=pathlib.Path,
+                            help="Output glyph list.")
         parser.add_argument("-l",
                             "--language",
                             help="language if the font is language-specific. "
@@ -215,24 +226,23 @@ class Builder(object):
         parser.add_argument("-o",
                             "--output",
                             default="build",
+                            type=pathlib.Path,
                             help="The output directory.")
-        parser.add_argument(
-            "-p",
-            "--path-out",
-            type=argparse.FileType('w'),
-            help="Output the input and output path information.")
+        parser.add_argument("-p",
+                            "--path-out",
+                            type=argparse.FileType('w'),
+                            help="Output the file paths.")
         parser.add_argument("-s",
                             "--suffix",
                             help="Suffix to add to the output file name.")
         parser.add_argument("-v",
                             "--verbose",
-                            help="increase output verbosity",
+                            help="increase output verbosity.",
                             action="count",
                             default=0)
         args = parser.parse_args()
         init_logging(args.verbose)
         if args.output:
-            args.output = pathlib.Path(args.output)
             args.output.mkdir(exist_ok=True, parents=True)
         for input in Builder.expand_paths(args.inputs):
             builder = Builder(input)

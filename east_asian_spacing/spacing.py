@@ -110,6 +110,16 @@ class GlyphSetTrio(object):
         return (('left', self.left), ('right', self.right), ('middle',
                                                              self.middle))
 
+    def assert_has_glyphs(self):
+        assert self.left, self
+        assert self.middle, self
+        assert self.right, self
+
+    def assert_glyphs_are_disjoint(self):
+        assert self.left.isdisjoint(self.middle)
+        assert self.left.isdisjoint(self.right)
+        assert self.middle.isdisjoint(self.right)
+
     def __str__(self):
         name_and_glyphs = self._name_and_glyphs
         name_and_glyphs = filter(lambda name_and_glyph: name_and_glyph[1],
@@ -132,16 +142,6 @@ class GlyphSetTrio(object):
         self.middle.unite(other.middle)
         self.right.unite(other.right)
 
-    def assert_has_glyphs(self):
-        assert self.left
-        assert self.middle
-        assert self.right
-
-    def assert_glyphs_are_disjoint(self):
-        assert self.left.isdisjoint(self.middle)
-        assert self.left.isdisjoint(self.right)
-        assert self.middle.isdisjoint(self.right)
-
     async def add_glyphs(self, config):
         font = self.font
         config = config.tweaked_for(font)
@@ -152,7 +152,6 @@ class GlyphSetTrio(object):
         for result in results:
             self.unite(result)
         self.add_to_cache()
-        self.assert_has_glyphs()
         self.assert_glyphs_are_disjoint()
 
     @staticmethod
@@ -321,6 +320,10 @@ class GlyphSetTrio(object):
             glyph_ids_by_value[value].add(glyph_id)
         glyphs.glyph_ids = not_cached
 
+    @property
+    def can_add_to_table(self):
+        return self.left or self.middle or self.right
+
     def add_to_table(self, table, feature_tag):
         self.assert_has_glyphs()
         self.assert_glyphs_are_disjoint()
@@ -449,6 +452,11 @@ class EastAsianSpacing(object):
         await self.horizontal.add_glyphs(config)
         if self.vertical:
             await self.vertical.add_glyphs(config)
+
+    @property
+    def can_add_to_font(self):
+        return self.horizontal.can_add_to_table or (
+            self.vertical and self.vertical.can_add_to_table)
 
     def add_to_font(self):
         font = self.font

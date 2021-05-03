@@ -372,19 +372,24 @@ class Dump(object):
         parser = argparse.ArgumentParser()
         parser.add_argument("path", nargs="+")
         parser.add_argument("--diff",
+                            type=pathlib.Path,
                             help="The source font or directory "
                             "to compute differences against.")
         parser.add_argument("-f",
                             "--features",
                             action="store_true",
                             help="Dump GPOS/GSUB feature names.")
-        parser.add_argument("-o", "--output", help="The output directory.")
+        parser.add_argument("-o",
+                            "--output",
+                            type=pathlib.Path,
+                            help="The output directory.")
         parser.add_argument("-s",
                             "--sort",
                             default="tag",
                             help="The sort order. "
                             "'tag' or 'offset' are supported.")
         parser.add_argument("--ttx",
+                            type=pathlib.Path,
                             help="Create TTX files at the specified path.")
         parser.add_argument("-v",
                             "--verbose",
@@ -398,7 +403,6 @@ class Dump(object):
             else:
                 logging.basicConfig(level=logging.INFO)
         if args.output:
-            args.output = pathlib.Path(args.output)
             args.output.mkdir(exist_ok=True, parents=True)
         num_files = len(args.path)
         for i, path in enumerate(args.path):
