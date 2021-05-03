@@ -55,12 +55,15 @@ def test_expand_paths(monkeypatch):
 
     with tempfile.TemporaryDirectory() as dir_str:
         dir = pathlib.Path(dir_str)
-        fonts = [dir / 'a.otf', dir / 'a.ttf', dir / 'a.ttc']
+        fonts = [dir / 'a.otf', dir / 'a.ttc', dir / 'a.ttf']
         for path in fonts + [dir / 'a.txt', dir / 'a.doc']:
             path.touch()
-        fonts = [str(font) for font in fonts]
-        assert call([dir_str]) == fonts
-        assert call(['x', dir_str, 'y']) == ['x', *fonts, 'y']
+        # Compare sets to avoid different ordering by platforms.
+        fonts_set = set(str(font) for font in fonts)
+        assert set(call([dir_str])) == fonts_set
+        result = call(['x', dir_str, 'y'])
+        assert (set(result) == fonts_set | {'x', 'y'} and result[0] == 'x'
+                and result[-1] == 'y')
 
     monkeypatch.setattr('sys.stdin', io.StringIO('line1\nline2\n'))
     assert call(['-']) == ['line1', 'line2']
