@@ -1,3 +1,4 @@
+import logging
 import pathlib
 import pytest
 import tempfile
@@ -5,9 +6,11 @@ import tempfile
 from dump import Dump
 from noto_cjk_builder import NotoCJKBuilder
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.mark.asyncio
-async def test_build_and_diff(fonts_dir, refs_dir, capsys):
+async def test_build_and_diff(fonts_dir, refs_dir):
     """This test runs a full code path for a test font; i.e., build a font,
     compute diff, and compare the diff with reference files.
     This is similar to what `build.sh` does.
@@ -19,22 +22,23 @@ async def test_build_and_diff(fonts_dir, refs_dir, capsys):
     and if there were any differences, update the reference files.
     """
     in_path = fonts_dir / 'NotoSansCJKjp-Regular.otf'
-    assert in_path.is_file(), 'Please run `tests/prepare.sh`'
+    assert in_path.is_file(), 'Please run `download-fonts.sh`'
 
     builder = NotoCJKBuilder(in_path)
     await builder.build()
-    with tempfile.TemporaryDirectory() as _out_dir:
-        out_dir = pathlib.Path(_out_dir)
+    with tempfile.TemporaryDirectory() as out_dir_str:
+        out_dir = pathlib.Path(out_dir_str)
         out_path = builder.save(out_dir)
 
         await builder.test()
 
-        # Compute diff and compare with the reference files.
+        # Compute diffs. There should be two, table and GPOS.
         diff_paths = await Dump.diff_font(out_path, in_path, out_dir)
         assert len(diff_paths) == 2, diff_paths
+
+        # Compare them with the reference files.
         for diff_path in diff_paths:
-            with capsys.disabled():
-                print(f'\n  {diff_path.name} ', end='')
+            logger.info('Diff=%s', diff_path)
             ref_path = refs_dir / diff_path.name
             assert diff_path.read_text() == ref_path.read_text(), (
                 diff_path.name)

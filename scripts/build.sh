@@ -10,8 +10,8 @@ REFDIR=${REFDIR:-references/}
 mkdir -p "$(dirname $LOG)"
 mkdir -p "$GLYPHSDIR"
 
-BUILDER_ARGS=(-p --glyph-out="$GLYPHSDIR")
-DUMP_ARGS=(-o="$DUMPDIR" --ref="$REFDIR" -)
+BUILDER_ARGS=(-p -g="$GLYPHSDIR")
+DUMP_ARGS=(-o="$DUMPDIR" -r="$REFDIR" -)
 time (set -x; "$PYDIR/$BUILDER" "${BUILDER_ARGS[@]}" "$@") |
      (set -x; "$PYDIR/dump.py" "${DUMP_ARGS[@]}" $DUMPOPTS) |
      tee "$LOG"

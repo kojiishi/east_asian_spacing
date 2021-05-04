@@ -10,6 +10,7 @@ fonttools = {extras = ["woff"]}
 pytest = "*"
 pytest-asyncio = "*"
 tox = "*"
+yapf = "*"
 
 [requires]
 python_version = "3.8"

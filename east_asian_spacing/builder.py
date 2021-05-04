@@ -26,12 +26,18 @@ class Builder(object):
             font = Font.load(font)
         self.font = font
         self._fonts_in_collection = None
+        self._spacings = []
+
+    @property
+    def has_spacings(self):
+        return len(self._spacings) > 0
 
     def save(self,
              output_path=None,
              stem_suffix=None,
              glyph_out=None,
              print_path=False):
+        assert self.has_spacings
         font = self.font
         output_path = self.calc_output_path(font.path, output_path,
                                             stem_suffix)
@@ -67,23 +73,23 @@ class Builder(object):
 
     async def build(self):
         font = self.font
+        logger.info('Building Font "%s"', font)
         fonts_in_collection = self.fonts_in_collection
         if fonts_in_collection is not None:
-            await self.build_collection(fonts_in_collection)
-            return
-        assert self.fonts_in_collection is None
-        await self.build_single()
+            return await self.build_collection(fonts_in_collection)
 
-    async def build_single(self):
-        font = self.font
-        logger.info('Font "%s"', font)
+        assert not font.is_collection
         spacing = EastAsianSpacing(font)
         await spacing.add_glyphs()
+        if not spacing.can_add_to_font:
+            logger.info('Skipping due to no pairs: %s', font)
+            return
         spacing.add_to_font()
-        self.spacings = (spacing, )
+        self._spacings.append(spacing)
 
     async def build_collection(self, fonts_in_collection):
         assert self.font.is_collection
+
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
         spacing_by_offset = {}
@@ -107,7 +113,6 @@ class Builder(object):
             spacing_by_offset[reader_offset] = (spacing, [font])
 
         # Add to each font using the united `EastAsianSpacing`s.
-        built_spacings = []
         built_fonts = []
         for spacing, fonts in spacing_by_offset.values():
             if not spacing.can_add_to_font:
@@ -119,10 +124,9 @@ class Builder(object):
             for font in fonts:
                 spacing.font = font
                 spacing.add_to_font()
-            built_spacings.append(spacing)
+            self._spacings.append(spacing)
             built_fonts.extend(fonts)
 
-        self.spacings = built_spacings
         self._fonts_in_collection = built_fonts
 
     def apply_language_and_indices(self, language=None, indices=None):
@@ -159,6 +163,7 @@ class Builder(object):
         return itertools.zip_longest(indices, ())
 
     def save_glyphs(self, output):
+        assert self.has_spacings
         font = self.font
         if isinstance(output, str):
             output = pathlib.Path(output)
@@ -173,7 +178,7 @@ class Builder(object):
         if font.is_collection:
             font = font.fonts_in_collection[0]
         united_spacing = EastAsianSpacing(font)
-        for spacing in self.spacings:
+        for spacing in self._spacings:
             united_spacing.unite(spacing)
         united_spacing.save_glyphs(output)
 
@@ -251,6 +256,9 @@ class Builder(object):
             builder.apply_language_and_indices(language=args.language,
                                                indices=args.index)
             await builder.build()
+            if not builder.has_spacings:
+                logger.info('Skip due to no changes: "%s"', input)
+                continue
             builder.save(args.output,
                          stem_suffix=args.suffix,
                          glyph_out=args.glyph_out,

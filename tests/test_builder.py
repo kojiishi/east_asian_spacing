@@ -62,8 +62,8 @@ def test_expand_paths(monkeypatch):
         fonts_set = set(str(font) for font in fonts)
         assert set(call([dir_str])) == fonts_set
         result = call(['x', dir_str, 'y'])
-        assert (set(result) == fonts_set | {'x', 'y'} and result[0] == 'x'
-                and result[-1] == 'y')
+        assert (result[0] == 'x' and set(result[1:-1]) == fonts_set
+                and result[-1] == 'y'), result
 
     monkeypatch.setattr('sys.stdin', io.StringIO('line1\nline2\n'))
     assert call(['-']) == ['line1', 'line2']

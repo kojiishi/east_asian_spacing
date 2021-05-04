@@ -182,6 +182,7 @@ class Dump(object):
         logger.info('dump_ttx %s', font.path)
         if isinstance(ttx_path, str):
             ttx_path = pathlib.Path(ttx_path)
+        assert isinstance(ttx_path, os.PathLike)
         if ttx_path.is_dir():
             ttx_path = ttx_path / (font.path.name + '.ttx')
 
@@ -247,13 +248,13 @@ class Dump(object):
         Dump.dump_table_entries(font, entries, out_file=out_file, **kwargs)
 
     @staticmethod
-    async def dump_font(font, output=sys.stdout, ttx=None, **kwargs):
+    async def dump_font(font, output=sys.stdout, ttx=False, **kwargs):
         logger.info('dump_font %s', font.path)
         entries = TableEntry.read_font(font)
         Dump.dump_tables(font, entries=entries, out_file=output, **kwargs)
         if ttx:
-            await Dump.dump_ttx(font, ttx, entries)
-        print(file=output)
+            assert isinstance(output, os.PathLike)
+            await Dump.dump_ttx(font, output, entries)
         logger.debug("dump_font completed: %s", font)
 
     @staticmethod
@@ -407,7 +408,7 @@ class Dump(object):
 
         def print_stats(self):
             print(f'Matches={len(self.matches)}, '
-                  f'Diffs={len(self.differents)}, '
+                  f'Differences={len(self.differents)}, '
                   f'No-references={len(self.no_refs)}')
 
         def write_update_script(self, output):
@@ -460,7 +461,7 @@ class Dump(object):
                             help="The sort order. "
                             "'tag' or 'offset' are supported.")
         parser.add_argument("--ttx",
-                            type=pathlib.Path,
+                            action="store_true",
                             help="Create TTX files at the specified path.")
         parser.add_argument("-v",
                             "--verbose",
@@ -472,7 +473,7 @@ class Dump(object):
         if args.output:
             args.output.mkdir(exist_ok=True, parents=True)
         dump_file_name = args.output is None and len(args.path) > 1
-        for path, diff_src, glyphs in Dump.expand_paths(args):
+        for i, (path, diff_src, glyphs) in enumerate(Dump.expand_paths(args)):
             if diff_src:
                 diffs = await Dump.diff_font(path, diff_src, args.output)
                 if glyphs:
@@ -482,13 +483,14 @@ class Dump(object):
             else:
                 font = Font.load(path)
                 if dump_file_name:
+                    if i: print()
                     print(f'File: {font.path.name}')
                 await Dump.dump_font(font, **vars(args))
                 logger.debug("dump %d completed: %s", i, font)
         if args.ref and args.ref.has_any:
             script = args.output / 'update-ref.sh'
             args.ref.write_update_script(script)
-            print(f'A script to update reference files created at "{script}".')
+            print(f'Created a script to update reference files at "{script}".')
             args.ref.print_stats()
         logger.debug("main completed")
 

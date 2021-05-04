@@ -33,7 +33,8 @@ Install [hb-shape] for Mac:
 ```
 
 Then install Python packages.
-The use of [pipenv] is recommended:
+The use of [pipenv] is recommended
+to create a separated Python environment from your system.
 ```sh
 % git clone https://github.com/kojiishi/east_asian_spacing
 % cd east_asian_spacing
@@ -156,25 +157,41 @@ to check the behavior of fonts on browsers.
 [Dump and Diff]: #dump-and-diff
 
 The `dump` sub-command can create various types of text dump files.
-The following example creates text dump files in the `build/dump` directory.
+
+The most simple usage is to show a list of tables.
+This is similar to "`ttx -l`" in [fonttools].
+For TrueType Collections (TTC),
+this tool can show which tables are shared with which fonts
+in the TrueType Collection.
 ```sh
-% east-asian-spacing dump -o build/dump build/NotoSansCJK-Regular.ttc
+% east-asian-spacing dump build/NotoSansCJK-Regular.ttc
+```
+
+The "`-o`" option creates the table list file in the specified directory:
+```sh
+% east-asian-spacing dump -o build/dump build/*.ttc
+```
+The "`--ttx`" option creates TTX text dumps in addition to the table list:
+```sh
+% east-asian-spacing dump -o build/dump --ttx build/*.ttc
 ```
 
 The `dump` sub-command can also create
-text dump files of two font files and compare them.
-This helps visualizing changes in the font files you created
+table lists and TTX text dump files of two font files and compare them.
+This helps visualizing differences in the font files you created
 from the original font files.
 ```sh
 % east-asian-spacing dump -o build/dump --diff source_fonts build/NotoSansCJK.ttc
 ```
-This example creates following 3 sets of files:
-1. Dump files for `build/NotoSansCJK.ttc` in the `build/dump` directory.
-2. Dump files for `source_fonts/NotoSansCJK.ttc` in the `build/dump/src` directory.
+The example above creates following 3 sets of files:
+1. The table list and TTX text dump files for `build/NotoSansCJK.ttc`
+   in the `build/dump` directory.
+2. The table list and TTX text dump files for `source_fonts/NotoSansCJK.ttc`
+   in the `build/dump/src` directory.
 3. Diff files of the two sets of dump files in the `build/dump/diff` directory.
 
 To create dump and diff files for all fonts you bulit,
-pipe the output as below:
+you can pipe the output as below:
 ```sh
 % east-asian-spacing -p *.otf | east-asian-spacing dump -o=build/dump -
 ```
@@ -206,7 +223,7 @@ The typical usage of this option is as below:
 ```
 Please see the [dump and diff] section for the "`-p`" option and piping.
 
-The `scripts/build*.sh` [scripts] include this option.
+The `build*.sh` [scripts] include this option.
 
 ### Shape Tests
 
