@@ -112,11 +112,6 @@ class GlyphSetTrio(object):
         return (('left', self.left), ('right', self.right), ('middle',
                                                              self.middle))
 
-    def assert_has_glyphs(self):
-        assert self.left, self
-        assert self.middle, self
-        assert self.right, self
-
     def assert_glyphs_are_disjoint(self):
         assert self.left.isdisjoint(self.middle)
         assert self.left.isdisjoint(self.right)
@@ -323,10 +318,10 @@ class GlyphSetTrio(object):
 
     @property
     def can_add_to_table(self):
-        return self.left and self.middle and self.right
+        return self.left and self.right
 
     def add_to_table(self, table, feature_tag):
-        self.assert_has_glyphs()
+        assert self.can_add_to_table, self
         self.assert_glyphs_are_disjoint()
         assert not Font._has_ottable_feature(table, feature_tag)
         lookups = table.LookupList.Lookup
@@ -360,7 +355,7 @@ class GlyphSetTrio(object):
 
     def build_lookup(self, lookups):
         font = self.font
-        left, right, middle = (tuple(font.to_glyph_names(sorted(glyphs)))
+        left, right, middle = (tuple(font.glyph_names(sorted(glyphs)))
                                for glyphs in (self.left, self.right,
                                               self.middle))
         logger.info("Adding Lookups for %d left, %d right, %d middle glyphs",

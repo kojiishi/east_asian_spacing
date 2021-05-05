@@ -208,7 +208,7 @@ class Font(object):
                                 key=lambda t: t[0] +
                                 ("" if t[1] is None else t[1]))))
 
-    def to_glyph_names(self, glyph_ids):
+    def glyph_names(self, glyph_ids):
         ttfont = self.ttfont
         if ttfont:
             return (ttfont.getGlyphName(glyph_id) for glyph_id in glyph_ids)
