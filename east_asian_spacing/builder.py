@@ -179,8 +179,6 @@ class Builder(object):
             return output
 
         logger.info("Saving glyphs to %s", output)
-        if font.is_collection:
-            font = font.fonts_in_collection[0]
         united_spacing = EastAsianSpacing(font)
         for spacing in self._spacings:
             united_spacing.unite(spacing)

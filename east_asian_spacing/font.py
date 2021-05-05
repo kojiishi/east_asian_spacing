@@ -208,6 +208,12 @@ class Font(object):
                                 key=lambda t: t[0] +
                                 ("" if t[1] is None else t[1]))))
 
+    def to_glyph_names(self, glyph_ids):
+        ttfont = self.ttfont
+        if ttfont:
+            return (ttfont.getGlyphName(glyph_id) for glyph_id in glyph_ids)
+        return (f'glyph{glyph_id:05}' for glyph_id in glyph_ids)
+
     @staticmethod
     def _has_ottable_feature(ottable, feature_tag):
         for feature_record in ottable.FeatureList.FeatureRecord:

@@ -18,9 +18,7 @@ def show_dump_images():
 
 
 class GlyphSet(object):
-    def __init__(self, font, glyph_ids=None):
-        assert isinstance(font, Font)
-        self.font = font
+    def __init__(self, glyph_ids=None):
         self.glyph_ids = glyph_ids if glyph_ids is not None else set()
         assert isinstance(self.glyph_ids, set)
 
@@ -36,13 +34,8 @@ class GlyphSet(object):
     def __len__(self):
         return len(self.glyph_ids)
 
-    def glyph_names(self, font=None):
-        assert isinstance(self.glyph_ids, set)
-        glyph_ids = sorted(self.glyph_ids)
-        if font:
-            font = font.ttfont
-            return (font.getGlyphName(glyph_id) for glyph_id in glyph_ids)
-        return (f'glyph{glyph_id:05}' for glyph_id in glyph_ids)
+    def __iter__(self):
+        return self.glyph_ids.__iter__()
 
     def isdisjoint(self, other):
         assert isinstance(self.glyph_ids, set)
@@ -136,7 +129,7 @@ class Shaper(object):
         # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
         glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
 
-        return GlyphSet(self.font, set(glyph_ids))
+        return GlyphSet(set(glyph_ids))
 
     async def dump(self):
         args = ["--font-size=128"]

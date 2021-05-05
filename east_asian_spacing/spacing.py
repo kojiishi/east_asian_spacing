@@ -103,9 +103,9 @@ class EastAsianSpacingConfig(object):
 class GlyphSetTrio(object):
     def __init__(self, font, left=None, right=None, middle=None):
         self.font = font
-        self.left = left if left is not None else GlyphSet(font)
-        self.right = right if right is not None else GlyphSet(font)
-        self.middle = middle if middle is not None else GlyphSet(font)
+        self.left = left if left is not None else GlyphSet()
+        self.right = right if right is not None else GlyphSet()
+        self.middle = middle if middle is not None else GlyphSet()
 
     @property
     def _name_and_glyphs(self):
@@ -131,10 +131,19 @@ class GlyphSetTrio(object):
 
     def save_glyphs(self, output, prefix='', separator='\n'):
         font = self.font
+        if font.is_collection:
+            if font.is_vertical:
+                fonts_in_collection = font.horizontal_font.fonts_in_collection
+                font = fonts_in_collection[0].vertical_font
+            else:
+                font = font.fonts_in_collection[0]
         for name, glyphs in self._name_and_glyphs:
             output.write(f'# {prefix}{name}\n')
-            glyph_names = glyphs.glyph_names(font)
-            output.write(separator.join(glyph_names))
+            glyph_names = font.to_glyph_names(sorted(glyphs))
+            for i, glyph_name in enumerate(glyph_names):
+                if i:
+                    output.write(separator)
+                output.write(glyph_name)
             output.write('\n')
 
     def unite(self, other):
@@ -361,9 +370,9 @@ class GlyphSetTrio(object):
 
     def build_lookup(self, lookups):
         font = self.font
-        left = tuple(self.left.glyph_names(font))
-        right = tuple(self.right.glyph_names(font))
-        middle = tuple(self.middle.glyph_names(font))
+        left, right, middle = (tuple(font.to_glyph_names(sorted(glyphs)))
+                               for glyphs in (self.left, self.right,
+                                              self.middle))
         logger.info("Adding Lookups for %d left, %d right, %d middle glyphs",
                     len(left), len(right), len(middle))
         half_em = int(font.units_per_em / 2)
