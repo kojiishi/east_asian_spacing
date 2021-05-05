@@ -131,46 +131,9 @@ class GlyphSetTrio(object):
 
     def save_glyphs(self, output, prefix='', separator='\n'):
         font = self.font
-
-        class GlyphIDMap(object):
-            def __init__(self, ttfont):
-                self.glyph_order = ttfont.getGlyphOrder()
-                cmap = ttfont.get('cmap')
-                self.unicodes_from_glyph_name = cmap.buildReversed()
-
-            def __getitem__(self, glyph_id):
-                try:
-                    glyph_name = self.glyph_order[glyph_id]
-                except IndexError:
-                    return (None, None)
-                # VID is not of interests, return None.
-                if (glyph_name.startswith('glyph')
-                        and glyph_name[5:] == f'{glyph_id:05}'):
-                    return (None, None)
-                return (glyph_name,
-                        self.unicodes_from_glyph_name.get(glyph_name))
-
-        ttfonts = font.ttfonts
-        maps = tuple(GlyphIDMap(ttfont) for ttfont in ttfonts)
         for name, glyphs in self._name_and_glyphs:
             output.write(f'# {prefix}{name}\n')
-            for i, glyph_id in enumerate(sorted(glyphs)):
-                if i:
-                    output.write(separator)
-                output.write(str(glyph_id))
-
-                glyph_name_set = set()
-                unicode_set = set()
-                for glyph_name, unicodes in (map[glyph_id] for map in maps):
-                    if glyph_name:
-                        glyph_name_set.add(glyph_name)
-                        if unicodes:
-                            unicode_set |= unicodes
-                comments = list(sorted(glyph_name_set))
-                comments.extend(f'U+{code:04X}'
-                                for code in sorted(unicode_set))
-                if len(comments):
-                    output.write(f' # {" ".join(comments)}')
+            output.write(separator.join(str(glyph_id) for glyph_id in glyphs))
             output.write('\n')
 
     def unite(self, other):
