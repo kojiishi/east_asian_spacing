@@ -151,6 +151,11 @@ Followings are example usages.
 A [test HTML] is available
 to check the behavior of fonts on browsers.
 
+It can test fonts you built locally.
+Download it to your local drive and
+add your fonts to the "`fonts`" list
+at the beginning of the `<script>` block.
+
 [test HTML]: https://kojiishi.github.io/chws/test.html
 
 ### Dump and Diff

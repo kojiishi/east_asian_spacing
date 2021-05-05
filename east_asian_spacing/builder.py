@@ -79,6 +79,8 @@ class Builder(object):
             return await self.build_collection(fonts_in_collection)
 
         assert not font.is_collection
+        if EastAsianSpacing.font_has_feature(font):
+            return
         spacing = EastAsianSpacing(font)
         await spacing.add_glyphs()
         if not spacing.can_add_to_font:
@@ -94,6 +96,8 @@ class Builder(object):
         # font, make sure we add the same data so that the new GPOS is also shared.
         spacing_by_offset = {}
         for font in fonts_in_collection:
+            if EastAsianSpacing.font_has_feature(font):
+                return
             reader_offset = font.reader_offset("GPOS")
             # If the font does not have `GPOS`, `reader_offset` is `None`.
             # Create a shared `GPOS` for all fonts in the case. e.g., BIZ-UD.

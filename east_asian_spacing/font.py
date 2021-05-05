@@ -208,14 +208,23 @@ class Font(object):
                                 key=lambda t: t[0] +
                                 ("" if t[1] is None else t[1]))))
 
-    def has_gsub_feature(self, feature_tag):
-        gsub = self.tttable("GSUB")
-        if not gsub:
-            return False
-        for feature_record in gsub.table.FeatureList.FeatureRecord:
+    @staticmethod
+    def _has_ottable_feature(ottable, feature_tag):
+        for feature_record in ottable.FeatureList.FeatureRecord:
             if feature_record.FeatureTag == feature_tag:
                 return True
         return False
+
+    @staticmethod
+    def _has_tttable_feature(tttable, feature_tag):
+        return (tttable
+                and Font._has_ottable_feature(tttable.table, feature_tag))
+
+    def has_gpos_feature(self, feature_tag):
+        return Font._has_tttable_feature(self.tttable('GPOS'), feature_tag)
+
+    def has_gsub_feature(self, feature_tag):
+        return Font._has_tttable_feature(self.tttable('GSUB'), feature_tag)
 
     def add_gpos_table(self):
         logger.info("Adding GPOS table")

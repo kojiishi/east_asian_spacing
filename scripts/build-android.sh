@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPTDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-export LOG=build/log/andoid.log
-export REFDIR=references/android
-"$SCRIPTDIR/build-noto-cjk.sh" $*
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+export LOG_NAME=andoid.log
+export REF_NAME=android
+"$SCRIPT_DIR/build-noto-cjk.sh" $*

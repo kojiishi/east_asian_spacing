@@ -324,11 +324,12 @@ class GlyphSetTrio(object):
 
     @property
     def can_add_to_table(self):
-        return self.left or self.middle or self.right
+        return self.left and self.middle and self.right
 
     def add_to_table(self, table, feature_tag):
         self.assert_has_glyphs()
         self.assert_glyphs_are_disjoint()
+        assert not Font._has_ottable_feature(table, feature_tag)
         lookups = table.LookupList.Lookup
         lookup_indices = self.build_lookup(lookups)
 
@@ -345,11 +346,12 @@ class GlyphSetTrio(object):
 
         scripts = table.ScriptList.ScriptRecord
         for script_record in scripts:
-            logger.debug(
-                "Adding Feature index %d to script '%s' DefaultLangSys",
-                feature_index, script_record.ScriptTag)
-            script_record.Script.DefaultLangSys.FeatureIndex.append(
-                feature_index)
+            default_lang_sys = script_record.Script.DefaultLangSys
+            if default_lang_sys:
+                logger.debug(
+                    "Adding Feature index %d to script '%s' DefaultLangSys",
+                    feature_index, script_record.ScriptTag)
+                default_lang_sys.FeatureIndex.append(feature_index)
             for lang_sys in script_record.Script.LangSysRecord:
                 logger.debug(
                     "Adding Feature index %d to script '%s' LangSys '%s'",
@@ -455,12 +457,23 @@ class EastAsianSpacing(object):
         if self.vertical:
             await self.vertical.add_glyphs(config)
 
+    @staticmethod
+    def font_has_feature(font):
+        assert not font.is_vertical
+        if font.has_gpos_feature('chws'):
+            return True
+        vertical_font = font.vertical_font
+        if vertical_font and vertical_font.has_gpos_feature('vchw'):
+            return True
+        return False
+
     @property
     def can_add_to_font(self):
-        return self.horizontal.can_add_to_table or (
-            self.vertical and self.vertical.can_add_to_table)
+        return (self.horizontal.can_add_to_table
+                or (self.vertical and self.vertical.can_add_to_table))
 
     def add_to_font(self):
+        assert self.can_add_to_font
         font = self.font
         assert not font.is_vertical
         gpos = font.tttable('GPOS')
@@ -469,8 +482,9 @@ class EastAsianSpacing(object):
         table = gpos.table
         assert table
 
-        self.horizontal.add_to_table(table, 'chws')
-        if self.vertical:
+        if self.horizontal.can_add_to_table:
+            self.horizontal.add_to_table(table, 'chws')
+        if self.vertical and self.vertical.can_add_to_table:
             self.vertical.add_to_table(table, 'vchw')
 
     @staticmethod

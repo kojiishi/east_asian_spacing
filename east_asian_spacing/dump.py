@@ -388,16 +388,16 @@ class Dump(object):
                     or len(self.no_refs))
 
         async def diff_with_references(self, targets):
-            logger.info('Comparing %d files with reference files',
-                        len(targets))
+            logger.info('Comparing %d files with reference files at "%s"',
+                        len(targets), self.ref_dir)
             for target in targets:
                 target = pathlib.Path(target)
                 ref = self.ref_dir / target.name
                 if not ref.is_file():
                     self.no_refs.append(target)
-                    print(f'+ diff: No reference file for {target}')
+                    print(f'+ diff-ref: No reference: {target}')
                     continue
-                print(f'+ diff {ref} {target}')
+                print(f'+ diff-ref {target}')
                 diff_lines = list(await Dump.diff(ref, target))
                 if len(diff_lines) == 0:
                     self.matches.append(target)
