@@ -2,3 +2,6 @@
 requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
 
 [tool.setuptools_scm]
+
+[tool.pytest.ini_options]
+testpaths = "tests"
