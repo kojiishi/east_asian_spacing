@@ -1,1 +1,0 @@
-fonttools[woff]==4.22.1

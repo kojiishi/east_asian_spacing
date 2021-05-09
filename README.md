@@ -33,18 +33,27 @@ Install [hb-shape] for Mac:
 ```
 
 Then install Python packages.
-The use of [pipenv] is recommended
-to create a separated Python environment from your system.
+If you may need to diagnose fonts or the code,
+installing in the editable mode (i.e., setuptools “develop mode”)
+using [poetry] is recommended:
 ```sh
 % git clone https://github.com/kojiishi/east_asian_spacing
 % cd east_asian_spacing
-% pipenv shell
-% pipenv sync -d
-% pip install -e .
+% poetry install
+```
+Otherwise, you can install using [pip].
+It is still recommended to install into a separate virtual environment:
+```sh
+% git clone https://github.com/kojiishi/east_asian_spacing
+% cd east_asian_spacing
+% python3 -m venv venv
+% source venv/bin/activate
+% pip install .
 ```
 
 [fonttools]: https://pypi.org/project/fonttools/
 [hb-shape]: https://command-not-found.com/hb-shape
+[pip]: https://pip.pypa.io/en/latest/
 [pipenv]: https://github.com/pypa/pipenv
 [poetry]: https://github.com/python-poetry/poetry
 

@@ -1,7 +1,30 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
-[tool.setuptools_scm]
+[tool.poetry]
+name = "east_asian_spacing"
+version = "0.1.0-dev"
+description = "East Asian Contextual Spacing Build Tools"
+authors = ["Koji Ishii <kojii@chromium.org>"]
+readme = "README.md"
+repository = "https://github.com/kojiishi/east_asian_spacing"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fonttools = {version = ">=4.13.0", extras = ["woff"]}
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+tox = "*"
+yapf = "*"
+
+[tool.poetry.scripts]
+east-asian-spacing = 'east_asian_spacing.__main__:main'
 
 [tool.pytest.ini_options]
 testpaths = "tests"
+
+[tool.yapf]
+based_on_style = "pep8"
