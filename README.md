@@ -27,7 +27,7 @@ Install [hb-shape] for Linux:
 ```sh
 % sudo apt get libharfbuzz-bin
 ```
-Install [hb-shape] for Mac:
+Install [hb-shape] for Mac with [homebrew]:
 ```sh
 % brew install harfbuzz
 ```
@@ -41,7 +41,7 @@ using [poetry] is recommended:
 % cd east_asian_spacing
 % poetry install
 ```
-Otherwise, you can install using [pip].
+Otherwise, you can install with [pip].
 It is still recommended to install into a separate virtual environment:
 ```sh
 % git clone https://github.com/kojiishi/east_asian_spacing
@@ -53,6 +53,7 @@ It is still recommended to install into a separate virtual environment:
 
 [fonttools]: https://pypi.org/project/fonttools/
 [hb-shape]: https://command-not-found.com/hb-shape
+[homebrew]: https://brew.sh/
 [pip]: https://pip.pypa.io/en/latest/
 [pipenv]: https://github.com/pypa/pipenv
 [poetry]: https://github.com/python-poetry/poetry
@@ -67,12 +68,9 @@ and saves it to the `build` directory.
 Please use the `--help` option
 to see the full list of options.
 
-Also, there are some [scripts] in the `scripts` directory
-that can help using the tools.
-
 ### Languages
 
-Because glyphs of a code point differ by languages,
+Because the glyph for a code point may differ by languages,
 this tool need to generate different tables for different languages.
 
 When the font supports multiple East Asian languages,
@@ -173,8 +171,8 @@ at the beginning of the `<script>` block.
 The `dump` sub-command can create various types of text dump files.
 
 The most simple usage is to show a list of tables.
-This is similar to "`ttx -l`" in [fonttools].
-For TrueType Collections (TTC),
+This is similar to "`ttx -l`" in [fonttools],
+except for TrueType Collections (TTC),
 this tool can show which tables are shared with which fonts
 in the TrueType Collection.
 ```sh
