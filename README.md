@@ -8,6 +8,10 @@ This feature enables the typography described in
 <span lang="ja">句読点や，括弧類などの基本的な配置方法</span>](https://w3c.github.io/jlreq/#positioning_of_punctuation_marks)
 and [CLREQ 3.1.6.1 Punctuation Adjustment Space
 <span lang="zh">标点符号的调整空间 標點符號的調整空間</span>](https://w3c.github.io/clreq/?lang=en#h-punctuation_adjustment_space).
+Following is an example picture from JLREQ.
+
+<img src="https://w3c.github.io/jlreq/images/img2_13.png"
+   title="Contextual spacing samples">
 
 You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
 
