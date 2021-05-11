@@ -287,7 +287,7 @@
 +        <LookupFlag value="0"/>
 +        <!-- SubTableCount=1 -->
 +        <PairPos index="0" Format="2">
-+          <Coverage Format="1">
++          <Coverage>
 +            <Glyph value="cid01397"/>
 +            <Glyph value="cid01398"/>
 +            <Glyph value="cid01405"/>
@@ -316,9 +316,9 @@
 +          </Coverage>
 +          <ValueFormat1 value="4"/>
 +          <ValueFormat2 value="0"/>
-+          <ClassDef1 Format="2">
++          <ClassDef1>
 +          </ClassDef1>
-+          <ClassDef2 Format="2">
++          <ClassDef2>
 +            <ClassDef glyph="cid01396" class="1"/>
 +            <ClassDef glyph="cid01397" class="1"/>
 +            <ClassDef glyph="cid01398" class="1"/>
@@ -386,7 +386,7 @@
 +        <LookupFlag value="0"/>
 +        <!-- SubTableCount=1 -->
 +        <SinglePos index="0" Format="1">
-+          <Coverage Format="1">
++          <Coverage>
 +            <Glyph value="cid01404"/>
 +            <Glyph value="cid01406"/>
 +            <Glyph value="cid01408"/>
@@ -414,7 +414,7 @@
 +        <!-- SubTableCount=1 -->
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
-+          <BacktrackCoverage index="0" Format="1">
++          <BacktrackCoverage index="0">
 +            <Glyph value="cid01396"/>
 +            <Glyph value="cid01404"/>
 +            <Glyph value="cid01406"/>
@@ -441,7 +441,7 @@
 +            <Glyph value="cid62421"/>
 +          </BacktrackCoverage>
 +          <!-- InputGlyphCount=1 -->
-+          <InputCoverage index="0" Format="1">
++          <InputCoverage index="0">
 +            <Glyph value="cid01404"/>
 +            <Glyph value="cid01406"/>
 +            <Glyph value="cid01408"/>
@@ -472,7 +472,7 @@
 +        <LookupFlag value="0"/>
 +        <!-- SubTableCount=1 -->
 +        <PairPos index="0" Format="2">
-+          <Coverage Format="1">
++          <Coverage>
 +            <Glyph value="cid59876"/>
 +            <Glyph value="cid59877"/>
 +            <Glyph value="cid59878"/>
@@ -495,9 +495,9 @@
 +          </Coverage>
 +          <ValueFormat1 value="8"/>
 +          <ValueFormat2 value="0"/>
-+          <ClassDef1 Format="2">
++          <ClassDef1>
 +          </ClassDef1>
-+          <ClassDef2 Format="2">
++          <ClassDef2>
 +            <ClassDef glyph="cid01396" class="1"/>
 +            <ClassDef glyph="cid01644" class="1"/>
 +            <ClassDef glyph="cid59876" class="1"/>
@@ -557,7 +557,7 @@
 +        <LookupFlag value="0"/>
 +        <!-- SubTableCount=1 -->
 +        <SinglePos index="0" Format="1">
-+          <Coverage Format="1">
++          <Coverage>
 +            <Glyph value="cid59883"/>
 +            <Glyph value="cid59891"/>
 +            <Glyph value="cid59893"/>
@@ -584,7 +584,7 @@
 +        <!-- SubTableCount=1 -->
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
-+          <BacktrackCoverage index="0" Format="1">
++          <BacktrackCoverage index="0">
 +            <Glyph value="cid01396"/>
 +            <Glyph value="cid01644"/>
 +            <Glyph value="cid59883"/>
@@ -609,7 +609,7 @@
 +            <Glyph value="cid64719"/>
 +          </BacktrackCoverage>
 +          <!-- InputGlyphCount=1 -->
-+          <InputCoverage index="0" Format="1">
++          <InputCoverage index="0">
 +            <Glyph value="cid59883"/>
 +            <Glyph value="cid59891"/>
 +            <Glyph value="cid59893"/>
