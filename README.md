@@ -1,7 +1,8 @@
 # East Asian Contextual Spacing
 
 This directory contains tools for
-the OpenType [Contextual Half-width Spacing] feature
+the OpenType Contextual Half-width Spacing feature
+("[`chws`]" and "[`vchw`]" feature tags)
 for Japanese/Chinese/Korean typography.
 This feature enables the typography described in
 [JLREQ 3.1.2 Positioning of Punctuation Marks (Commas, Periods and Brackets)
@@ -13,16 +14,17 @@ Following is a figure from JLREQ:
 <img src="https://w3c.github.io/jlreq/images/img2_13.png"
    title="East Asian contextual spacing examples">
 
-You can find [sample text here](http://kojiishi.github.io/chws/samples.html),
-or early discussion at [Adobe CJK Type blog article].
+You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
+The sample page uses fonts built with this tool.
+Also, early discussion at [Adobe CJK Type blog article]
+may help to understand the feature.
 
-[Contextual Half-width Spacing]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
+[`chws`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
+[`vchw`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_uz#tag-vchw
 [Adobe CJK Type blog article]: https://ccjktype.fonts.adobe.com/2018/04/contextual-spacing.html
 
-
-## Adding the feature to your fonts
-
-### Install
+## Install
+[install]: #install
 
 This tool requires following packages.
 
@@ -42,13 +44,16 @@ Install [hb-shape] for Mac with [homebrew]:
 Then install Python packages.
 If you may need to diagnose fonts or the code,
 installing in the editable mode
-(i.e., "`-e`" option in [pip], or setuptools “develop mode”)
+([pip "`-e`" option] or setuptools "[development mode]")
 using [poetry] is recommended:
 ```sh
 % git clone https://github.com/kojiishi/east_asian_spacing
 % cd east_asian_spacing
 % poetry install
 ```
+This method installs testing tools too.
+You can run [unit tests] to verify your installation if needed.
+
 Otherwise, you can install with [pip].
 It is still recommended to install into a separate virtual environment:
 ```sh
@@ -59,32 +64,36 @@ It is still recommended to install into a separate virtual environment:
 % pip install .
 ```
 
+[development mode]: https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html
+[editable mode]: https://pip.pypa.io/en/stable/cli/pip_install/#install-editable
 [fonttools]: https://pypi.org/project/fonttools/
 [hb-shape]: https://command-not-found.com/hb-shape
 [homebrew]: https://brew.sh/
 [pip]: https://pip.pypa.io/en/latest/
+[pip "`-e`" option]: https://pip.pypa.io/en/stable/cli/pip_install/#install-editable
 [pipenv]: https://github.com/pypa/pipenv
 [poetry]: https://github.com/python-poetry/poetry
 
+## Adding the feature to your fonts
+
 ### Usage
 
-The following example adds the feature table to `input-font-file`
+The following example adds the feature to `input-font-file`
 and saves it to the `build` directory.
 ```sh
 % east-asian-spacing -o build input-font-file
 ```
-Please use the `--help` option
-to see the full list of options.
+The `--help` option shows the full list of options.
 
 ### Languages
 
-Because the glyph for a code point may differ by languages,
-this tool need to generate different tables for different languages.
+Because the glyph for a code point may vary by languages,
+different tables are desired for different languages.
 
-When the font supports multiple East Asian languages,
-this tool can detect the languages automatically in most cases.
-But when the language can't be detected, this tool shows an error.
-You need to specify the [OpenType language system tag] of the font.
+In many cases, when the font supports multiple East Asian languages,
+this tool can detect the languages automatically.
+But it shows an error when it failed to detect.
+You need to specify the [OpenType language system tag] of the font in that case.
 
 The following example specifies that the font is a Japanese font.
 ```sh
@@ -95,19 +104,19 @@ The following example specifies that the font is a Japanese font.
 
 ### TrueType Collection (TTC)
 
-When the `input-font-file` is a TrueType Collection,
-this tool adds the feature table to all fonts in the collection by default.
+When the `input-font-file` is a TrueType Collection (TTC),
+this tool adds the feature to all fonts in the TTC by default.
 
-If you want to add the feature table to only some of fonts in the collection,
-you can specify a comma-separated list of font indexes.
-The following example adds the table to the font index 0 and 1,
-but not to other fonts in the collection.
+If you want to add the feature to only some of fonts in the TTC,
+you can specify a comma-separated list of font indices.
+The following example adds the feature to the font index 0 and 1,
+but not to other fonts in the TTC.
 ```sh
 % east-asian-spacing --index=0,1 input-font-file.ttc
 ```
 
-The language option applies to all fonts in the collection by default.
-When you want to specify different languages to each font in the collection,
+The language option applies to all fonts in the TTC by default.
+When you want to specify different languages to each font in the TTC,
 it accepts a comma-separated list.
 The following example specifies
 Korean for the font index 1,
@@ -121,7 +130,7 @@ You can combine these two options.
 The following example applies
 `JAN` to the index 2,
 and `ZHS` to the index 3.
-Other fonts are not changed.
+Other fonts in the TTC are not changed.
 ```sh
 % east-asian-spacing --index=2,3 --language=JAN,ZHS input-font-file.ttc
 ```
@@ -129,7 +138,7 @@ Other fonts are not changed.
 ### Noto CJK
 
 For [Noto CJK] fonts,
-`east-asian-spacing` has a built-in support
+this tool has a built-in support
 to determine the font indices and the languages automatically.
 
 When the first argument is `noto`, it
@@ -180,9 +189,9 @@ at the beginning of the `<script>` block.
 The `dump` sub-command can create various types of text dump files.
 
 The most simple usage is to show a list of tables.
-This is similar to "`ttx -l`" in [fonttools],
+This is similar to the "`-l`" option of [TTX],
 except for TrueType Collections (TTC),
-this tool can show tables of all fonts in the collection,
+this tool can show tables of all fonts in the TTC,
 along with which tables are shared with which fonts.
 ```sh
 % east-asian-spacing dump build/NotoSansCJK-Regular.ttc
@@ -192,12 +201,15 @@ The "`-o`" option creates table list files in the specified directory:
 ```sh
 % east-asian-spacing dump -o build/dump build/*.ttc
 ```
-The "`--ttx`" option creates TTX text dumps in addition to the table list files.
-Again, unlike running TTX by yourself,
-it can dump all tables in TrueType Collections (TTC).
+The "`--ttx`" option creates [TTX] text dumps of all tables
+in addition to the table list files.
+This is similar to the "`-s`" option of [TTX],
+except that it can dump all tables in TrueType Collections (TTC).
 ```sh
 % east-asian-spacing dump -o build/dump --ttx build/*.ttc
 ```
+
+[TTX]: https://fonttools.readthedocs.io/en/latest/ttx.html
 
 ### Diff
 [diff]: #diff
@@ -218,14 +230,14 @@ The example above creates following 3 sets of files:
 
 The "`--diff`" option is more efficient than doing all these,
 especially for large fonts,
-because it skips creating TTX of tables if they are binary-equal.
+because it skips creating TTX of tables when they are binary-equal.
 
 To create diff files for all fonts you bulit,
 you can pipe the output as below:
 ```sh
 % east-asian-spacing -p *.otf | east-asian-spacing dump -o build/diff -
 ```
-The "`-p`" option prints the font paths to `stdout`
+The "`-p`" option prints the input and output font paths to `stdout`
 in the tab-separated-values format.
 The `dump` sub-command with the "`-`" argument reads this list from `stdin`,
 and creates their text dump and diff files in the `build/diff` directory.
@@ -258,9 +270,39 @@ Please see the [Diff] section for the "`-p`" option and piping.
 The `build*.sh` [scripts] include this option.
 
 ### Shape Tests
+[shape tests]: #shape-tests
 
 `tester.py` can test fonts by shaping several strings
 and by checking whether the contextual spacing is applied or not.
 
 `builder.py` and `noto_cjk_builder.py` call this automtically
 for all fonts they built.
+
+### Unit Tests
+[unit tests]: #unit-tests
+
+This repositry contains unit tests using [pytest].
+The unit tests include basic functionalities
+including [shape tests],
+adding the feature to a test font,
+and comparing it with [references].
+
+If you used [poetry] to [install],
+tools for unit testing are already installed.
+Before you run them first time,
+you need to download fonts for testing:
+```sh
+% ./download-fonts.sh
+```
+
+You can then run the tests by:
+```sh
+% pytest
+```
+or run them with multiple versions of Python using [tox]:
+```sh
+% tox
+```
+
+[pytest]: https://pytest.org/
+[tox]: https://tox.readthedocs.io/en/latest/index.html

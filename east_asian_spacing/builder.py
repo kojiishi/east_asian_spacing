@@ -220,30 +220,29 @@ class Builder(object):
         parser.add_argument("inputs", nargs="+")
         parser.add_argument("-i",
                             "--index",
-                            help="For a font collection (TTC), "
-                            "specify a list of indices.")
+                            help="font index, or a list of font indices"
+                            " for a font collection (TTC).")
         parser.add_argument("-g",
                             "--glyph-out",
                             type=pathlib.Path,
-                            help="Output glyph list.")
+                            help="output glyph list.")
         parser.add_argument("-l",
                             "--language",
-                            help="language if the font is language-specific. "
-                            "For a font collection (TTC), "
-                            "a comma separated list can specify different "
-                            "language for each font in the colletion.")
+                            help="language if the font is language-specific,"
+                            " or a comma separated list of languages"
+                            " for a font collection (TTC).")
         parser.add_argument("-o",
                             "--output",
                             default="build",
                             type=pathlib.Path,
-                            help="The output directory.")
+                            help="output directory.")
         parser.add_argument("-p",
                             "--print-path",
                             action="store_true",
-                            help="Output the file paths.")
+                            help="output the file paths.")
         parser.add_argument("-s",
                             "--suffix",
-                            help="Suffix to add to the output file name.")
+                            help="suffix to add to the output file name.")
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity.",

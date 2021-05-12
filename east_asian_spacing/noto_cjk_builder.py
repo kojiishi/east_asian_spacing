@@ -78,16 +78,16 @@ class NotoCJKBuilder(Builder):
                             "--glyph-out",
                             default='build/dump',
                             type=pathlib.Path,
-                            help="Output glyph list.")
+                            help="output glyph list.")
         parser.add_argument("-o",
                             "--output",
                             default='build',
                             type=pathlib.Path,
-                            help="The output directory.")
+                            help="output directory.")
         parser.add_argument("-p",
                             "--print-path",
                             action="store_true",
-                            help="Output the file paths.")
+                            help="output the file paths.")
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity.",
