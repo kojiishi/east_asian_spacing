@@ -17,7 +17,7 @@ fonttools = {version = ">=4.13.0", extras = ["woff"]}
 [tool.poetry.dev-dependencies]
 pytest = "*"
 pytest-asyncio = "*"
-tox = "*"
+tox = ">=3.3.0"
 yapf = "*"
 
 [tool.poetry.scripts]
