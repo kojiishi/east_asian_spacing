@@ -1,6 +1,7 @@
 import pytest
 
 from dump import Dump
+from font import Font
 
 
 @pytest.mark.asyncio
@@ -21,3 +22,18 @@ def test_read_split_table_ttx(data_dir):
     tables = Dump.read_split_table_ttx(data_dir / 'split-table.ttx')
     assert list(tables.keys()) == ['head', 'hmtx']
     assert tables['head'] == data_dir / 'test._h_e_a_d.ttx'
+
+
+@pytest.mark.asyncio
+async def test_diff_font(test_font_path, tmp_path):
+    # Create a copy by saving. This should update timestamp and checksum.
+    dst_font_Path = tmp_path / test_font_path.name
+    font = Font.load(test_font_path)
+    font.save(dst_font_Path)
+
+    # The 'head' table should differ, but the diff should be ignored because
+    # only timestamp and checksum are diferent.
+    diffs = await Dump.diff_font(dst_font_Path, test_font_path, tmp_path)
+    assert len(diffs) == 1
+    assert diffs[0].suffixes[-2] == '.tables'
+    assert diffs[0].stat().st_size == 0
