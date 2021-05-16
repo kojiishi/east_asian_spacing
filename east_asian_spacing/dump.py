@@ -8,6 +8,7 @@ import os
 import pathlib
 import re
 import sys
+import tempfile
 
 from east_asian_spacing.font import Font
 from east_asian_spacing.log_utils import init_logging
@@ -258,7 +259,7 @@ class Dump(object):
         logger.debug("dump_font completed: %s", font)
 
     @staticmethod
-    async def diff(src, dst, out_dir=None, ignore_line_numbers=False):
+    async def diff(src, dst, output=None, ignore_line_numbers=False):
         assert src or dst
         args = [
             'diff', '-u', src if src else os.devnull,
@@ -271,14 +272,18 @@ class Dump(object):
         stdout = stdout.decode('utf-8')
         lines = stdout.splitlines(keepends=True)
 
+        if hasattr(output, 'writelines'):
+            output.writelines(lines)
+            return lines
+
         # Skip the diff headers.
         lines = itertools.islice(lines, 2, None)
         if ignore_line_numbers:
             lines = ('@@\n' if re.match(r'@@ -.', line) else line
                      for line in lines)
 
-        if out_dir:
-            out_path = out_dir / f'{(dst or src).name}.diff'
+        if output:
+            out_path = output / f'{(dst or src).name}.diff'
             with out_path.open('w') as out_file:
                 out_file.writelines(lines)
             return out_path
@@ -317,9 +322,33 @@ class Dump(object):
         return True
 
     @staticmethod
-    async def diff_font(font, src_font, out_dir):
+    async def diff_font(font, src_font, diff_out=None, dump_dir=None):
         logger.info('diff_font %s src=%s', font, src_font)
-        assert out_dir, 'output is required for diff'
+
+        if isinstance(dump_dir, str):
+            dump_dir = pathlib.Path(dump_dir)
+        if isinstance(diff_out, str):
+            diff_out = pathlib.Path(diff_out)
+        if isinstance(diff_out, os.PathLike):
+            diff_out.mkdir(exist_ok=True, parents=True)
+            if dump_dir is None:
+                dump_dir = diff_out / 'dump'
+            src_dump_dir = diff_out / 'src'
+        elif dump_dir is None:
+            # If `diff_out` is a file but without `dump_dir`, dump to a
+            # temporary directory.
+            with tempfile.TemporaryDirectory() as temp_dir:
+                return await Dump.diff_font(font,
+                                            src_font,
+                                            diff_out=diff_out,
+                                            dump_dir=temp_dir)
+        else:
+            if diff_out is None:
+                diff_out = sys.stdout
+            src_dump_dir = dump_dir / 'src'
+        dump_dir.mkdir(exist_ok=True, parents=True)
+        src_dump_dir.mkdir(exist_ok=True, parents=True)
+
         if not isinstance(font, Font):
             font = Font.load(font)
         if not isinstance(src_font, Font):
@@ -328,30 +357,29 @@ class Dump(object):
             if src_font.is_dir():
                 src_font = src_font / font.path.name
             src_font = Font.load(src_font)
-        if isinstance(out_dir, str):
-            out_dir = pathlib.Path(out_dir)
-        src_out_dir = out_dir / 'src'
-        src_out_dir.mkdir(exist_ok=True, parents=True)
 
         # Create tables files and diff them.
         entries = TableEntry.read_font(font)
-        tables_path = Dump.dump_tables(font, entries=entries, out_file=out_dir)
+        tables_path = Dump.dump_tables(font,
+                                       entries=entries,
+                                       out_file=dump_dir)
         src_entries = TableEntry.read_font(src_font)
         src_tables_path = Dump.dump_tables(src_font,
                                            entries=src_entries,
-                                           out_file=src_out_dir)
-        diff_out_dir = out_dir / 'diff'
-        diff_out_dir.mkdir(exist_ok=True, parents=True)
-        tables_diff = await Dump.diff(src_tables_path, tables_path,
-                                      diff_out_dir)
+                                           out_file=src_dump_dir)
+        tables_diff = await Dump.diff(src_tables_path, tables_path, diff_out)
         diff_paths = [tables_diff]
 
-        # Dump TTX files.
+        logger.info('%d / %d tables found', len(entries), len(src_entries))
         entries, src_entries = TableEntry.filter_entries_by_binary_diff(
             entries, src_entries)
+        logger.info('%d / %d tables after binary diff', len(entries),
+                    len(src_entries))
+
+        # Dump TTX files.
         ttx_paths, src_ttx_paths = await asyncio.gather(
-            Dump.dump_ttx(font, out_dir, entries),
-            Dump.dump_ttx(src_font, src_out_dir, src_entries))
+            Dump.dump_ttx(font, dump_dir, entries),
+            Dump.dump_ttx(src_font, src_dump_dir, src_entries))
 
         # Diff TTX files.
         assert len(ttx_paths) == len(
@@ -364,12 +392,13 @@ class Dump(object):
                 src_table = src_tables.get(table_name)
                 ttx_diff = await Dump.diff(src_table,
                                            table,
-                                           diff_out_dir,
+                                           diff_out,
                                            ignore_line_numbers=True)
-                if not Dump.has_table_diff(ttx_diff, table_name):
-                    logger.debug('No diff for %s', table_name)
-                    ttx_diff.unlink()
-                    continue
+                if isinstance(ttx_diff, os.PathLike):
+                    if not Dump.has_table_diff(ttx_diff, table_name):
+                        logger.debug('No diff for %s', table_name)
+                        ttx_diff.unlink()
+                        continue
                 logger.debug('Diff found for %s', table_name)
                 diff_paths.append(ttx_diff)
         logger.debug("diff completed: %s", font)
@@ -441,28 +470,28 @@ class Dump(object):
         parser.add_argument("path", nargs="+")
         parser.add_argument("--diff",
                             type=pathlib.Path,
-                            help="The source font or directory "
+                            help="source font or directory "
                             "to compute differences against.")
         parser.add_argument("-f",
                             "--features",
                             action="store_true",
-                            help="Dump GPOS/GSUB feature names.")
+                            help="dump GPOS/GSUB feature names.")
         parser.add_argument("-o",
                             "--output",
                             type=pathlib.Path,
-                            help="The output directory.")
+                            help="output directory.")
         parser.add_argument("-r",
                             "--ref",
                             type=Dump.References,
-                            help="The reference directory.")
+                            help="reference directory.")
         parser.add_argument("-s",
                             "--sort",
                             default="tag",
-                            help="The sort order. "
-                            "'tag' or 'offset' are supported.")
+                            choices=["offset", "tag"],
+                            help="sort order.")
         parser.add_argument("--ttx",
                             action="store_true",
-                            help="Create TTX files at the specified path.")
+                            help="create TTX files in addition to table list.")
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity.",
@@ -474,19 +503,23 @@ class Dump(object):
             args.output.mkdir(exist_ok=True, parents=True)
         dump_file_name = args.output is None and len(args.path) > 1
         for i, (path, diff_src, glyphs) in enumerate(Dump.expand_paths(args)):
+            if dump_file_name:
+                if i: print()
+                print(f'File: {path}')
             if diff_src:
-                diffs = await Dump.diff_font(path, diff_src, args.output)
-                if glyphs:
-                    diffs.append(glyphs)
+                diffs = await Dump.diff_font(path,
+                                             diff_src,
+                                             diff_out=args.output)
                 if args.ref:
+                    if not isinstance(diffs[0], os.PathLike):
+                        raise Exception('`-r` requires `-o`')
+                    if glyphs:
+                        diffs.append(glyphs)
                     await args.ref.diff_with_references(diffs)
-            else:
-                font = Font.load(path)
-                if dump_file_name:
-                    if i: print()
-                    print(f'File: {font.path.name}')
-                await Dump.dump_font(font, **vars(args))
-                logger.debug("dump %d completed: %s", i, font)
+                continue
+            font = Font.load(path)
+            await Dump.dump_font(font, **vars(args))
+            logger.debug("dump %d completed: %s", i, font)
         if args.ref and args.ref.has_any:
             script = args.output / 'update-ref.sh'
             args.ref.write_update_script(script)

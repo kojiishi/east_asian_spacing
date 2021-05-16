@@ -207,14 +207,14 @@ The `dump` sub-command can also create
 This helps visualizing differences in two fonts,
 specifically, the font files you created from the original font files.
 ```sh
-% east-asian-spacing dump -o build/dump --diff source_fonts_dir build/NotoSansCJK.ttc
+% east-asian-spacing dump -o build/diff --diff source_fonts_dir build/NotoSansCJK.ttc
 ```
 The example above creates following 3 sets of files:
 1. The table list and TTX text dump files for `build/NotoSansCJK.ttc`
-   in the `build/dump` directory.
+   in the `build/diff/dump` directory.
 2. The table list and TTX text dump files for `source_fonts_dir/NotoSansCJK.ttc`
-   in the `build/dump/src` directory.
-3. Diff files of the two sets of dump files in the `build/dump/diff` directory.
+   in the `build/diff/src` directory.
+3. Diff files of the two sets of dump files in the `build/diff` directory.
 
 The "`--diff`" option is more efficient than doing all these,
 especially for large fonts,
@@ -223,14 +223,14 @@ because it skips creating TTX of tables if they are binary-equal.
 To create diff files for all fonts you bulit,
 you can pipe the output as below:
 ```sh
-% east-asian-spacing -p *.otf | east-asian-spacing dump -o build/dump -
+% east-asian-spacing -p *.otf | east-asian-spacing dump -o build/diff -
 ```
 The "`-p`" option prints the font paths to `stdout`
 in the tab-separated-values format.
 The `dump` sub-command with the "`-`" argument reads this list from `stdin`,
-and creates their text dump and diff files in the `build/dump` directory.
+and creates their text dump and diff files in the `build/diff` directory.
 The "`--diff`" option is not necessary in this case,
-because the path of source fonts are also provided from the pipe.
+because the source font paths are provided from the pipe.
 
 ### References
 [references]: #references
