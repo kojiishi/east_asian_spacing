@@ -128,7 +128,8 @@ class GlyphSetTrio(object):
         font = self.font
         for name, glyphs in self._name_and_glyphs:
             output.write(f'# {prefix}{name}\n')
-            output.write(separator.join(str(glyph_id) for glyph_id in glyphs))
+            glyphs = (str(glyph_id) for glyph_id in sorted(glyphs))
+            output.write(separator.join(glyphs))
             output.write('\n')
 
     def unite(self, other):
