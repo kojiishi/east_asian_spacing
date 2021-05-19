@@ -15,6 +15,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 from east_asian_spacing.font import Font
 from east_asian_spacing.log_utils import init_logging
 from east_asian_spacing.spacing import EastAsianSpacing
+from east_asian_spacing.spacing import EastAsianSpacingConfig
 from east_asian_spacing.tester import EastAsianSpacingTester
 
 logger = logging.getLogger('build')
@@ -39,10 +40,11 @@ class Builder(object):
              print_path=False):
         assert self.has_spacings
         font = self.font
-        output_path = self.calc_output_path(font.path, output_path,
+        path_before_save = font.path
+        output_path = self.calc_output_path(path_before_save, output_path,
                                             stem_suffix)
         font.save(output_path)
-        paths = [output_path, font.path]
+        paths = [output_path, path_before_save]
         if glyph_out:
             glyphs_path = self.save_glyphs(glyph_out)
             paths.append(glyphs_path)
@@ -136,8 +138,9 @@ class Builder(object):
     def apply_language_and_indices(self, language=None, indices=None):
         font = self.font
         if not font.is_collection:
-            font.language = language
+            assert language is None or ',' not in language
             assert indices is None
+            font.language = language
             return
         self._fonts_in_collection = tuple(
             self.calc_fonts_in_collection(font.fonts_in_collection, language,
@@ -184,14 +187,18 @@ class Builder(object):
             united_spacing.unite(spacing)
         united_spacing.save_glyphs(output)
 
-    async def test(self):
+    async def test(self, config=None):
+        if config is None:
+            config = EastAsianSpacingConfig()
+            config.down_sample_to(3)
+        font = self.font
         fonts_in_collection = self.fonts_in_collection
         if fonts_in_collection is not None:
             for font in fonts_in_collection:
-                await EastAsianSpacingTester(font).test()
+                await EastAsianSpacingTester(font).test(
+                    config.tweaked_for(font))
             return
-        font = self.font
-        await EastAsianSpacingTester(font).test()
+        await EastAsianSpacingTester(font).test(config.tweaked_for(font))
 
     @classmethod
     def expand_paths(cls, paths):
