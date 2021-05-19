@@ -169,6 +169,14 @@ Followings are example usages.
 % ./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
 ```
 
+### Character-Pairs
+
+Some fonts may not have expected spacings for some characters,
+and you may want to adjust which character-pairs should adjust spacings.
+
+Currently, this is possible only from a Python program.
+Please see `tests/test_config.py` for an example.
+
 ## Testing
 
 ### Test HTML

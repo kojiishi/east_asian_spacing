@@ -446,8 +446,7 @@ class EastAsianSpacing(object):
         if self.vertical and other.vertical:
             self.vertical.unite(other.vertical)
 
-    async def add_glyphs(self):
-        config = EastAsianSpacingConfig()
+    async def add_glyphs(self, config):
         await self.horizontal.add_glyphs(config)
         if self.vertical:
             await self.vertical.add_glyphs(config)

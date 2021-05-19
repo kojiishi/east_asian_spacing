@@ -22,10 +22,11 @@ logger = logging.getLogger('build')
 
 
 class Builder(object):
-    def __init__(self, font):
+    def __init__(self, font, config=EastAsianSpacingConfig()):
         if not isinstance(font, Font):
             font = Font.load(font)
         self.font = font
+        self.config = config
         self._fonts_in_collection = None
         self._spacings = []
 
@@ -84,7 +85,7 @@ class Builder(object):
         if EastAsianSpacing.font_has_feature(font):
             return
         spacing = EastAsianSpacing(font)
-        await spacing.add_glyphs()
+        await spacing.add_glyphs(self.config)
         if not spacing.can_add_to_font:
             logger.info('Skipping due to no pairs: %s', font)
             return
@@ -93,6 +94,7 @@ class Builder(object):
 
     async def build_collection(self, fonts_in_collection):
         assert self.font.is_collection
+        config = self.config
 
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
@@ -111,11 +113,11 @@ class Builder(object):
                 spacing, fonts = spacing_entry
                 # Different faces may have different set of glyphs. Unite them.
                 spacing.font = font
-                await spacing.add_glyphs()
+                await spacing.add_glyphs(config)
                 fonts.append(font)
                 continue
             spacing = EastAsianSpacing(font)
-            await spacing.add_glyphs()
+            await spacing.add_glyphs(config)
             spacing_by_offset[reader_offset] = (spacing, [font])
 
         # Add to each font using the united `EastAsianSpacing`s.
@@ -189,7 +191,7 @@ class Builder(object):
 
     async def test(self, config=None):
         if config is None:
-            config = EastAsianSpacingConfig()
+            config = self.config.clone()
             config.down_sample_to(3)
         font = self.font
         fonts_in_collection = self.fonts_in_collection
