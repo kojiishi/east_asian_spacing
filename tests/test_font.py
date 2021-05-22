@@ -1,4 +1,4 @@
-from font import Font
+from east_asian_spacing import Font
 
 
 def test_is_font_extension():

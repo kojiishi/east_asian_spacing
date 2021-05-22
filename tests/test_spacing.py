@@ -1,4 +1,4 @@
-from spacing import EastAsianSpacingConfig
+from east_asian_spacing import EastAsianSpacingConfig
 
 
 def test_down_sample_to():

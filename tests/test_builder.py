@@ -2,8 +2,8 @@ import io
 import pathlib
 import tempfile
 
-from builder import Builder
-from font import Font
+from east_asian_spacing import Builder
+from east_asian_spacing import Font
 
 
 def test_calc_indices_and_languages():

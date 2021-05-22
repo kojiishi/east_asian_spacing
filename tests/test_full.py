@@ -3,8 +3,8 @@ import pathlib
 import pytest
 import tempfile
 
-from dump import Dump
-from noto_cjk_builder import NotoCJKBuilder
+from east_asian_spacing import Dump
+from east_asian_spacing import NotoCJKBuilder
 
 logger = logging.getLogger(__name__)
 
