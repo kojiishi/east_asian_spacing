@@ -1,7 +1,7 @@
 import pytest
 
-from dump import Dump
-from font import Font
+from east_asian_spacing import Dump
+from east_asian_spacing import Font
 
 
 @pytest.mark.asyncio
