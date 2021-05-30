@@ -87,6 +87,10 @@ class NotoCJKBuilder(Builder):
                             "--print-path",
                             action="store_true",
                             help="output the file paths.")
+        parser.add_argument("--test",
+                            type=int,
+                            default=1,
+                            help="0=no tests, 1=smoke tests, 2=full tests")
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity.",
@@ -104,7 +108,8 @@ class NotoCJKBuilder(Builder):
             builder.save(args.output,
                          glyph_out=args.glyph_out,
                          print_path=args.print_path)
-            await builder.test()
+            if args.test:
+                await builder.test(smoke=(args.test == 1))
 
 
 if __name__ == '__main__':

@@ -38,7 +38,8 @@ class EastAsianSpacingTester(object):
             message = (f'{len(messages)}/{len(results)} failed\n' +
                        '\n'.join(messages))
             raise AssertionError(message)
-        logger.info('PASS: %d tests for "%s"', len(tasks), self.font)
+        logger.info('PASS: %d tests %d cases for "%s"', len(tasks),
+                    sum(results), self.font)
 
     def test_coros(self, config):
         yield self.assert_trim(
@@ -52,6 +53,7 @@ class EastAsianSpacingTester(object):
         font = self.font
         em = font.units_per_em
         half_em = em / 2
+        pass_count = 0
         for text, glyphs, off_glyphs in test_and_results:
             # If any glyphs are not em, the feature should not apply.
             if any(g.advance != em for g in off_glyphs):
@@ -65,6 +67,8 @@ class EastAsianSpacingTester(object):
                     (f'{index}.offset != {half_em}:'
                     f' {self.debug_str(text, glyphs)}'
                     f' off={self.debug_str(text, off_glyphs)}')
+            pass_count += 1
+        return pass_count
 
     _features = (('chws', 'fwid'), ('fwid', ))
     _vertical_features = (('vchw', 'fwid', 'vert'), ('fwid', 'vert'))

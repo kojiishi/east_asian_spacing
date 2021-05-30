@@ -189,9 +189,13 @@ class Builder(object):
             united_spacing.unite(spacing)
         united_spacing.save_glyphs(output)
 
-    async def test(self, config=None):
+    async def test(self, config=None, smoke=None):
         if config is None:
             config = self.config.clone()
+            if smoke is None or smoke:
+                config.down_sample_to(3)
+        elif smoke:
+            config = config.clone()
             config.down_sample_to(3)
         font = self.font
         fonts_in_collection = self.fonts_in_collection
@@ -252,6 +256,10 @@ class Builder(object):
         parser.add_argument("-s",
                             "--suffix",
                             help="suffix to add to the output file name.")
+        parser.add_argument("--test",
+                            type=int,
+                            default=1,
+                            help="0=no tests, 1=smoke tests, 2=full tests")
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity.",
@@ -273,7 +281,8 @@ class Builder(object):
                          stem_suffix=args.suffix,
                          glyph_out=args.glyph_out,
                          print_path=args.print_path)
-            await builder.test()
+            if args.test:
+                await builder.test(smoke=(args.test == 1))
 
 
 if __name__ == '__main__':
