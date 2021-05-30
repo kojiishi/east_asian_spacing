@@ -17,8 +17,8 @@ async def test_diff(data_dir, diff):
         lines = await Dump.diff(data_dir / 'head.ttx',
                                 data_dir / 'head-modified.ttx')
         lines = list(lines)
-        diff_lines = [line for line in lines if line[0] == '-' or line[0] == '+']
-        assert len(diff_lines) == 4, ''.join(lines)
+        diffs = [line for line in lines if line[0] == '-' or line[0] == '+']
+        assert len(diffs) == 4, ''.join(lines)
     finally:
         Dump._diff = saved_diff
 

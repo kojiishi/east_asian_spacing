@@ -11,6 +11,52 @@ from east_asian_spacing.spacing import EastAsianSpacingConfig
 logger = logging.getLogger('test')
 
 
+class ShapeTest(object):
+    _features = (('chws', 'fwid'), ('fwid', ))
+    _vertical_features = (('vchw', 'fwid', 'vert'), ('fwid', 'vert'))
+
+    @staticmethod
+    async def create_list(font, inputs):
+        features = (ShapeTest._vertical_features
+                    if font.is_vertical else ShapeTest._features)
+        tests = tuple(ShapeTest(font, input, features) for input in inputs)
+        coros = (test.shape() for test in tests)
+        tasks = list(asyncio.create_task(coro) for coro in coros)
+        await asyncio.gather(*tasks)
+        return tests
+
+    def __init__(self, font, input, features_list):
+        self.font = font
+        self.input = input
+        self.features_list = features_list
+        self.fail_reasons = []
+
+    async def shape(self):
+        coros = (Shaper(self.font, self.input, features=f).shape()
+                 for f in self.features_list)
+        tasks = list(asyncio.create_task(coro) for coro in coros)
+        glyphs_list = await asyncio.gather(*tasks)
+        glyphs_list = tuple(tuple(g) for g in glyphs_list)
+        self.glyphs, self.off_glyphs = glyphs_list
+
+    @property
+    def is_fail(self):
+        return len(self.fail_reasons) > 0
+
+    def fail(self, reason):
+        self.fail_reasons.append(reason)
+
+    def __str__(self):
+        text = ' '.join(f'U+{ch:04X}' for ch in self.input)
+        glyphs = ' '.join(str(glyph) for glyph in self.glyphs)
+        off_glyphs = ' '.join(str(glyph) for glyph in self.off_glyphs)
+        summary = f'{text} ==> {glyphs} off={off_glyphs} font={self.font}'
+        if len(self.fail_reasons) == 0:
+            return f'PASS {text}'
+        return (f'FAIL {text}: {", ".join(self.fail_reasons)} '
+                f'==> {glyphs} off={off_glyphs} font={self.font}')
+
+
 class EastAsianSpacingTester(object):
     def __init__(self, font):
         assert not font.is_collection
@@ -28,18 +74,14 @@ class EastAsianSpacingTester(object):
                 coros.extend(vertical_tester.test_coros(config))
 
         tasks = list(asyncio.create_task(coro) for coro in coros)
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        messages = []
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                messages.append(f'  {i}: FAIL {result}')
-        if len(messages):
-            message = (f'{len(messages)}/{len(results)} failed\n' +
-                       '\n'.join(messages))
+        results = await asyncio.gather(*tasks)
+        tests = tuple(itertools.chain(*results))
+        fails = tuple(test for test in tests if test.is_fail)
+        if len(fails) > 0:
+            message = (f'{len(fails)}/{len(tests)} tests failed\n' +
+                       '\n'.join(str(test) for test in fails))
             raise AssertionError(message)
-        logger.info('PASS: %d tests %d cases for "%s"', len(tasks),
-                    sum(results), self.font)
+        logger.info('PASS: %d tests for "%s"', len(tests), self.font)
 
     def test_coros(self, config):
         yield self.assert_trim(
@@ -48,50 +90,25 @@ class EastAsianSpacingTester(object):
         yield self.assert_trim(
             1, True, itertools.product(config.cjk_opening, config.cjk_opening))
 
-    async def assert_trim(self, index, assert_offset, tests):
-        test_and_results = await self.shape_tests(tests)
+    async def assert_trim(self, index, assert_offset, inputs):
         font = self.font
+        tests = await ShapeTest.create_list(font, inputs)
         em = font.units_per_em
         half_em = em / 2
-        pass_count = 0
-        for text, glyphs, off_glyphs in test_and_results:
-            # If any glyphs are not em, the feature should not apply.
-            if any(g.advance != em for g in off_glyphs):
-                assert glyphs[index].advance == off_glyphs[index].advance
+        for test in tests:
+            # If any glyphs are missing, or their advances are not em,
+            # the feature should not apply.
+            if any(g.glyph_id == 0 or g.advance != em
+                   for g in test.off_glyphs):
+                assert (test.glyphs[index].advance ==
+                        test.off_glyphs[index].advance)
                 continue
-
-            assert glyphs[index].advance == half_em,\
-                f'{index}.advance != {half_em}: {self.debug_str(text, glyphs)}'
-            if assert_offset:
-                assert glyphs[index].offset - off_glyphs[index].offset == -half_em,\
-                    (f'{index}.offset != {half_em}:'
-                    f' {self.debug_str(text, glyphs)}'
-                    f' off={self.debug_str(text, off_glyphs)}')
-            pass_count += 1
-        return pass_count
-
-    _features = (('chws', 'fwid'), ('fwid', ))
-    _vertical_features = (('vchw', 'fwid', 'vert'), ('fwid', 'vert'))
-
-    async def shape_tests(self, tests):
-        async def shape(font, text, features):
-            coros = (Shaper(font, text, features=f).shape() for f in features)
-            tasks = list(asyncio.create_task(coro) for coro in coros)
-            glyphs = await asyncio.gather(*tasks)
-            glyphs = tuple(tuple(g) for g in glyphs)
-            return (text, *glyphs)
-
-        font = self.font
-        features = (EastAsianSpacingTester._vertical_features
-                    if font.is_vertical else EastAsianSpacingTester._features)
-        coros = (shape(font, text, features) for text in tests)
-        tasks = list(asyncio.create_task(coro) for coro in coros)
-        return await asyncio.gather(*tasks)
-
-    def debug_str(self, text, glyphs):
-        text = ' '.join(f'U+{ch:04X}' for ch in text)
-        glyphs = ' '.join(str(glyph) for glyph in glyphs)
-        return f'{text} ==> {glyphs} font={self.font}'
+            if test.glyphs[index].advance != half_em:
+                test.fail(f'{index}.advance != {half_em}')
+            if (assert_offset and test.glyphs[index].offset -
+                    test.off_glyphs[index].offset != -half_em):
+                test.fail(f'{index}.offset != {half_em}')
+        return tests
 
     @staticmethod
     async def main():
@@ -108,8 +125,9 @@ class EastAsianSpacingTester(object):
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.INFO)
-        font = Font(args)
-        await EastAsianSpacingTester(font).test()
+        font = Font.load(args.path)
+        config = EastAsianSpacingConfig()
+        await EastAsianSpacingTester(font).test(config)
         logging.info('All tests pass')
 
 
