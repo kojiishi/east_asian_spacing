@@ -179,9 +179,9 @@ which is a Cython bindings for the HarfBuzz.
 
 If you install or build [HarfBuzz] and want to use it instead,
 you can use the [hb-shape] command line tool by
-settting the `HB_SHAPE` environment variable.
+settting the `SHAPER` environment variable.
 ```sh
-export HB_SHAPE=hb-shape
+export SHAPER=hb-shape
 ```
 
 To install [hb-shape] for Linux:
@@ -294,7 +294,7 @@ with once-reviewed diff files in the `references` directory.
 The typical usage of this option is as below:
 ```sh
 east-asian-spacing -p -g=build/glyphs *.otf |
-    east-asian-spacing dump -o=build/dump -r=references -
+    east-asian-spacing dump -o=build/diff -r=references -
 ```
 Please see the [Diff] section for the "`-p`" option and piping.
 

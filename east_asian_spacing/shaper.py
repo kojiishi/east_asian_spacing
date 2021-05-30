@@ -216,7 +216,7 @@ class HbShapeShaper(ShaperBase):
         args.append(f'--unicodes={unicodes_as_hex_string}')
 
 
-HbShapeShaper._hb_shape_path = os.environ.get('HB_SHAPE')
+HbShapeShaper._hb_shape_path = os.environ.get('SHAPER')
 if HbShapeShaper._hb_shape_path:
     logger.debug('Using HbShapeShaper at "%s"', HbShapeShaper._hb_shape_path)
     Shaper = HbShapeShaper
