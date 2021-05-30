@@ -156,6 +156,9 @@ class UHarfBuzzShaper(ShaperBase):
         features = self.features_dict
         # logger.debug('lang=%s, script=%s, features=%s', buffer.language,
         #              buffer.script, features)
+        logger.debug('%s lang=%s script=%s features=%s',
+                     ' '.join(f'U+{ch:04X}' for ch in unicodes), self.language,
+                     self.script, features)
         hb.shape(font.hbfont, buffer, features)
         infos = buffer.glyph_infos
         positions = buffer.glyph_positions
