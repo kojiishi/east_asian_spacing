@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-import collections
+import difflib
 import itertools
 import logging
 import os
 import pathlib
 import re
+import shutil
 import sys
 import tempfile
 
@@ -261,16 +262,25 @@ class Dump(object):
     @staticmethod
     async def diff(src, dst, output=None, ignore_line_numbers=False):
         assert src or dst
-        args = [
-            'diff', '-u', src if src else os.devnull,
-            dst if dst else os.devnull
-        ]
-        logger.debug("run_diff: %s", args)
-        proc = await asyncio.create_subprocess_exec(
-            *args, stdout=asyncio.subprocess.PIPE)
-        stdout, _ = await proc.communicate()
-        stdout = stdout.decode('utf-8')
-        lines = stdout.splitlines(keepends=True)
+        if Dump._diff:
+            args = [
+                Dump._diff, '-u', src if src else os.devnull,
+                dst if dst else os.devnull
+            ]
+            logger.debug("run_diff: %s", args)
+            proc = await asyncio.create_subprocess_exec(
+                *args, stdout=asyncio.subprocess.PIPE)
+            stdout, _ = await proc.communicate()
+            stdout = stdout.decode('utf-8')
+            lines = stdout.splitlines(keepends=True)
+        else:
+            src_lines, dst_lines = ([] if path is None else
+                                    path.read_text().splitlines(keepends=True)
+                                    for path in (src, dst))
+            lines = difflib.unified_diff(src_lines,
+                                         dst_lines,
+                                         fromfile=str(src),
+                                         tofile=str(dst))
 
         if hasattr(output, 'writelines'):
             output.writelines(lines)
@@ -527,6 +537,14 @@ class Dump(object):
             args.ref.print_stats()
         logger.debug("main completed")
 
+
+Dump._diff = os.environ.get('DIFF')
+if Dump._diff == '-':  # '-' forces using the intrnal difflib.
+    Dump._diff = None
+elif not Dump._diff:
+    # Prefer external diff command if it is available.
+    # The external command can run in parallel, and is generally faster.
+    Dump._diff = shutil.which('diff')
 
 if __name__ == '__main__':
     asyncio.run(Dump.main())

@@ -1,3 +1,5 @@
+import shutil
+
 import pytest
 
 from east_asian_spacing import Dump
@@ -5,12 +7,20 @@ from east_asian_spacing import Font
 
 
 @pytest.mark.asyncio
-async def test_diff(data_dir):
-    lines = await Dump.diff(data_dir / 'head.ttx',
-                            data_dir / 'head-modified.ttx')
-    lines = list(lines)
-    diff_lines = [line for line in lines if line[0] == '-' or line[0] == '+']
-    assert len(diff_lines) == 4, ''.join(lines)
+@pytest.mark.parametrize('diff', [None, 'diff'])
+async def test_diff(data_dir, diff):
+    if diff is not None and shutil.which(diff) is None:
+        return
+    saved_diff = Dump._diff
+    Dump._diff = diff
+    try:
+        lines = await Dump.diff(data_dir / 'head.ttx',
+                                data_dir / 'head-modified.ttx')
+        lines = list(lines)
+        diff_lines = [line for line in lines if line[0] == '-' or line[0] == '+']
+        assert len(diff_lines) == 4, ''.join(lines)
+    finally:
+        Dump._diff = saved_diff
 
 
 def test_has_table_diff_head(data_dir):
