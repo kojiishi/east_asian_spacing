@@ -81,8 +81,14 @@ class EastAsianSpacingTester(object):
                 vertical_config = config.tweaked_for(vertical_font)
                 coros.extend(vertical_tester.test_coros(vertical_config))
 
-        tasks = list(asyncio.create_task(coro) for coro in coros)
-        results = await asyncio.gather(*tasks)
+        # Run tests. Run them without `asyncio.gather` to avoid too many open
+        # files when using subprocesses.
+        # tasks = list(asyncio.create_task(coro) for coro in coros)
+        # results = await asyncio.gather(*tasks)
+        results = []
+        for coro in coros:
+            results.append(await coro)
+
         tests = tuple(itertools.chain(*results))
         fails = tuple(test for test in tests if test.is_fail)
         if len(fails) > 0:
