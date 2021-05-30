@@ -110,7 +110,7 @@ class ShaperBase(object):
     @property
     def unicodes(self):
         if not self._unicodes:
-            self._unicodes = list(ord(c) for c in self.text)
+            self._unicodes = list(ord(c) for c in self._text)
         return self._unicodes
 
     @property
@@ -139,9 +139,12 @@ class ShaperBase(object):
 
 class UHarfBuzzShaper(ShaperBase):
     async def shape(self):
-        font = self.font
+        unicodes = self.unicodes
+        if not unicodes:
+            return ()
         buffer = hb.Buffer()
-        buffer.add_str(self.text)
+        buffer.add_codepoints(list(unicodes))
+        font = self.font
         if font.is_vertical:
             buffer.direction = 'ttb'
         else:
@@ -169,8 +172,11 @@ class UHarfBuzzShaper(ShaperBase):
 
 class HbShapeShaper(ShaperBase):
     async def shape(self):
+        unicodes = self.unicodes
+        if not unicodes:
+            return ()
         args = ["--output-format=json", "--no-glyph-names"]
-        self.append_hb_args(self.unicodes, args)
+        self.append_hb_args(unicodes, args)
         logger.debug("subprocess.run: %s", args)
         proc = await asyncio.create_subprocess_exec(
             HbShapeShaper._hb_shape_path,

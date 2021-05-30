@@ -32,8 +32,14 @@ class ShapeTest(object):
         self.fail_reasons = []
 
     async def shape(self):
-        coros = (Shaper(self.font, self.input, features=f).shape()
-                 for f in self.features_list)
+        font = self.font
+        shapers = (Shaper(font,
+                          self.input,
+                          language=font.language,
+                          script='hani',
+                          features=features)
+                   for features in self.features_list)
+        coros = (shaper.shape() for shaper in shapers)
         tasks = list(asyncio.create_task(coro) for coro in coros)
         glyphs_list = await asyncio.gather(*tasks)
         glyphs_list = tuple(tuple(g) for g in glyphs_list)
@@ -64,14 +70,16 @@ class EastAsianSpacingTester(object):
 
     async def test(self, config):
         coros = []
+        font = self.font
+        config = config.tweaked_for(font)
         coros.extend(self.test_coros(config))
 
-        font = self.font
         if not font.is_vertical:
             vertical_font = font.vertical_font
             if vertical_font:
                 vertical_tester = EastAsianSpacingTester(vertical_font)
-                coros.extend(vertical_tester.test_coros(config))
+                vertical_config = config.tweaked_for(vertical_font)
+                coros.extend(vertical_tester.test_coros(vertical_config))
 
         tasks = list(asyncio.create_task(coro) for coro in coros)
         results = await asyncio.gather(*tasks)

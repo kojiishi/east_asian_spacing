@@ -57,6 +57,8 @@ class Builder(object):
     @staticmethod
     def calc_output_path(input_path, output_path, stem_suffix=None):
         if output_path:
+            if isinstance(output_path, str):
+                output_path = pathlib.Path(output_path)
             output_path = output_path / input_path.name
         else:
             output_path = input_path
@@ -201,10 +203,9 @@ class Builder(object):
         fonts_in_collection = self.fonts_in_collection
         if fonts_in_collection is not None:
             for font in fonts_in_collection:
-                await EastAsianSpacingTester(font).test(
-                    config.tweaked_for(font))
+                await EastAsianSpacingTester(font).test(config)
             return
-        await EastAsianSpacingTester(font).test(config.tweaked_for(font))
+        await EastAsianSpacingTester(font).test(config)
 
     @classmethod
     def expand_paths(cls, paths):

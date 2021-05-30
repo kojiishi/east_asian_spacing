@@ -422,9 +422,12 @@ class Dump(object):
             self.no_refs = []
 
         @property
+        def has_any_diffs(self):
+            return len(self.differents) or len(self.no_refs)
+
+        @property
         def has_any(self):
-            return (len(self.matches) or len(self.differents)
-                    or len(self.no_refs))
+            return len(self.matches) or self.has_any_diffs
 
         async def diff_with_references(self, targets):
             logger.info('Comparing %d files with reference files at "%s"',
@@ -531,10 +534,13 @@ class Dump(object):
             await Dump.dump_font(font, **vars(args))
             logger.debug("dump %d completed: %s", i, font)
         if args.ref and args.ref.has_any:
+            args.ref.print_stats()
             script = args.output / 'update-ref.sh'
             args.ref.write_update_script(script)
-            print(f'Created a script to update reference files at "{script}".')
-            args.ref.print_stats()
+            if args.ref.has_any_diffs:
+                print(
+                    f'Created a script to update reference files at "{script}".'
+                )
         logger.debug("main completed")
 
 

@@ -45,6 +45,21 @@ class EastAsianSpacingConfig(object):
     def clone(self):
         return copy.deepcopy(self)
 
+    @property
+    def _sets(self):
+        yield self.cjk_opening
+        yield self.cjk_closing
+        yield self.quotes_opening
+        yield self.quotes_closing
+        yield self.cjk_middle
+        yield self.cjk_period_comma
+        yield self.cjk_column_semicolon
+        yield self.cjk_exclam_question
+
+    def clear(self):
+        for set in self._sets:
+            set.clear()
+
     def tweaked_for(self, font):
         """Returns a tweaked copy when the `font` needs special treatments.
         Otherwise returns `self`."""
@@ -71,14 +86,8 @@ class EastAsianSpacingConfig(object):
 
     def remove(self, *codes):
         for code in codes:
-            self.cjk_opening.discard(code)
-            self.cjk_closing.discard(code)
-            self.quotes_opening.discard(code)
-            self.quotes_closing.discard(code)
-            self.cjk_middle.discard(code)
-            self.cjk_period_comma.discard(code)
-            self.cjk_column_semicolon.discard(code)
-            self.cjk_exclam_question.discard(code)
+            for set in self._sets:
+                set.discard(code)
 
     def change_quotes_closing_to_opening(self, *codes):
         """Changes the `code` from `quotes_closing` to `quotes_opening`.
