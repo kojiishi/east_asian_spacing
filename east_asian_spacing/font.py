@@ -9,6 +9,7 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
+import uharfbuzz as hb
 
 logger = logging.getLogger('font')
 
@@ -23,14 +24,16 @@ class Font(object):
         if isinstance(path, str):
             path = pathlib.Path(path)
         self = Font()
+        self._byte_array = None
         self.font_index = None
+        self._hbfont = None
         self.is_vertical = False
         self._language = None
         self.parent_collection = None
         self.path = path
         self._units_per_em = None
         self._vertical_font = None
-        if self.path.suffix == ".ttc":
+        if self.path.suffix.casefold() == ".ttc".casefold():
             self.ttcollection = TTCollection(path, allowVID=True)
             self.ttfont = None
             self._fonts_in_collection = tuple(
@@ -47,6 +50,7 @@ class Font(object):
     def _clone(self):
         clone = Font()
         clone.font_index = self.font_index
+        clone._hbfont = self._hbfont
         clone.is_vertical = self.is_vertical
         clone._language = self._language
         clone.parent_collection = self.parent_collection
@@ -60,6 +64,7 @@ class Font(object):
     def _create_font_in_collection(self, font_index, ttfont):
         font = self._clone()
         font.font_index = font_index
+        self._hbfont = None
         font.parent_collection = self
         font.ttfont = ttfont
         font._fonts_in_collection = None
@@ -67,9 +72,22 @@ class Font(object):
         font._vertical_font = None
         return font
 
-    def _derived_fonts(self):
+    def _root_font(self, default):
+        if self.is_vertical:
+            return self.horizontal_font._root_font(default)
+        if self.parent_collection:
+            return self.parent_collection
+        return default
+
+    @property
+    def root_or_self(self):
+        return self._root_font(self)
+
+    def _self_and_derived_fonts(self):
+        assert self.root_or_self is self
         assert self.parent_collection is None
         assert not self.is_vertical
+        yield self
         if self.is_collection:
             assert self._fonts_in_collection is not None
             yield from self._fonts_in_collection
@@ -81,10 +99,12 @@ class Font(object):
                 yield from vertical_font._fonts_in_collection
 
     def _set_path(self, path):
-        for font in self._derived_fonts():
-            assert font.path == self.path
+        old_path = self.path
+        for font in self._self_and_derived_fonts():
+            assert font.path == old_path
             font.path = path
-        self.path = path
+            font._byte_array = None
+            font._hbfont = None
 
     @property
     def fonts_in_collection(self):
@@ -166,6 +186,25 @@ class Font(object):
         if entry:
             return entry.offset
         return None
+
+    @property
+    def byte_array(self):
+        root = self.root_or_self
+        if not root._byte_array:
+            root._byte_array = root.path.read_bytes()
+        return root._byte_array
+
+    @property
+    def hbfont(self):
+        if self._hbfont:
+            return self._hbfont
+        if self.is_vertical:
+            return self.horizontal_font.hbfont
+        byte_array = self.byte_array
+        index = 0 if self.font_index is None else self.font_index
+        hbface = hb.Face(byte_array, index)
+        self._hbfont = hb.Font(hbface)
+        return self._hbfont
 
     def debug_name(self, name_id):
         # name_id:

@@ -26,33 +26,21 @@ may help to understand the feature.
 ## Install
 [install]: #install
 
-This tool requires following packages.
+This tool requires Python 3.8 or later.
 
-* [hb-shape]
-* Python 3.8 or later
-* [fonttools]
-
-Install [hb-shape] for Linux:
-```sh
-sudo apt get libharfbuzz-bin
-```
-Install [hb-shape] for Mac with [homebrew]:
-```sh
-brew install harfbuzz
-```
-
-Then install Python packages.
 If you may need to diagnose fonts or the code,
-installing in the editable mode
-([pip "`-e`" option] or setuptools "[development mode]")
-using [poetry] is recommended:
+installing using [poetry] is recommended:
 ```sh
 git clone https://github.com/kojiishi/east_asian_spacing
 cd east_asian_spacing
 poetry install
 poetry shell
 ```
-This method installs testing tools too.
+This method:
+* Installs the exact versions of dependencies.
+* Installs in the editable mode
+(i.e., [pip "`-e`" option] or setuptools "[development mode]").
+* Installs testing tools too.
 You can run [unit tests] to verify your installation if needed.
 
 If all what you need is the command line tool,
@@ -65,18 +53,14 @@ Otherwise, you can install with [pip].
 When installing with [pip],
 it is still recommended to install into a virtual environment:
 ```sh
-git clone https://github.com/kojiishi/east_asian_spacing
-cd east_asian_spacing
 python3 -m venv venv
 source venv/bin/activate
-pip install .
+pip install git+https://github.com/kojiishi/east_asian_spacing
 ```
 
 [development mode]: https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html
 [editable mode]: https://pip.pypa.io/en/stable/cli/pip_install/#install-editable
 [fonttools]: https://pypi.org/project/fonttools/
-[hb-shape]: https://command-not-found.com/hb-shape
-[homebrew]: https://brew.sh/
 [pip]: https://pip.pypa.io/en/latest/
 [pip "`-e`" option]: https://pip.pypa.io/en/stable/cli/pip_install/#install-editable
 [pipx]: https://pipxproject.github.io/pipx/
@@ -185,6 +169,36 @@ and you may want to adjust which character-pairs should adjust spacings.
 
 Currently, this is possible only from a Python program.
 Please see `tests/test_config.py` for an example.
+
+
+### HarfBuzz
+
+This package uses the [HarfBuzz] shaping engine
+using the [uharfbuzz] package,
+which is a Cython bindings for the HarfBuzz.
+
+If you install or build [HarfBuzz] and want to use it instead,
+you can use the [hb-shape] command line tool by
+settting the `HB_SHAPE` environment variable.
+```sh
+export HB_SHAPE=hb-shape
+```
+
+To install [hb-shape] for Linux:
+```sh
+sudo apt get libharfbuzz-bin
+```
+To install [hb-shape] for Mac with [homebrew]:
+```sh
+brew install harfbuzz
+```
+Instructions for other platforms may be available at
+[command-not-found.com](https://command-not-found.com/hb-shape).
+
+[HarfBuzz]: https://github.com/harfbuzz/harfbuzz
+[hb-shape]: https://harfbuzz.github.io/utilities.html#utilities-command-line-hbshape
+[homebrew]: https://brew.sh/
+[uharfbuzz]: https://github.com/harfbuzz/uharfbuzz
 
 ## Testing
 

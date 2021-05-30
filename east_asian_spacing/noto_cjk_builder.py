@@ -76,7 +76,6 @@ class NotoCJKBuilder(Builder):
         parser.add_argument("inputs", nargs="+")
         parser.add_argument("-g",
                             "--glyph-out",
-                            default='build/dump',
                             type=pathlib.Path,
                             help="output glyph list.")
         parser.add_argument("-o",

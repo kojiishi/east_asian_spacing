@@ -485,7 +485,7 @@ class EastAsianSpacing(object):
     async def main():
         parser = argparse.ArgumentParser()
         parser.add_argument("path")
-        parser.add_argument("-i", "--index", type=int, default=0)
+        parser.add_argument("-i", "--index", type=int, default=-1)
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity",
@@ -502,11 +502,13 @@ class EastAsianSpacing(object):
         else:
             logging.basicConfig(level=logging.INFO)
         font = Font.load(args.path)
-        font = font.fonts[args.index]
+        if args.index >= 0:
+            font = font.fonts_in_collection[args.index]
         if args.is_vertical:
             font = font.vertical_font
         spacing = EastAsianSpacing(font)
-        await spacing.add_glyphs()
+        config = EastAsianSpacingConfig()
+        await spacing.add_glyphs(config)
         spacing.save_glyphs(sys.stdout, separator=', ')
 
 
