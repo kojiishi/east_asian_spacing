@@ -259,7 +259,7 @@ class Builder(object):
                             help="suffix to add to the output file name.")
         parser.add_argument("--test",
                             type=int,
-                            default=1,
+                            default=0,
                             help="0=no tests, 1=smoke tests, 2=full tests")
         parser.add_argument("-v",
                             "--verbose",
