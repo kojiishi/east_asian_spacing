@@ -197,19 +197,17 @@ class Builder(object):
 
     async def test(self, config=None, smoke=None):
         if config is None:
-            config = self.config.clone()
+            config = self.config
             if smoke is None or smoke:
-                config.down_sample_to(3)
+                config = config.for_smoke_testing()
         elif smoke:
-            config = config.clone()
-            config.down_sample_to(3)
-        font = self.font
-        fonts_in_collection = self.fonts_in_collection
-        if fonts_in_collection is not None:
-            for font in fonts_in_collection:
-                await EastAsianSpacingTester(font).test(config)
-            return
-        await EastAsianSpacingTester(font).test(config)
+            config.for_smoke_testing()
+        spacing = self._united_spacings()
+        tester = EastAsianSpacingTester(
+            self.font,
+            glyphs=spacing.horizontal.glyph_ids,
+            vertical_glyphs=spacing.vertical.glyph_ids)
+        await tester.test(config, fonts=self._fonts_in_collection)
 
     @classmethod
     def expand_paths(cls, paths):
@@ -257,14 +255,14 @@ class Builder(object):
         parser.add_argument("-p",
                             "--print-path",
                             action="store_true",
-                            help="output the file paths.")
+                            help="print the file paths to stdout.")
         parser.add_argument("-s",
                             "--suffix",
                             help="suffix to add to the output file name.")
         parser.add_argument("--test",
                             type=int,
-                            default=0,
-                            help="0=no tests, 1=smoke tests, 2=full tests")
+                            default=1,
+                            help="0=no tests, 1=smoke tests, 2=full tests.")
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity.",

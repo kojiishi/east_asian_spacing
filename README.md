@@ -300,14 +300,21 @@ Please see the [Diff] section for the "`-p`" option and piping.
 
 The `build*.sh` [scripts] include this option.
 
-### Shape Tests
-[shape tests]: #shape-tests
+### Shape Test
+[shape tests]: #shape-test
 
-`tester.py` can test fonts by shaping several strings
-and by checking whether the contextual spacing is applied or not.
+The shape testing shapes test strings
+and checks whether the contextual spacing is applied or not.
 
-`builder.py` and `noto_cjk_builder.py` call this automtically
-for all fonts they built.
+The `--test` option sets the level of the shape testing.
+```sh
+east-asian-spacing --test 2 -v -o build input-font-file
+```
+The level 0 disables the shape testing.
+The level 1 runs a smoke test using a small set of samples.
+The level 2 runs the shape testing using a large set of test strings.
+
+The default value is 1.
 
 ### Unit Tests
 [unit tests]: #unit-tests

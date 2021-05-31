@@ -96,16 +96,21 @@ class EastAsianSpacingConfig(object):
                 self.quotes_closing.remove(code)
                 self.quotes_opening.add(code)
 
-    def down_sample_to(self, max):
+    def for_smoke_testing(self):
         """Reduce the number of code points for testing."""
-        def down_sample(input):
-            if len(input) <= max:
-                return input
-            interval = math.ceil(len(input) / max)
-            return set(itertools.islice(input, 0, None, interval))
+        clone = self.clone()
+        clone.cjk_opening = EastAsianSpacingConfig._down_sample_to(
+            clone.cjk_opening, 3)
+        clone.cjk_closing = EastAsianSpacingConfig._down_sample_to(
+            clone.cjk_closing, 3)
+        return clone
 
-        self.cjk_opening = down_sample(self.cjk_opening)
-        self.cjk_closing = down_sample(self.cjk_closing)
+    @staticmethod
+    def _down_sample_to(input, max):
+        if len(input) <= max:
+            return input
+        interval = math.ceil(len(input) / max)
+        return set(itertools.islice(input, 0, None, interval))
 
 
 class GlyphSetTrio(object):
@@ -125,6 +130,10 @@ class GlyphSetTrio(object):
     def _name_and_glyphs(self):
         return (('left', self.left), ('right', self.right), ('middle',
                                                              self.middle))
+
+    @property
+    def glyph_ids(self):
+        return self.left | self.middle | self.right
 
     def assert_glyphs_are_disjoint(self):
         assert self.left.isdisjoint(self.middle)

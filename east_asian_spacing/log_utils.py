@@ -1,7 +1,6 @@
 import logging
 
-from east_asian_spacing.shaper import show_dump_images
-
+from east_asian_spacing.shaper import ShaperBase
 
 def init_logging(verbose):
     if not verbose or verbose <= 0:
@@ -15,4 +14,4 @@ def init_logging(verbose):
     if verbose <= 2:
         return
 
-    show_dump_images()
+    ShaperBase._show_shaper_logs = True

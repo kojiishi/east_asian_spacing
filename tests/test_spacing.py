@@ -1,14 +1,11 @@
-from east_asian_spacing.spacing import Font
-from east_asian_spacing.spacing import GlyphSetTrio
 from east_asian_spacing import EastAsianSpacingConfig
+from east_asian_spacing import Font
+from east_asian_spacing import GlyphSetTrio
 
 
 def test_down_sample_to():
-    def call(list, max):
-        config = EastAsianSpacingConfig()
-        config.cjk_opening = list
-        config.down_sample_to(max)
-        return config.cjk_opening
+    def call(input, max):
+        return EastAsianSpacingConfig._down_sample_to(input, max)
 
     assert call(list(range(8)), 3) == {0, 3, 6}
     assert call(list(range(9)), 3) == {0, 3, 6}

@@ -86,11 +86,11 @@ class NotoCJKBuilder(Builder):
         parser.add_argument("-p",
                             "--print-path",
                             action="store_true",
-                            help="output the file paths.")
+                            help="print the file paths to stdout.")
         parser.add_argument("--test",
                             type=int,
                             default=1,
-                            help="0=no tests, 1=smoke tests, 2=full tests")
+                            help="0=no tests, 1=smoke tests, 2=full tests.")
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity.",

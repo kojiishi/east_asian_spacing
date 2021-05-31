@@ -29,6 +29,12 @@ class GlyphData(object):
         self.advance = advance
         self.offset = offset
 
+    def __eq__(self, other):
+        return (self.glyph_id == other.glyph_id
+                and self.cluster_index == other.cluster_index
+                and self.advance == other.advance
+                and self.offset == other.offset)
+
     def __str__(self):
         return (f'{{g={self.glyph_id},c={self.cluster_index}'
                 f',a={self.advance},o={self.offset}}}')
@@ -38,11 +44,18 @@ class ShapeResult(object):
     def __init__(self, glyphs):
         self._glyphs = glyphs
 
+    def __eq__(self, other):
+        return self._glyphs == other._glyphs
+
     def __len__(self):
         return len(self._glyphs)
 
     def __iter__(self):
         return self._glyphs.__iter__()
+
+    def __getitem__(self, item):
+        self.freeze()
+        return self._glyphs[item]
 
     def filter(self, predicate):
         self._glyphs = filter(predicate, self._glyphs)
@@ -55,8 +68,13 @@ class ShapeResult(object):
         glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
         return glyph_ids
 
-    def __str__(self):
+    def freeze(self):
+        """Freeze the internal generator as a tuple.
+        Once frozen, it can iterate multiple times."""
         self._glyphs = tuple(self._glyphs)
+
+    def __str__(self):
+        self.freeze()  # Make sure it is still iterable.
         return f'[{",".join(str(g) for g in self._glyphs)}]'
 
 
@@ -159,13 +177,16 @@ class HbShapeShaper(ShaperBase):
             '--no-glyph-names'
         ]
         self.append_hb_args(unicodes, args)
+        if self._show_shaper_logs:
+            args.append('--trace')
         logger.debug('subprocess.run: %s', shlex.join(args))
         proc = await asyncio.create_subprocess_exec(
             *args, stdout=asyncio.subprocess.PIPE)
         stdout, _ = await proc.communicate()
         with io.StringIO(stdout.decode('utf-8')) as file:
             for line in file:
-                logger.debug('hb-shape: %s', line.rstrip())
+                if self._show_shaper_logs:
+                    logger.debug('hb-shape: %s', line.rstrip())
                 if line.startswith('['):
                     glyphs = json.loads(line)
         logger.debug('glyphs = %s', glyphs)
@@ -185,7 +206,7 @@ class HbShapeShaper(ShaperBase):
     async def dump(self):
         args = ['hb-view', '--font-size=128']
         # Add '|' so that the height of `hb-view` dump becomes consistent.
-        unicodes = [ord('|')] + self.unicodes + [ord('|')]
+        unicodes = [ord('|')] + list(self.unicodes) + [ord('|')]
         self.append_hb_args(unicodes, args)
         proc = await asyncio.create_subprocess_exec(*args)
         await proc.wait()
@@ -203,18 +224,31 @@ class HbShapeShaper(ShaperBase):
             args.append('--direction=ttb')
         if self.features:
             args.append(f'--features={",".join(self.features)}')
-        if self._show_shaper_logs:
-            args.append('--trace')
         unicodes_as_hex_string = ','.join(hex(c) for c in unicodes)
         args.append(f'--unicodes={unicodes_as_hex_string}')
 
 
-HbShapeShaper._hb_shape_path = os.environ.get('SHAPER')
-if HbShapeShaper._hb_shape_path:
+def _get_shaper_for(font, text, **kwargs):
+    # uharfbuzz fails to apply GPOS for some fonts
+    # https://github.com/harfbuzz/uharfbuzz/issues/90
+    name = font.debug_name(1)
+    if (name.startswith('Hiragino Maru Gothic Pro')
+            or name.startswith('Hiragino Mincho Pro')):
+        return HbShapeShaper(font, text, **kwargs)
+    return UHarfBuzzShaper(font, text, **kwargs)
+
+
+def _shaper_factory():
+    HbShapeShaper._hb_shape_path = os.environ.get('SHAPER')
+    if not HbShapeShaper._hb_shape_path:
+        return _get_shaper_for
+    if HbShapeShaper._hb_shape_path == 'uharfbuzz':
+        return UHarfBuzzShaper
     logger.debug('Using HbShapeShaper at "%s"', HbShapeShaper._hb_shape_path)
-    Shaper = HbShapeShaper
-else:
-    Shaper = UHarfBuzzShaper
+    return HbShapeShaper
+
+
+Shaper = _shaper_factory()
 
 
 async def main():
