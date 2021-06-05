@@ -18,7 +18,6 @@ from fontTools.otlLib.builder import SinglePosBuilder
 from fontTools.ttLib.tables import otTables
 
 from east_asian_spacing.font import Font
-from east_asian_spacing.shaper import GlyphSet
 from east_asian_spacing.shaper import Shaper
 from east_asian_spacing.shaper import show_dump_images
 
@@ -112,9 +111,9 @@ class EastAsianSpacingConfig(object):
 class GlyphSetTrio(object):
     def __init__(self, font, left=None, right=None, middle=None):
         self.font = font
-        self.left = left if left is not None else GlyphSet()
-        self.right = right if right is not None else GlyphSet()
-        self.middle = middle if middle is not None else GlyphSet()
+        self.left = left if left is not None else set()
+        self.right = right if right is not None else set()
+        self.middle = middle if middle is not None else set()
 
     @property
     def _name_and_glyphs(self):
@@ -144,9 +143,9 @@ class GlyphSetTrio(object):
     def unite(self, other):
         if not other:
             return
-        self.left.unite(other.left)
-        self.middle.unite(other.middle)
-        self.right.unite(other.right)
+        self.left |= other.left
+        self.middle |= other.middle
+        self.right |= other.right
 
     async def add_glyphs(self, config):
         font = self.font
@@ -161,21 +160,33 @@ class GlyphSetTrio(object):
         self.assert_glyphs_are_disjoint()
 
     @staticmethod
+    async def _shape(font, text, language=None):
+        glyphs = await Shaper(font, text, language=language,
+                              script="hani").shape()
+
+        # East Asian spacing applies only to fullwidth glyphs.
+        em = font.units_per_em
+        assert isinstance(em, int)
+        glyphs.filter(lambda g: g.advance == em)
+
+        return set(glyphs.glyph_ids)
+
+    @staticmethod
     async def get_opening_closing(font, config):
         opening = config.cjk_opening | config.quotes_opening
         closing = config.cjk_closing | config.quotes_closing
         left, right, middle = await asyncio.gather(
-            Shaper(font, closing).glyph_set(),
-            Shaper(font, opening).glyph_set(),
-            Shaper(font, config.cjk_middle).glyph_set())
+            GlyphSetTrio._shape(font, closing),
+            GlyphSetTrio._shape(font, opening),
+            GlyphSetTrio._shape(font, config.cjk_middle))
         result = GlyphSetTrio(font, left, right, middle)
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
-            horizontal = await Shaper(font.horizontal_font,
-                                      opening | closing).glyph_set()
-            result.left.subtract(horizontal)
-            result.right.subtract(horizontal)
+            horizontal = await GlyphSetTrio._shape(font.horizontal_font,
+                                                   opening | closing)
+            result.left -= horizontal
+            result.right -= horizontal
         result.assert_glyphs_are_disjoint()
         return result
 
@@ -188,17 +199,17 @@ class GlyphSetTrio(object):
         if not text:
             return None
         ja, zht = await asyncio.gather(
-            Shaper(font, text, language="JAN", script="hani").glyph_set(),
-            Shaper(font, text, language="ZHT", script="hani").glyph_set())
+            GlyphSetTrio._shape(font, text, language="JAN"),
+            GlyphSetTrio._shape(font, text, language="ZHT"))
         if __debug__:
             zhs, kor = await asyncio.gather(
-                Shaper(font, text, language="ZHS", script="hani").glyph_set(),
-                Shaper(font, text, language="KOR", script="hani").glyph_set())
+                GlyphSetTrio._shape(font, text, language="ZHS"),
+                GlyphSetTrio._shape(font, text, language="KOR"))
             assert zhs == ja
             assert kor == ja
             # Some fonts do not support ZHH, in that case, it may be the same as JAN.
             # For example, NotoSansCJK supports ZHH but NotoSerifCJK does not.
-            # assert Shaper(font, text, language="ZHH", script="hani").glyph_set() == zht
+            # assert Shaper(font, text, language="ZHH", script="hani").glyph_ids_set() == zht
         if ja == zht:
             if not font.language: font.raise_require_language()
             if font.language == "ZHT" or font.language == "ZHH":
@@ -215,17 +226,17 @@ class GlyphSetTrio(object):
         # Colon/semicolon are at middle for Japanese, left in ZHS.
         text = config.cjk_column_semicolon
         ja, zhs = await asyncio.gather(
-            Shaper(font, text, language="JAN", script="hani").glyph_set(),
-            Shaper(font, text, language="ZHS", script="hani").glyph_set())
+            GlyphSetTrio._shape(font, text, language="JAN"),
+            GlyphSetTrio._shape(font, text, language="ZHS"))
         if __debug__ and not font.is_vertical:
             zht, kor = await asyncio.gather(
-                Shaper(font, text, language="ZHT", script="hani").glyph_set(),
-                Shaper(font, text, language="KOR", script="hani").glyph_set())
+                GlyphSetTrio._shape(font, text, language="ZHT"),
+                GlyphSetTrio._shape(font, text, language="KOR"))
             assert zht == ja
             assert kor == ja
         result = GlyphSetTrio(font)
-        result.add_from_cache(ja)
-        result.add_from_cache(zhs)
+        ja = result.add_from_cache(ja)
+        zhs = result.add_from_cache(zhs)
         if not ja and not zhs:
             return result
         if ja == zhs:
@@ -241,15 +252,14 @@ class GlyphSetTrio(object):
             # may not be upright. Vertical alternate glyphs indicate they are rotated.
             # In ZHT, they may be upright even when there are vertical glyphs.
             if font.language is None or font.language == "JAN":
-                ja_horizontal = await Shaper(font.horizontal_font,
-                                             text,
-                                             language="JAN",
-                                             script="hani").glyph_set()
-                ja.subtract(ja_horizontal)
-                result.middle.unite(ja)
+                ja_horizontal = await GlyphSetTrio._shape(font.horizontal_font,
+                                                          text,
+                                                          language="JAN")
+                ja -= ja_horizontal
+                result.middle |= ja
             return result
-        result.middle.unite(ja)
-        result.left.unite(zhs)
+        result.middle |= ja
+        result.left |= zhs
         result.assert_glyphs_are_disjoint()
         return result
 
@@ -260,12 +270,12 @@ class GlyphSetTrio(object):
         # Fullwidth exclamation mark and question mark are on left only in ZHS.
         text = config.cjk_exclam_question
         ja, zhs = await asyncio.gather(
-            Shaper(font, text, language="JAN", script="hani").glyph_set(),
-            Shaper(font, text, language="ZHS", script="hani").glyph_set())
+            GlyphSetTrio._shape(font, text, language="JAN"),
+            GlyphSetTrio._shape(font, text, language="ZHS"))
         if __debug__:
             zht, kor = await asyncio.gather(
-                Shaper(font, text, language="ZHT", script="hani").glyph_set(),
-                Shaper(font, text, language="KOR", script="hani").glyph_set())
+                GlyphSetTrio._shape(font, text, language="ZHT"),
+                GlyphSetTrio._shape(font, text, language="KOR"))
             assert zht == ja
             assert kor == ja
         if ja == zhs:
@@ -284,7 +294,7 @@ class GlyphSetTrio(object):
             self.type_by_glyph_id = dict()
 
         def add(self, glyphs, value):
-            for glyph_id in glyphs.glyph_ids:
+            for glyph_id in glyphs:
                 assert self.type_by_glyph_id.get(glyph_id, value) == value
                 self.type_by_glyph_id[glyph_id] = value
 
@@ -313,18 +323,18 @@ class GlyphSetTrio(object):
     def add_from_cache(self, glyphs):
         cache = self.get_cache()
         if cache is None:
-            return
+            return glyphs
         not_cached = set()
         glyph_ids_by_value = {
             None: not_cached,
-            "L": self.left.glyph_ids,
-            "M": self.middle.glyph_ids,
-            "R": self.right.glyph_ids
+            "L": self.left,
+            "M": self.middle,
+            "R": self.right
         }
-        for glyph_id in glyphs.glyph_ids:
+        for glyph_id in glyphs:
             value = cache.type_from_glyph_id(glyph_id)
             glyph_ids_by_value[value].add(glyph_id)
-        glyphs.glyph_ids = not_cached
+        return not_cached
 
     @property
     def can_add_to_table(self):

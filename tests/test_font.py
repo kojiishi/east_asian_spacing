@@ -10,6 +10,7 @@ def test_is_font_extension():
     assert Font.is_font_extension('.TTC')
     assert Font.is_font_extension('.TTF')
 
+
 def test_vertical_font(test_font_path):
     font = Font.load(test_font_path)
     assert font.is_root

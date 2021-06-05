@@ -22,45 +22,6 @@ def show_dump_images():
     dump_images = True
 
 
-class GlyphSet(object):
-    def __init__(self, glyph_ids=None):
-        self.glyph_ids = glyph_ids if glyph_ids is not None else set()
-        assert isinstance(self.glyph_ids, set)
-
-    def __bool__(self):
-        return len(self.glyph_ids) > 0
-
-    def __eq__(self, other):
-        return self.glyph_ids == other.glyph_ids
-
-    def __str__(self):
-        return str(self.glyph_ids)
-
-    def __len__(self):
-        return len(self.glyph_ids)
-
-    def __iter__(self):
-        return self.glyph_ids.__iter__()
-
-    def isdisjoint(self, other):
-        assert isinstance(self.glyph_ids, set)
-        assert isinstance(other.glyph_ids, set)
-        return self.glyph_ids.isdisjoint(other.glyph_ids)
-
-    def clear(self):
-        self.glyph_ids.clear()
-
-    def unite(self, other):
-        assert isinstance(self.glyph_ids, set)
-        assert isinstance(other.glyph_ids, set)
-        self.glyph_ids = self.glyph_ids.union(other.glyph_ids)
-
-    def subtract(self, other):
-        assert isinstance(self.glyph_ids, set)
-        assert isinstance(other.glyph_ids, set)
-        self.glyph_ids = self.glyph_ids.difference(other.glyph_ids)
-
-
 class GlyphData(object):
     def __init__(self, glyph_id, cluster_index, advance, offset):
         self.glyph_id = glyph_id
@@ -86,12 +47,13 @@ class ShapeResult(object):
     def filter(self, predicate):
         self._glyphs = filter(predicate, self._glyphs)
 
-    def glyph_set(self):
+    @property
+    def glyph_ids(self):
         glyph_ids = (g.glyph_id for g in self)
         # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
         # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
         glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
-        return GlyphSet(set(glyph_ids))
+        return glyph_ids
 
     def __str__(self):
         self._glyphs = tuple(self._glyphs)
@@ -137,17 +99,6 @@ class ShaperBase(object):
         for feature in self.features:
             features_dict[feature] = True
         return features_dict
-
-    async def glyph_set(self):
-        glyphs = await self.shape()
-
-        # East Asian spacing applies only to fullwidth glyphs.
-        font = self.font
-        em = font.units_per_em
-        assert isinstance(em, int)
-        glyphs.filter(lambda g: g.advance == em)
-
-        return glyphs.glyph_set()
 
     _show_shaper_logs = False
 

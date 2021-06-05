@@ -1,3 +1,5 @@
+from east_asian_spacing.spacing import Font
+from east_asian_spacing.spacing import GlyphSetTrio
 from east_asian_spacing import EastAsianSpacingConfig
 
 
@@ -23,3 +25,16 @@ def test_change_quotes_closing_to_opening():
     config.change_quotes_closing_to_opening(0xFFFF)
     assert config.quotes_opening == {0x2018, 0x201C, 0x2019}
     assert config.quotes_closing == {0x201D}
+
+
+def test_cache(test_font_path):
+    font = Font.load(test_font_path)
+    trio = GlyphSetTrio(font, {1}, {2}, {3})
+    trio.add_to_cache()
+    trio2 = GlyphSetTrio(font)
+    glyphs = {1, 2, 3, 4}
+    glyphs = trio2.add_from_cache(glyphs)
+    assert trio2.left == {1}
+    assert trio2.right == {2}
+    assert trio2.middle == {3}
+    assert glyphs == {4}
