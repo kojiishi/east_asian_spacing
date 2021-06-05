@@ -86,12 +86,12 @@ class Builder(object):
         assert not font.is_collection
         if EastAsianSpacing.font_has_feature(font):
             return
-        spacing = EastAsianSpacing(font)
-        await spacing.add_glyphs(self.config)
+        spacing = EastAsianSpacing()
+        await spacing.add_glyphs(font, self.config)
         if not spacing.can_add_to_font:
             logger.info('Skipping due to no pairs: %s', font)
             return
-        spacing.add_to_font()
+        spacing.add_to_font(font)
         self._spacings.append(spacing)
 
     async def build_collection(self, fonts_in_collection):
@@ -114,12 +114,11 @@ class Builder(object):
             if spacing_entry:
                 spacing, fonts = spacing_entry
                 # Different faces may have different set of glyphs. Unite them.
-                spacing.font = font
-                await spacing.add_glyphs(config)
+                await spacing.add_glyphs(font, config)
                 fonts.append(font)
                 continue
-            spacing = EastAsianSpacing(font)
-            await spacing.add_glyphs(config)
+            spacing = EastAsianSpacing()
+            await spacing.add_glyphs(font, config)
             spacing_by_offset[reader_offset] = (spacing, [font])
 
         # Add to each font using the united `EastAsianSpacing`s.
@@ -132,8 +131,7 @@ class Builder(object):
             logger.info('Adding feature to: %s',
                         list(font.font_index for font in fonts))
             for font in fonts:
-                spacing.font = font
-                spacing.add_to_font()
+                spacing.add_to_font(font)
             self._spacings.append(spacing)
             built_fonts.extend(fonts)
 
@@ -176,7 +174,7 @@ class Builder(object):
     def _united_spacings(self):
         assert self.has_spacings
         font = self.font
-        united_spacing = EastAsianSpacing(font)
+        united_spacing = EastAsianSpacing()
         for spacing in self._spacings:
             united_spacing.unite(spacing)
         return united_spacing

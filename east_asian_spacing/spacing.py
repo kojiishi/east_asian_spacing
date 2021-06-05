@@ -109,11 +109,17 @@ class EastAsianSpacingConfig(object):
 
 
 class GlyphSetTrio(object):
-    def __init__(self, font, left=None, right=None, middle=None):
-        self.font = font
+    def __init__(self, left=None, right=None, middle=None):
         self.left = left if left is not None else set()
         self.right = right if right is not None else set()
         self.middle = middle if middle is not None else set()
+        self._root_font = None  # For checking purposes.
+
+    def assert_font(self, font):
+        if self._root_font:
+            assert self._root_font == font.root_or_self
+        else:
+            self._root_font = font.root_or_self
 
     @property
     def _name_and_glyphs(self):
@@ -133,7 +139,6 @@ class GlyphSetTrio(object):
             (f'{name}={glyphs}' for name, glyphs in name_and_glyphs))
 
     def save_glyphs(self, output, prefix='', separator='\n'):
-        font = self.font
         for name, glyphs in self._name_and_glyphs:
             output.write(f'# {prefix}{name}\n')
             glyphs = (str(glyph_id) for glyph_id in sorted(glyphs))
@@ -147,8 +152,8 @@ class GlyphSetTrio(object):
         self.middle |= other.middle
         self.right |= other.right
 
-    async def add_glyphs(self, config):
-        font = self.font
+    async def add_glyphs(self, font, config):
+        self.assert_font(font)
         config = config.tweaked_for(font)
         results = await asyncio.gather(self.get_opening_closing(font, config),
                                        self.get_period_comma(font, config),
@@ -156,7 +161,7 @@ class GlyphSetTrio(object):
                                        self.get_exclam_question(font, config))
         for result in results:
             self.unite(result)
-        self.add_to_cache()
+        self.add_to_cache(font)
         self.assert_glyphs_are_disjoint()
 
     @staticmethod
@@ -179,7 +184,7 @@ class GlyphSetTrio(object):
             GlyphSetTrio._shape(font, closing),
             GlyphSetTrio._shape(font, opening),
             GlyphSetTrio._shape(font, config.cjk_middle))
-        result = GlyphSetTrio(font, left, right, middle)
+        result = GlyphSetTrio(left, right, middle)
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
@@ -217,7 +222,7 @@ class GlyphSetTrio(object):
             else:
                 zht.clear()
         assert ja.isdisjoint(zht)
-        result = GlyphSetTrio(font, ja, None, zht)
+        result = GlyphSetTrio(ja, None, zht)
         result.assert_glyphs_are_disjoint()
         return result
 
@@ -234,9 +239,9 @@ class GlyphSetTrio(object):
                 GlyphSetTrio._shape(font, text, language="KOR"))
             assert zht == ja
             assert kor == ja
-        result = GlyphSetTrio(font)
-        ja = result.add_from_cache(ja)
-        zhs = result.add_from_cache(zhs)
+        result = GlyphSetTrio()
+        ja = result.add_from_cache(font, ja)
+        zhs = result.add_from_cache(font, zhs)
         if not ja and not zhs:
             return result
         if ja == zhs:
@@ -285,7 +290,7 @@ class GlyphSetTrio(object):
             else:
                 zhs.clear()
         assert ja.isdisjoint(zhs)
-        result = GlyphSetTrio(font, zhs, None, None)
+        result = GlyphSetTrio(zhs, None, None)
         result.assert_glyphs_are_disjoint()
         return result
 
@@ -293,7 +298,7 @@ class GlyphSetTrio(object):
         def __init__(self):
             self.type_by_glyph_id = dict()
 
-        def add(self, glyphs, value):
+        def add_glyphs(self, glyphs, value):
             for glyph_id in glyphs:
                 assert self.type_by_glyph_id.get(glyph_id, value) == value
                 self.type_by_glyph_id[glyph_id] = value
@@ -301,51 +306,58 @@ class GlyphSetTrio(object):
         def type_from_glyph_id(self, glyph_id):
             return self.type_by_glyph_id.get(glyph_id, None)
 
-    def get_cache(self, create=False):
-        font = self.font
-        if font.parent_collection:
-            font = font.parent_collection
-        assert font.font_index is None
-        if hasattr(font, "east_asian_spacing_"):
-            return font.east_asian_spacing_
-        if not create:
-            return None
-        cache = GlyphSetTrio.GlyphTypeCache()
-        font.east_asian_spacing_ = cache
-        return cache
+        @staticmethod
+        def get(font, create=False):
+            if font.parent_collection:
+                font = font.parent_collection
+            assert font.font_index is None
+            if hasattr(font, "east_asian_spacing_"):
+                return font.east_asian_spacing_
+            if not create:
+                return None
+            cache = GlyphSetTrio.GlyphTypeCache()
+            font.east_asian_spacing_ = cache
+            return cache
 
-    def add_to_cache(self):
-        cache = self.get_cache(create=True)
-        cache.add(self.left, "L")
-        cache.add(self.middle, "M")
-        cache.add(self.right, "R")
+        def add_trio(self, glyph_set_trio):
+            self.add_glyphs(glyph_set_trio.left, "L")
+            self.add_glyphs(glyph_set_trio.middle, "M")
+            self.add_glyphs(glyph_set_trio.right, "R")
 
-    def add_from_cache(self, glyphs):
-        cache = self.get_cache()
+        def add_to_trio(self, glyph_set_trio, glyphs):
+            not_cached = set()
+            glyph_ids_by_value = {
+                None: not_cached,
+                "L": glyph_set_trio.left,
+                "M": glyph_set_trio.middle,
+                "R": glyph_set_trio.right
+            }
+            for glyph_id in glyphs:
+                value = self.type_from_glyph_id(glyph_id)
+                glyph_ids_by_value[value].add(glyph_id)
+            return not_cached
+
+    def add_to_cache(self, font):
+        cache = GlyphSetTrio.GlyphTypeCache.get(font, create=True)
+        cache.add_trio(self)
+
+    def add_from_cache(self, font, glyphs):
+        cache = GlyphSetTrio.GlyphTypeCache.get(font, create=False)
         if cache is None:
             return glyphs
-        not_cached = set()
-        glyph_ids_by_value = {
-            None: not_cached,
-            "L": self.left,
-            "M": self.middle,
-            "R": self.right
-        }
-        for glyph_id in glyphs:
-            value = cache.type_from_glyph_id(glyph_id)
-            glyph_ids_by_value[value].add(glyph_id)
-        return not_cached
+        return cache.add_to_trio(self, glyphs)
 
     @property
     def can_add_to_table(self):
         return self.left and self.right
 
-    def add_to_table(self, table, feature_tag):
+    def add_to_table(self, font, table, feature_tag):
         assert self.can_add_to_table, self
+        self.assert_font(font)
         self.assert_glyphs_are_disjoint()
         assert not Font._has_ottable_feature(table, feature_tag)
         lookups = table.LookupList.Lookup
-        lookup_indices = self.build_lookup(lookups)
+        lookup_indices = self.build_lookup(font, lookups)
 
         features = table.FeatureList.FeatureRecord
         feature_index = len(features)
@@ -373,8 +385,8 @@ class GlyphSetTrio(object):
                     lang_sys.LangSysTag)
                 lang_sys.LangSys.FeatureIndex.append(feature_index)
 
-    def build_lookup(self, lookups):
-        font = self.font
+    def build_lookup(self, font, lookups):
+        self.assert_font(font)
         left, right, middle = (tuple(font.glyph_names(sorted(glyphs)))
                                for glyphs in (self.left, self.right,
                                               self.middle))
@@ -431,27 +443,9 @@ class GlyphSetTrio(object):
 
 
 class EastAsianSpacing(object):
-    def __init__(self, font):
-        assert not font.is_vertical
-        self._font = font
-        self.horizontal = GlyphSetTrio(font)
-        self.vertical = None
-        if not font.is_vertical:
-            vertical_font = font.vertical_font
-            if vertical_font:
-                self.vertical = GlyphSetTrio(vertical_font)
-
-    @property
-    def font(self):
-        return self._font
-
-    @font.setter
-    def font(self, font):
-        assert not font.is_vertical
-        self._font = font
-        self.horizontal.font = font
-        if self.vertical:
-            self.vertical.font = font.vertical_font
+    def __init__(self):
+        self.horizontal = GlyphSetTrio()
+        self.vertical = GlyphSetTrio()
 
     def save_glyphs(self, output, separator='\n'):
         self.horizontal.save_glyphs(output, separator=separator)
@@ -465,10 +459,12 @@ class EastAsianSpacing(object):
         if self.vertical and other.vertical:
             self.vertical.unite(other.vertical)
 
-    async def add_glyphs(self, config):
-        await self.horizontal.add_glyphs(config)
-        if self.vertical:
-            await self.vertical.add_glyphs(config)
+    async def add_glyphs(self, font, config):
+        assert not font.is_vertical
+        await self.horizontal.add_glyphs(font, config)
+        vertical_font = font.vertical_font
+        if vertical_font:
+            await self.vertical.add_glyphs(vertical_font, config)
 
     @staticmethod
     def font_has_feature(font):
@@ -483,11 +479,10 @@ class EastAsianSpacing(object):
     @property
     def can_add_to_font(self):
         return (self.horizontal.can_add_to_table
-                or (self.vertical and self.vertical.can_add_to_table))
+                or self.vertical.can_add_to_table)
 
-    def add_to_font(self):
+    def add_to_font(self, font):
         assert self.can_add_to_font
-        font = self.font
         assert not font.is_vertical
         gpos = font.tttable('GPOS')
         if not gpos:
@@ -496,9 +491,10 @@ class EastAsianSpacing(object):
         assert table
 
         if self.horizontal.can_add_to_table:
-            self.horizontal.add_to_table(table, 'chws')
-        if self.vertical and self.vertical.can_add_to_table:
-            self.vertical.add_to_table(table, 'vchw')
+            self.horizontal.add_to_table(font, table, 'chws')
+        vertical_font = font.vertical_font
+        if vertical_font and self.vertical.can_add_to_table:
+            self.vertical.add_to_table(vertical_font, table, 'vchw')
 
     @staticmethod
     async def main():

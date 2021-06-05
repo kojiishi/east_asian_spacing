@@ -29,11 +29,11 @@ def test_change_quotes_closing_to_opening():
 
 def test_cache(test_font_path):
     font = Font.load(test_font_path)
-    trio = GlyphSetTrio(font, {1}, {2}, {3})
-    trio.add_to_cache()
-    trio2 = GlyphSetTrio(font)
+    trio = GlyphSetTrio({1}, {2}, {3})
+    trio.add_to_cache(font)
+    trio2 = GlyphSetTrio()
     glyphs = {1, 2, 3, 4}
-    glyphs = trio2.add_from_cache(glyphs)
+    glyphs = trio2.add_from_cache(font, glyphs)
     assert trio2.left == {1}
     assert trio2.right == {2}
     assert trio2.middle == {3}
