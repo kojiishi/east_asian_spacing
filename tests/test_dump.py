@@ -5,22 +5,26 @@ import pytest
 from east_asian_spacing import Dump
 from east_asian_spacing import Font
 
+diff_params = [None]
+if shutil.which('diff'):
+    diff_params.append('diff')
+
+
+@pytest.fixture(params=diff_params)
+def diff_config(request):
+    saved_diff = Dump._diff
+    Dump._diff = request.param
+    yield
+    Dump._diff = saved_diff
+
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('diff', [None, 'diff'])
-async def test_diff(data_dir, diff):
-    if diff is not None and shutil.which(diff) is None:
-        return
-    saved_diff = Dump._diff
-    Dump._diff = diff
-    try:
-        lines = await Dump.diff(data_dir / 'head.ttx',
-                                data_dir / 'head-modified.ttx')
-        lines = list(lines)
-        diffs = [line for line in lines if line[0] == '-' or line[0] == '+']
-        assert len(diffs) == 4, ''.join(lines)
-    finally:
-        Dump._diff = saved_diff
+async def test_diff(data_dir, diff_config):
+    lines = await Dump.diff(data_dir / 'head.ttx',
+                            data_dir / 'head-modified.ttx')
+    lines = list(lines)
+    diffs = [line for line in lines if line[0] == '-' or line[0] == '+']
+    assert len(diffs) == 4, ''.join(lines)
 
 
 def test_has_table_diff_head(data_dir):
