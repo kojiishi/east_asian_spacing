@@ -8,9 +8,9 @@ def test_down_sample_to():
         config.down_sample_to(max)
         return config.cjk_opening
 
-    assert call(list(range(8)), 3) == [0, 3, 6]
-    assert call(list(range(9)), 3) == [0, 3, 6]
-    assert call(list(range(10)), 3) == [0, 4, 8]
+    assert call(list(range(8)), 3) == {0, 3, 6}
+    assert call(list(range(9)), 3) == {0, 3, 6}
+    assert call(list(range(10)), 3) == {0, 4, 8}
 
 
 def test_change_quotes_closing_to_opening():

@@ -103,7 +103,7 @@ class EastAsianSpacingConfig(object):
             if len(input) <= max:
                 return input
             interval = math.ceil(len(input) / max)
-            return list(itertools.islice(input, 0, None, interval))
+            return set(itertools.islice(input, 0, None, interval))
 
         self.cjk_opening = down_sample(self.cjk_opening)
         self.cjk_closing = down_sample(self.cjk_closing)

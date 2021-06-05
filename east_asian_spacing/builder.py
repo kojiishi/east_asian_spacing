@@ -173,6 +173,14 @@ class Builder(object):
             return itertools.zip_longest(indices, languages)
         return itertools.zip_longest(indices, ())
 
+    def _united_spacings(self):
+        assert self.has_spacings
+        font = self.font
+        united_spacing = EastAsianSpacing(font)
+        for spacing in self._spacings:
+            united_spacing.unite(spacing)
+        return united_spacing
+
     def save_glyphs(self, output):
         assert self.has_spacings
         font = self.font
@@ -186,9 +194,7 @@ class Builder(object):
             return output
 
         logger.info("Saving glyphs to %s", output)
-        united_spacing = EastAsianSpacing(font)
-        for spacing in self._spacings:
-            united_spacing.unite(spacing)
+        united_spacing = self._united_spacings()
         united_spacing.save_glyphs(output)
 
     async def test(self, config=None, smoke=None):

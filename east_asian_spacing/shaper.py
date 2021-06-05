@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import pathlib
+import shlex
 
 import uharfbuzz as hb
 
@@ -71,13 +72,30 @@ class GlyphData(object):
         return (f'{{g={self.glyph_id},c={self.cluster_index}'
                 f',a={self.advance},o={self.offset}}}')
 
-    @staticmethod
-    def from_json(g):
-        return GlyphData(g["g"], g["cl"], g["ax"], g["dx"])
 
-    @staticmethod
-    def from_json_vertical(g):
-        return GlyphData(g["g"], g["cl"], -g["ay"], -g["dy"])
+class ShapeResult(object):
+    def __init__(self, glyphs):
+        self._glyphs = glyphs
+
+    def __len__(self):
+        return len(self._glyphs)
+
+    def __iter__(self):
+        return self._glyphs.__iter__()
+
+    def filter(self, predicate):
+        self._glyphs = filter(predicate, self._glyphs)
+
+    def glyph_set(self):
+        glyph_ids = (g.glyph_id for g in self)
+        # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
+        # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
+        glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
+        return GlyphSet(set(glyph_ids))
+
+    def __str__(self):
+        self._glyphs = tuple(self._glyphs)
+        return f'[{",".join(str(g) for g in self._glyphs)}]'
 
 
 class ShaperBase(object):
@@ -125,16 +143,13 @@ class ShaperBase(object):
 
         # East Asian spacing applies only to fullwidth glyphs.
         font = self.font
-        units_per_em = font.units_per_em
-        if isinstance(units_per_em, int):
-            glyphs = filter(lambda g: g.advance == units_per_em, glyphs)
+        em = font.units_per_em
+        assert isinstance(em, int)
+        glyphs.filter(lambda g: g.advance == em)
 
-        glyph_ids = (g.glyph_id for g in glyphs)
-        # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
-        # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
-        glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
+        return glyphs.glyph_set()
 
-        return GlyphSet(set(glyph_ids))
+    _show_shaper_logs = False
 
 
 class UHarfBuzzShaper(ShaperBase):
@@ -145,23 +160,33 @@ class UHarfBuzzShaper(ShaperBase):
         buffer = hb.Buffer()
         buffer.add_codepoints(list(unicodes))
         font = self.font
+        features = self.features_dict
         if font.is_vertical:
             buffer.direction = 'ttb'
+            assert features['vert']
         else:
             buffer.direction = 'ltr'
+            assert not features.get('vert')
         if self.language:
             buffer.language = f'x-hbot{self.language}'
+            # buffer.set_language_from_ot_tag(self.language)
         if self.script:
             buffer.script = self.script
-        features = self.features_dict
+            # buffer.set_script_from_ot_tag(self.script)
         logger.debug('%s lang=%s script=%s features=%s',
                      ' '.join(f'U+{ch:04X}' for ch in unicodes), self.language,
                      self.script, features)
         # logger.debug('lang=%s, script=%s, features=%s', buffer.language,
         #              buffer.script, features)
+        if self._show_shaper_logs:
+            buffer.set_message_func(
+                lambda message: logger.debug('uharfbuzz: %s', message))
+        # buffer.cluster_level = hb.BufferClusterLevel.DEFAULT
+        # buffer.guess_segment_properties()
         hb.shape(font.hbfont, buffer, features)
         infos = buffer.glyph_infos
         positions = buffer.glyph_positions
+        assert len(infos) == len(positions)
         if font.is_vertical:
             glyphs = (GlyphData(info.codepoint, info.cluster, -pos.y_advance,
                                 -pos.y_offset)
@@ -170,7 +195,7 @@ class UHarfBuzzShaper(ShaperBase):
             glyphs = (GlyphData(info.codepoint, info.cluster, pos.x_advance,
                                 pos.x_offset)
                       for info, pos in zip(infos, positions))
-        return glyphs
+        return ShapeResult(glyphs)
 
 
 class HbShapeShaper(ShaperBase):
@@ -178,34 +203,40 @@ class HbShapeShaper(ShaperBase):
         unicodes = self.unicodes
         if not unicodes:
             return ()
-        args = ["--output-format=json", "--no-glyph-names"]
+        args = [
+            HbShapeShaper._hb_shape_path or 'hb-shape', '--output-format=json',
+            '--no-glyph-names'
+        ]
         self.append_hb_args(unicodes, args)
-        logger.debug("subprocess.run: %s", args)
+        logger.debug('subprocess.run: %s', shlex.join(args))
         proc = await asyncio.create_subprocess_exec(
-            HbShapeShaper._hb_shape_path,
-            *args,
-            stdout=asyncio.subprocess.PIPE)
+            *args, stdout=asyncio.subprocess.PIPE)
         stdout, _ = await proc.communicate()
-        with io.BytesIO(stdout) as file:
-            glyphs = json.load(file)
-        logger.debug("glyphs = %s", glyphs)
+        with io.StringIO(stdout.decode('utf-8')) as file:
+            for line in file:
+                logger.debug('hb-shape: %s', line.rstrip())
+                if line.startswith('['):
+                    glyphs = json.loads(line)
+        logger.debug('glyphs = %s', glyphs)
         if dump_images:
             await self.dump()
 
         font = self.font
         is_vertical = font.is_vertical
         if is_vertical:
-            glyphs = (GlyphData.from_json_vertical(g) for g in glyphs)
+            glyphs = (GlyphData(g["g"], g["cl"], -g["ay"], -g["dy"])
+                      for g in glyphs)
         else:
-            glyphs = (GlyphData.from_json(g) for g in glyphs)
-        return glyphs
+            glyphs = (GlyphData(g["g"], g["cl"], g["ax"], g["dx"])
+                      for g in glyphs)
+        return ShapeResult(glyphs)
 
     async def dump(self):
-        args = ["--font-size=128"]
+        args = ['hb-view', '--font-size=128']
         # Add '|' so that the height of `hb-view` dump becomes consistent.
         unicodes = [ord('|')] + self.unicodes + [ord('|')]
         self.append_hb_args(unicodes, args)
-        proc = await asyncio.create_subprocess_exec("hb-view", *args)
+        proc = await asyncio.create_subprocess_exec(*args)
         await proc.wait()
 
     def append_hb_args(self, unicodes, args):
@@ -218,10 +249,12 @@ class HbShapeShaper(ShaperBase):
         if self.script:
             args.append(f'--script={self.script}')
         if font.is_vertical:
-            args.append("--direction=ttb")
+            args.append('--direction=ttb')
         if self.features:
             args.append(f'--features={",".join(self.features)}')
-        unicodes_as_hex_string = ",".join(hex(c) for c in unicodes)
+        if self._show_shaper_logs:
+            args.append('--trace')
+        unicodes_as_hex_string = ','.join(hex(c) for c in unicodes)
         args.append(f'--unicodes={unicodes_as_hex_string}')
 
 
@@ -251,6 +284,8 @@ async def main():
     show_dump_images()
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
+        if args.verbose > 1:
+            ShaperBase._show_shaper_logs = True
     else:
         logging.basicConfig(level=logging.INFO)
     font = Font.load(args.font_path)

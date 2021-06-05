@@ -72,35 +72,33 @@ class Font(object):
         font._vertical_font = None
         return font
 
-    def _root_font(self, default):
-        if self.is_vertical:
-            return self.horizontal_font._root_font(default)
-        if self.parent_collection:
-            return self.parent_collection
-        return default
+    @property
+    def is_root(self):
+        return self.root_or_self == self
 
     @property
     def root_or_self(self):
-        return self._root_font(self)
+        if self.is_vertical:
+            return self.horizontal_font.root_or_self
+        if self.parent_collection:
+            return self.parent_collection
+        return self
 
-    def _self_and_derived_fonts(self):
-        assert self.root_or_self is self
-        assert self.parent_collection is None
-        assert not self.is_vertical
+    def self_and_derived_fonts(self, create=True):
         yield self
+        if not self.is_vertical and (create or self._vertical_font):
+            vertical = self.vertical_font
+            if vertical:
+                yield vertical
         if self.is_collection:
             assert self._fonts_in_collection is not None
-            yield from self._fonts_in_collection
-        vertical_font = self._vertical_font
-        if vertical_font:
-            yield vertical_font
-            if vertical_font.is_collection:
-                assert vertical_font._fonts_in_collection is not None
-                yield from vertical_font._fonts_in_collection
+            yield from itertools.chain(*(font.self_and_derived_fonts(
+                create=create) for font in self._fonts_in_collection))
 
     def _set_path(self, path):
+        assert self.is_root
         old_path = self.path
-        for font in self._self_and_derived_fonts():
+        for font in self.self_and_derived_fonts(create=False):
             assert font.path == old_path
             font.path = path
             font._byte_array = None
@@ -201,8 +199,7 @@ class Font(object):
         if self.is_vertical:
             return self.horizontal_font.hbfont
         byte_array = self.byte_array
-        index = 0 if self.font_index is None else self.font_index
-        hbface = hb.Face(byte_array, index)
+        hbface = hb.Face(byte_array, self.font_index or 0)
         self._hbfont = hb.Font(hbface)
         return self._hbfont
 
@@ -235,7 +232,7 @@ class Font(object):
     def language(self, language):
         self._language = language
         if self.is_collection:
-            for font in self.fonts:
+            for font in self.fonts_in_collection:
                 font.language = language
         assert not self.is_vertical
         if self._vertical_font:
