@@ -228,20 +228,10 @@ class HbShapeShaper(ShaperBase):
         args.append(f'--unicodes={unicodes_as_hex_string}')
 
 
-def _get_shaper_for(font, text, **kwargs):
-    # uharfbuzz fails to apply GPOS for some fonts
-    # https://github.com/harfbuzz/uharfbuzz/issues/90
-    name = font.debug_name(1)
-    if (name.startswith('Hiragino Maru Gothic Pro')
-            or name.startswith('Hiragino Mincho Pro')):
-        return HbShapeShaper(font, text, **kwargs)
-    return UHarfBuzzShaper(font, text, **kwargs)
-
-
 def _shaper_factory():
     HbShapeShaper._hb_shape_path = os.environ.get('SHAPER')
     if not HbShapeShaper._hb_shape_path:
-        return _get_shaper_for
+        return UHarfBuzzShaper
     if HbShapeShaper._hb_shape_path == 'uharfbuzz':
         return UHarfBuzzShaper
     logger.debug('Using HbShapeShaper at "%s"', HbShapeShaper._hb_shape_path)
