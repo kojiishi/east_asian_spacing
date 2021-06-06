@@ -3,7 +3,6 @@ import argparse
 import itertools
 import logging
 import pathlib
-import sys
 
 from fontTools.ttLib import newTable
 from fontTools.ttLib import TTFont
@@ -33,7 +32,7 @@ class Font(object):
         self.path = path
         self._units_per_em = None
         self._vertical_font = None
-        if self.path.suffix.casefold() == ".ttc".casefold():
+        if Font.is_ttc_font_extension(self.path.suffix):
             self.ttcollection = TTCollection(path, allowVID=True)
             self.ttfont = None
             self._fonts_in_collection = tuple(
@@ -325,12 +324,17 @@ class Font(object):
         script_record.Script = script
         return script_record
 
-    _casefolded_font_extensions = set(ext.casefold()
-                                      for ext in ('.otf', '.ttc', '.ttf'))
+    _ot_extensions = set(ext.casefold() for ext in ('.otf', '.ttf'))
+    _ttc_extensions = set(ext.casefold() for ext in ('.otc', '.ttc'))
+    _font_extensions = _ttc_extensions | _ot_extensions
+
+    @staticmethod
+    def is_ttc_font_extension(extension):
+        return extension.casefold() in Font._ttc_extensions
 
     @staticmethod
     def is_font_extension(extension):
-        return extension.casefold() in Font._casefolded_font_extensions
+        return extension.casefold() in Font._font_extensions
 
 
 if __name__ == '__main__':

@@ -2,13 +2,24 @@ from east_asian_spacing import Font
 
 
 def test_is_font_extension():
-    assert not Font.is_font_extension('.xyz')
+    assert Font.is_font_extension('.otc')
     assert Font.is_font_extension('.otf')
     assert Font.is_font_extension('.ttc')
     assert Font.is_font_extension('.ttf')
+    assert Font.is_font_extension('.OTC')
     assert Font.is_font_extension('.OTF')
     assert Font.is_font_extension('.TTC')
     assert Font.is_font_extension('.TTF')
+
+    assert not Font.is_font_extension('.xyz')
+
+    assert Font.is_ttc_font_extension('.otc')
+    assert Font.is_ttc_font_extension('.ttc')
+    assert Font.is_ttc_font_extension('.OTC')
+    assert Font.is_ttc_font_extension('.TTC')
+
+    assert not Font.is_ttc_font_extension('.otf')
+    assert not Font.is_ttc_font_extension('.ttf')
 
 
 def test_vertical_font(test_font_path):

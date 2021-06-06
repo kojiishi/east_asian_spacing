@@ -2,6 +2,7 @@ import logging
 
 from east_asian_spacing.shaper import ShaperBase
 
+
 def init_logging(verbose):
     if not verbose or verbose <= 0:
         return
