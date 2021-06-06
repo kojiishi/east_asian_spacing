@@ -13,7 +13,7 @@ repository = "https://github.com/kojiishi/east_asian_spacing"
 [tool.poetry.dependencies]
 python = "^3.8"
 fonttools = {version = ">=4.13.0", extras = ["woff"]}
-uharfbuzz = "<0.10"
+uharfbuzz = "^0.16.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
