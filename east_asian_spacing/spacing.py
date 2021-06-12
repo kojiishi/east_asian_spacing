@@ -174,9 +174,15 @@ class GlyphSetTrio(object):
         self.assert_glyphs_are_disjoint()
 
     @staticmethod
-    async def _shape(font, text, language=None):
-        glyphs = await Shaper(font, text, language=language,
-                              script="hani").shape()
+    async def _shape(font, unicodes, language=None):
+        text = ''.join(chr(c) for c in unicodes)
+        # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
+        # Enable "fwid" feature to get fullwidth glyphs.
+        features = ['fwid', 'vert'] if font.is_vertical else ['fwid']
+        glyphs = await Shaper(font,
+                              language=language,
+                              script='hani',
+                              features=features).shape(text)
 
         # East Asian spacing applies only to fullwidth glyphs.
         em = font.units_per_em

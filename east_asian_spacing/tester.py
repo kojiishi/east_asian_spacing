@@ -32,14 +32,14 @@ class ShapeTest(object):
     async def shape(self):
         font = self.font
         shaper = Shaper(font,
-                        self.input,
                         language=font.language,
                         script='hani',
                         features=self.off_features)
-        self.off_glyphs = await shaper.shape()
+        text = ''.join(chr(c) for c in self.input)
+        self.off_glyphs = await shaper.shape(text)
         self.off_glyphs.freeze()
         shaper.features = self.features
-        self.glyphs = await shaper.shape()
+        self.glyphs = await shaper.shape(text)
         self.glyphs.freeze()
 
     def should_apply(self, em=None, glyphs=None):
@@ -146,7 +146,9 @@ class EastAsianSpacingTester(object):
         tested = []
         for test in tests:
             if not test.should_apply(em=em, glyphs=self._glyphs):
-                assert test.glyphs == test.off_glyphs
+                if test.glyphs != test.off_glyphs:
+                    test.fail('Unexpected differences')
+                    tested.append(test)
                 continue
             if test.glyphs[index].advance != half_em:
                 test.fail(f'{index}.advance != {half_em}')

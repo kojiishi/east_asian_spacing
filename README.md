@@ -174,10 +174,9 @@ Please see `tests/test_config.py` for an example.
 ### HarfBuzz
 
 This package uses the [HarfBuzz] shaping engine
-using the [uharfbuzz] package,
-which is a Cython bindings for the HarfBuzz.
+using a Cython bindings [uharfbuzz].
 
-If you install or build [HarfBuzz] and want to use it instead,
+If you install or build [HarfBuzz],
 you can use the [hb-shape] command line tool by
 settting the `SHAPER` environment variable.
 ```sh
