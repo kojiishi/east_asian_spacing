@@ -47,7 +47,7 @@ If all what you need is the command line tool,
 [pipx] can install it globally
 while still isolating it in a virtual environment:
 ```sh
-pipx install git+https://github.com/kojiishi/east_asian_spacing
+pipx install east-asian-spacing
 ```
 Otherwise, you can install with [pip].
 When installing with [pip],
@@ -55,7 +55,7 @@ it is still recommended to install into a virtual environment:
 ```sh
 python3 -m venv venv
 source venv/bin/activate
-pip install git+https://github.com/kojiishi/east_asian_spacing
+pip install east-asian-spacing
 ```
 
 [development mode]: https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html
