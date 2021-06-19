@@ -22,13 +22,13 @@ def download_fonts():
         name = os.path.basename(url)
         path = fonts_dir / name
         if path.exists():
-            logging.info('Skip downloading: "%s" exists.', path)
+            logging.info('Skip downloading: "%s" exists', path)
             continue
         url = f'{font_url_root}{url}'
-        logging.info('Downloading <%s>...', url)
+        logging.info('Downloading <%s>', url)
         with urllib.request.urlopen(url) as response:
             body = response.read()
-        logging.info('Writing %d bytes to "%s".', len(body), path)
+        logging.info('Writing %d bytes to "%s"', len(body), path)
         path.write_bytes(body)
 
 
