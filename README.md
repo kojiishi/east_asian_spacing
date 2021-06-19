@@ -17,7 +17,7 @@ Following is a figure from JLREQ:
 You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
 The sample page uses fonts built with this tool.
 Also, early discussion at [Adobe CJK Type blog article]
-may help to understand the feature.
+may help to understand the feature better.
 
 [`chws`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
 [`vchw`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_uz#tag-vchw
@@ -26,7 +26,10 @@ may help to understand the feature.
 ## Install
 [install]: #install
 
-This tool requires Python 3.8 or later.
+There are 3 ways to install this package,
+depending on your neeeds.
+
+### Clone and Install
 
 If you may need to diagnose fonts or the code,
 installing using [poetry] is recommended:
@@ -43,13 +46,15 @@ This method:
 * Installs testing tools too.
 You can run [unit tests] to verify your installation if needed.
 
+### Command Line Tool
+
 If all what you need is the command line tool,
 [pipx] can install it globally
 while still isolating it in a virtual environment:
 ```sh
 pipx install east-asian-spacing
 ```
-Otherwise, you can install with [pip].
+You can also install with [pip].
 When installing with [pip],
 it is still recommended to install into a virtual environment:
 ```sh
@@ -57,6 +62,16 @@ python3 -m venv venv
 source venv/bin/activate
 pip install east-asian-spacing
 ```
+
+### For Your Python Programs
+
+If you want to use this tool from your Python programs,
+you can install using your package management tools
+such as [poetry], [pipenv], or [pip].
+```sh
+pip install east-asian-spacing
+```
+
 
 [development mode]: https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html
 [editable mode]: https://pip.pypa.io/en/stable/cli/pip_install/#install-editable
@@ -176,9 +191,8 @@ Please see `tests/test_config.py` for an example.
 This package uses the [HarfBuzz] shaping engine
 using a Cython bindings [uharfbuzz].
 
-If you install or build [HarfBuzz],
-you can use the [hb-shape] command line tool by
-settting the `SHAPER` environment variable.
+You can use the [hb-shape] command line tool instead
+by settting the `SHAPER` environment variable.
 ```sh
 export SHAPER=hb-shape
 ```
@@ -258,9 +272,16 @@ The example above creates following 3 sets of files:
    in the `build/diff/src` directory.
 3. Diff files of the two sets of dump files in the `build/diff` directory.
 
+Note:
 The "`--diff`" option is more efficient than doing all these,
 especially for large fonts,
 because it skips creating TTX of tables when they are binary-equal.
+
+The `-o` option is optional. When it is omitted,
+the sub-command ouputs the diff to `stdout`.
+```sh
+east-asian-spacing dump --diff source_fonts_dir build/NotoSansCJK.ttc | less
+```
 
 To create diff files for all fonts you bulit,
 you can pipe the output as below:
