@@ -17,6 +17,7 @@ font_urls = [
 
 
 def download_fonts():
+    fonts_dir.mkdir(exist_ok=True, parents=True)
     for url in font_urls:
         name = os.path.basename(url)
         path = fonts_dir / name
