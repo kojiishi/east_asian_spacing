@@ -34,7 +34,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m poetry install --no-interaction
-          ./download-fonts.sh
+          python ./tests/download_fonts.py
 
       - name: Run Tests
         run: python -m poetry run pytest -v tests/

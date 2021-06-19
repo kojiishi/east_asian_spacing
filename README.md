@@ -329,7 +329,7 @@ tools for unit testing are already installed.
 Before you run them first time,
 you need to download fonts for testing:
 ```sh
-./download-fonts.sh
+./tests/download-fonts.py
 ```
 
 You can then run the tests by:

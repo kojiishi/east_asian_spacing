@@ -24,7 +24,7 @@ def fonts_dir():
 @pytest.fixture(scope="session")
 def test_font_path():
     path = _fonts_dir / 'NotoSansCJKjp-Regular.otf'
-    assert path.is_file(), 'Please run `download-fonts.sh`'
+    assert path.is_file(), 'Please run `download_fonts.py`'
     return path
 
 
