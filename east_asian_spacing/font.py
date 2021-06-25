@@ -27,7 +27,6 @@ class Font(object):
         self.font_index = None
         self._hbfont = None
         self.is_vertical = False
-        self._language = None
         self.parent_collection = None
         self.path = path
         self._units_per_em = None
@@ -51,7 +50,6 @@ class Font(object):
         clone.font_index = self.font_index
         clone._hbfont = self._hbfont
         clone.is_vertical = self.is_vertical
-        clone._language = self._language
         clone.parent_collection = self.parent_collection
         clone.path = self.path
         clone.ttcollection = self.ttcollection
@@ -215,27 +213,11 @@ class Font(object):
         attributes = []
         if self.font_index is not None:
             attributes.append(f'#{self.font_index}')
-        if self.language:
-            attributes.append(f'lang={self.language}')
         if self.is_vertical:
             attributes.append('vertical')
         if len(attributes):
             return f'{name} ({", ".join(attributes)})'
         return name
-
-    @property
-    def language(self):
-        return self._language
-
-    @language.setter
-    def language(self, language):
-        self._language = language
-        if self.is_collection:
-            for font in self.fonts_in_collection:
-                font.language = language
-        assert not self.is_vertical
-        if self._vertical_font:
-            self._vertical_font._language = language
 
     @property
     def units_per_em(self):

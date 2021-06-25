@@ -1,22 +1,18 @@
 import pytest
 
 from east_asian_spacing import Builder
-from east_asian_spacing import EastAsianSpacingConfig
+from east_asian_spacing import CollectionConfig
+from east_asian_spacing import Config
 from east_asian_spacing import EastAsianSpacingTester
 
 
 @pytest.mark.asyncio
 async def test_config(test_font_path, tmp_path):
-    class MyCustomConfig(EastAsianSpacingConfig):
+    class MyCustomConfig(Config):
         def __init__(self):
             super().__init__()
             self.cjk_opening = {0x3008}
             self.cjk_closing = {0x3009}
-
-        def tweaked_for(self, font):
-            # No need to call `super` if the default tweaking is not needed.
-            # `EastAsianSpacingConfig` has tweaks for some known fonts.
-            return self
 
     config = MyCustomConfig()
     builder = Builder(test_font_path, config)
@@ -30,3 +26,25 @@ async def test_config(test_font_path, tmp_path):
     fail_config.cjk_opening = {0x300A}
     with pytest.raises(AssertionError):
         await EastAsianSpacingTester(builder.font).test(fail_config)
+
+
+def test_calc_indices_and_languages():
+    def call(num_fonts, indices, language):
+        return list(
+            CollectionConfig._calc_indices_and_languages(
+                num_fonts, indices, language))
+
+    assert call(3, None, None) == [(0, None), (1, None), (2, None)]
+    assert call(3, None, 'JAN') == [(0, 'JAN'), (1, 'JAN'), (2, 'JAN')]
+    assert call(3, None, 'JAN,') == [(0, 'JAN'), (1, ''), (2, None)]
+    assert call(3, None, 'JAN,ZHS') == [(0, 'JAN'), (1, 'ZHS'), (2, None)]
+    assert call(3, None, ',JAN') == [(0, ''), (1, 'JAN'), (2, None)]
+
+    assert call(4, '0', None) == [(0, None)]
+    assert call(4, '0,2', None) == [(0, None), (2, None)]
+
+    assert call(4, '0', 'JAN') == [(0, 'JAN')]
+    assert call(4, '0,2', 'JAN') == [(0, 'JAN'), (2, 'JAN')]
+    assert call(4, '0,2', 'JAN,ZHS') == [(0, 'JAN'), (2, 'ZHS')]
+    assert call(6, '0,2,5', 'JAN,ZHS') == [(0, 'JAN'), (2, 'ZHS'), (5, None)]
+    assert call(6, '0,2,5', 'JAN,,ZHS') == [(0, 'JAN'), (2, ''), (5, 'ZHS')]

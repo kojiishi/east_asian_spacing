@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-import contextlib
-import copy
-import io
-import itertools
-import json
 import logging
-import math
 import sys
 
 from fontTools.otlLib.builder import buildValue
@@ -17,100 +11,12 @@ from fontTools.otlLib.builder import PairPosBuilder
 from fontTools.otlLib.builder import SinglePosBuilder
 from fontTools.ttLib.tables import otTables
 
+from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 from east_asian_spacing.shaper import Shaper
 from east_asian_spacing.shaper import show_dump_images
 
 logger = logging.getLogger('spacing')
-
-
-class EastAsianSpacingConfig(object):
-    def __init__(self):
-        self.cjk_opening = {
-            0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014, 0x3016, 0x3018,
-            0x301A, 0x301D, 0xFF08, 0xFF3B, 0xFF5B, 0xFF5F
-        }
-        self.cjk_closing = {
-            0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 0x3019,
-            0x301B, 0x301E, 0x301F, 0xFF09, 0xFF3D, 0xFF5D, 0xFF60
-        }
-        self.quotes_opening = {0x2018, 0x201C}
-        self.quotes_closing = {0x2019, 0x201D}
-        self.cjk_middle = {0x3000, 0x30FB}
-        self.cjk_period_comma = {0x3001, 0x3002, 0xFF0C, 0xFF0E}
-        self.cjk_column_semicolon = {0xFF1A, 0xFF1B}
-        self.cjk_exclam_question = {0xFF01, 0xFF1F}
-
-    def clone(self):
-        return copy.deepcopy(self)
-
-    @property
-    def _sets(self):
-        yield self.cjk_opening
-        yield self.cjk_closing
-        yield self.quotes_opening
-        yield self.quotes_closing
-        yield self.cjk_middle
-        yield self.cjk_period_comma
-        yield self.cjk_column_semicolon
-        yield self.cjk_exclam_question
-
-    def clear(self):
-        for set in self._sets:
-            set.clear()
-
-    def tweaked_for(self, font):
-        """Returns a tweaked copy when the `font` needs special treatments.
-        Otherwise returns `self`."""
-        name = font.debug_name(1)
-        if font.is_vertical:
-            if name.startswith("Meiryo"):
-                clone = self.clone()
-                clone.change_quotes_closing_to_opening(0x2019)
-                clone.remove(0xFF0C, 0xFF0E)
-                return clone
-            if name.startswith("Microsoft YaHei"):
-                clone = self.clone()
-                clone.remove(0x3001, 0x3002, 0x3018, 0x3019, 0x301A, 0x301B,
-                             0xFF08, 0xFF09, 0xFF0C, 0xFF0E)
-                return clone
-        if name.startswith("Microsoft JhengHei"):
-            clone = self.clone()
-            clone.remove(0xFF08, 0xFF09, 0xFF3B, 0xFF3D, 0xFF5B, 0xFF5D,
-                         0xFF5F, 0xFF60)
-            if font.is_vertical:
-                clone.change_quotes_closing_to_opening(0x2019, 0x201D)
-            return clone
-        return self
-
-    def remove(self, *codes):
-        for code in codes:
-            for set in self._sets:
-                set.discard(code)
-
-    def change_quotes_closing_to_opening(self, *codes):
-        """Changes the `code` from `quotes_closing` to `quotes_opening`.
-        Does nothing if the `code` is not in `quotes_closing`."""
-        for code in codes:
-            with contextlib.suppress(KeyError):
-                self.quotes_closing.remove(code)
-                self.quotes_opening.add(code)
-
-    def for_smoke_testing(self):
-        """Reduce the number of code points for testing."""
-        clone = self.clone()
-        clone.cjk_opening = EastAsianSpacingConfig._down_sample_to(
-            clone.cjk_opening, 3)
-        clone.cjk_closing = EastAsianSpacingConfig._down_sample_to(
-            clone.cjk_closing, 3)
-        return clone
-
-    @staticmethod
-    def _down_sample_to(input, max):
-        if len(input) <= max:
-            return input
-        interval = math.ceil(len(input) / max)
-        return set(itertools.islice(input, 0, None, interval))
 
 
 class GlyphSetTrio(object):
@@ -163,7 +69,7 @@ class GlyphSetTrio(object):
 
     async def add_glyphs(self, font, config):
         self.assert_font(font)
-        config = config.tweaked_for(font)
+        config = config.for_font(font)
         results = await asyncio.gather(self.get_opening_closing(font, config),
                                        self.get_period_comma(font, config),
                                        self.get_colon_semicolon(font, config),
@@ -231,8 +137,8 @@ class GlyphSetTrio(object):
             # For example, NotoSansCJK supports ZHH but NotoSerifCJK does not.
             # assert Shaper(font, text, language="ZHH", script="hani").glyph_ids_set() == zht
         if ja == zht:
-            if not font.language: font.raise_require_language()
-            if font.language == "ZHT" or font.language == "ZHH":
+            if not config.language: font.raise_require_language()
+            if config.language == "ZHT" or config.language == "ZHH":
                 ja.clear()
             else:
                 zht.clear()
@@ -260,8 +166,8 @@ class GlyphSetTrio(object):
         if not ja and not zhs:
             return result
         if ja == zhs:
-            if not font.language: font.raise_require_language()
-            if font.language == "ZHS":
+            if not config.language: font.raise_require_language()
+            if config.language == "ZHS":
                 ja.clear()
             else:
                 zhs.clear()
@@ -271,7 +177,7 @@ class GlyphSetTrio(object):
             # alternate glyphs. In ZHS, they are upright. In Japanese, they may or
             # may not be upright. Vertical alternate glyphs indicate they are rotated.
             # In ZHT, they may be upright even when there are vertical glyphs.
-            if font.language is None or font.language == "JAN":
+            if config.language is None or config.language == "JAN":
                 ja_horizontal = await GlyphSetTrio._shape(font.horizontal_font,
                                                           text,
                                                           language="JAN")
@@ -299,8 +205,8 @@ class GlyphSetTrio(object):
             assert zht == ja
             assert kor == ja
         if ja == zhs:
-            if not font.language: font.raise_require_language()
-            if font.language == "ZHS":
+            if not config.language: font.raise_require_language()
+            if config.language == "ZHS":
                 ja.clear()
             else:
                 zhs.clear()
@@ -537,7 +443,7 @@ class EastAsianSpacing(object):
         if args.is_vertical:
             font = font.vertical_font
         spacing = EastAsianSpacing(font)
-        config = EastAsianSpacingConfig()
+        config = Config.default
         await spacing.add_glyphs(config)
         spacing.save_glyphs(sys.stdout, separator=', ')
 

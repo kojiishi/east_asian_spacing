@@ -3,36 +3,52 @@ import argparse
 import asyncio
 import logging
 import pathlib
-import sys
 import time
 
 from east_asian_spacing.builder import Builder
 from east_asian_spacing.builder import Font
+from east_asian_spacing.config import Config
 from east_asian_spacing.log_utils import init_logging
 
 logger = logging.getLogger('build')
 
 
-class NotoCJKBuilder(Builder):
-    def __init__(self, font):
-        super().__init__(font)
-        font = self.font
-        if font.is_collection:
-            self._fonts_in_collection = tuple(
-                self.calc_fonts_in_collection(font))
-        else:
-            font.language = self.lang_from_ttfont(font.ttfont)
+class NotoCJKConfig(Config):
+    default = None  # This will be set later in this file.
+
+    def for_font(self, font):
+        name = font.debug_name(1)
+        if not name:
+            return self
+        lang = self._lang_from_debug_name(name)
+        if lang is None:
+            return None
+        return self.for_language(lang)
 
     @staticmethod
-    def calc_fonts_in_collection(font):
-        assert len(font.fonts_in_collection) > 0
-        for index, font in enumerate(font.fonts_in_collection):
-            lang = NotoCJKBuilder.lang_from_ttfont(font.ttfont)
-            if lang is None:
-                logger.info(f'Font index {index} "{font}" skipped')
-                continue
-            font.language = lang
-            yield font
+    def _lang_from_debug_name(name):
+        assert name.startswith('Noto ')
+        if 'Mono' in name:
+            return None
+        if 'JP' in name:
+            return 'JAN'
+        if 'KR' in name:
+            return 'KOR'
+        if 'SC' in name:
+            return 'ZHS'
+        if 'TC' in name:
+            return 'ZHT'
+        if 'HK' in name:
+            return 'ZHH'
+        assert False, name
+
+
+NotoCJKConfig.default = NotoCJKConfig()
+
+
+class NotoCJKBuilder(Builder):
+    def __init__(self, font):
+        super().__init__(font, config=NotoCJKConfig.default)
 
     @classmethod
     def expand_dir(cls, path):
@@ -51,24 +67,6 @@ class NotoCJKBuilder(Builder):
         if not Font.is_font_extension(path.suffix):
             return False
         return True
-
-    @staticmethod
-    def lang_from_ttfont(ttfont):
-        name = ttfont.get('name').getDebugName(1)
-        assert name.startswith('Noto ')
-        if 'Mono' in name:
-            return None
-        if 'JP' in name:
-            return 'JAN'
-        if 'KR' in name:
-            return 'KOR'
-        if 'SC' in name:
-            return 'ZHS'
-        if 'TC' in name:
-            return 'ZHT'
-        if 'HK' in name:
-            return 'ZHH'
-        assert False, name
 
     @staticmethod
     async def main():

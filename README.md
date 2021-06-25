@@ -183,7 +183,7 @@ Some fonts may not have expected spacings for some characters,
 and you may want to adjust which character-pairs should adjust spacings.
 
 Currently, this is possible only from a Python program.
-Please see `tests/test_config.py` for an example.
+Please see `test_config` in `tests/test_config.py` for an example.
 
 
 ### HarfBuzz

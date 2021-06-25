@@ -4,9 +4,9 @@ import asyncio
 import itertools
 import logging
 
+from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 from east_asian_spacing.shaper import Shaper
-from east_asian_spacing.spacing import EastAsianSpacingConfig
 
 logger = logging.getLogger('test')
 
@@ -29,10 +29,10 @@ class ShapeTest(object):
         self.off_features = off_features
         self.fail_reasons = []
 
-    async def shape(self):
+    async def shape(self, language):
         font = self.font
         shaper = Shaper(font,
-                        language=font.language,
+                        language=language,
                         script='hani',
                         features=self.off_features)
         text = ''.join(chr(c) for c in self.input)
@@ -119,14 +119,16 @@ class EastAsianSpacingTester(object):
     async def _test(self, config):
         coros = []
         font = self.font
-        config = config.tweaked_for(font)
+        config = config.for_font(font)
 
         opening = config.cjk_opening
         closing = config.cjk_closing
         coros.append(
-            self.assert_trim(itertools.product(closing, opening), 0, False))
+            self.assert_trim(config, itertools.product(closing, opening), 0,
+                             False))
         coros.append(
-            self.assert_trim(itertools.product(opening, opening), 1, True))
+            self.assert_trim(config, itertools.product(opening, opening), 1,
+                             True))
 
         # Run tests without using `asyncio.gather`
         # to avoid too many open files when using subprocesses.
@@ -135,10 +137,10 @@ class EastAsianSpacingTester(object):
         tests = tuple(itertools.chain(*tests))
         return tests
 
-    async def assert_trim(self, inputs, index, assert_offset):
+    async def assert_trim(self, config, inputs, index, assert_offset):
         font = self.font
         tests = ShapeTest.create_list(font, inputs)
-        coros = (test.shape() for test in tests)
+        coros = (test.shape(language=config.language) for test in tests)
         await EastAsianSpacingTester.run_coros(coros)
 
         em = font.units_per_em
@@ -185,7 +187,7 @@ class EastAsianSpacingTester(object):
         font = Font.load(args.path)
         if args.index >= 0:
             font = font.fonts_in_collection[args.index]
-        config = EastAsianSpacingConfig()
+        config = Config.default
         await EastAsianSpacingTester(font).test(config)
         logging.info('All tests pass')
 

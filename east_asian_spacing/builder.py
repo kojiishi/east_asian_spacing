@@ -1,28 +1,22 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-import itertools
 import logging
 import pathlib
-import re
 import sys
 import time
 
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.tables import otTables
-from fontTools.ttLib.ttCollection import TTCollection
-
+from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 from east_asian_spacing.log_utils import init_logging
 from east_asian_spacing.spacing import EastAsianSpacing
-from east_asian_spacing.spacing import EastAsianSpacingConfig
 from east_asian_spacing.tester import EastAsianSpacingTester
 
 logger = logging.getLogger('build')
 
 
 class Builder(object):
-    def __init__(self, font, config=EastAsianSpacingConfig()):
+    def __init__(self, font, config=Config.default):
         if not isinstance(font, Font):
             font = Font.load(font)
         self.font = font
@@ -67,49 +61,42 @@ class Builder(object):
         return (output_path.parent /
                 f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
-    @property
-    def fonts_in_collection(self):
-        if self._fonts_in_collection:
-            assert self.font.is_collection
-            return self._fonts_in_collection
-        if self.font.is_collection:
-            return self.font.fonts_in_collection
-        return None
-
     async def build(self):
         font = self.font
-        logger.info('Building Font "%s"', font)
-        fonts_in_collection = self.fonts_in_collection
-        if fonts_in_collection is not None:
-            return await self.build_collection(fonts_in_collection)
+        config = self.config
+        logger.info('Building Font "%s" lang=%s', font, config.language)
+        if font.is_collection:
+            return await self.build_collection()
 
         assert not font.is_collection
         if EastAsianSpacing.font_has_feature(font):
             return
         spacing = EastAsianSpacing()
-        await spacing.add_glyphs(font, self.config)
+        await spacing.add_glyphs(font, config)
         if not spacing.can_add_to_font:
             logger.info('Skipping due to no pairs: %s', font)
             return
         spacing.add_to_font(font)
         self._spacings.append(spacing)
 
-    async def build_collection(self, fonts_in_collection):
+    async def build_collection(self):
         assert self.font.is_collection
-        config = self.config
 
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
         spacing_by_offset = {}
-        for font in fonts_in_collection:
+        for font in self.font.fonts_in_collection:
+            config = self.config.for_font(font)
+            if config is None:
+                continue
             if EastAsianSpacing.font_has_feature(font):
                 return
             reader_offset = font.reader_offset("GPOS")
             # If the font does not have `GPOS`, `reader_offset` is `None`.
             # Create a shared `GPOS` for all fonts in the case. e.g., BIZ-UD.
             spacing_entry = spacing_by_offset.get(reader_offset)
-            logger.info('%d "%s" GPOS=%d%s', font.font_index, font,
-                        reader_offset if reader_offset else 0,
+            logger.info('%d "%s" lang=%s GPOS=%d%s', font.font_index, font,
+                        config.language, reader_offset if reader_offset else 0,
                         ' (shared)' if spacing_entry else '')
             if spacing_entry:
                 spacing, fonts = spacing_entry
@@ -136,40 +123,6 @@ class Builder(object):
             built_fonts.extend(fonts)
 
         self._fonts_in_collection = built_fonts
-
-    def apply_language_and_indices(self, language=None, indices=None):
-        font = self.font
-        if not font.is_collection:
-            assert language is None or ',' not in language
-            assert indices is None
-            font.language = language
-            return
-        self._fonts_in_collection = tuple(
-            self.calc_fonts_in_collection(font.fonts_in_collection, language,
-                                          indices))
-
-    @staticmethod
-    def calc_fonts_in_collection(fonts_in_collection, language, indices):
-        indices_and_languages = Builder.calc_indices_and_languages(
-            len(fonts_in_collection), indices, language)
-        for index, language in indices_and_languages:
-            font = fonts_in_collection[index]
-            font.language = language
-            yield font
-
-    @staticmethod
-    def calc_indices_and_languages(num_fonts, indices, language):
-        assert num_fonts >= 2
-        if indices is None:
-            indices = range(num_fonts)
-        elif isinstance(indices, str):
-            indices = (int(i) for i in indices.split(","))
-        if language:
-            languages = language.split(",")
-            if len(languages) == 1:
-                return itertools.zip_longest(indices, (), fillvalue=language)
-            return itertools.zip_longest(indices, languages)
-        return itertools.zip_longest(indices, ())
 
     def _united_spacings(self):
         assert self.has_spacings
@@ -273,9 +226,17 @@ class Builder(object):
         if args.output:
             args.output.mkdir(exist_ok=True, parents=True)
         for input in Builder.expand_paths(args.inputs):
-            builder = Builder(input)
-            builder.apply_language_and_indices(language=args.language,
+            font = Font.load(input)
+            if font.is_collection:
+                config = Config.for_collection(font,
+                                               languages=args.language,
                                                indices=args.index)
+            else:
+                config = Config.default
+                if args.language:
+                    assert ',' not in args.language
+                    config = config.for_language(args.language)
+            builder = Builder(font, config)
             await builder.build()
             if not builder.has_spacings:
                 logger.info('Skip due to no changes: "%s"', input)
