@@ -262,6 +262,8 @@ class Font(object):
 
     @staticmethod
     def _has_ottable_feature(ottable, feature_tag):
+        if not ottable or not ottable.FeatureList:
+            return False
         for feature_record in ottable.FeatureList.FeatureRecord:
             if feature_record.FeatureTag == feature_tag:
                 return True

@@ -153,6 +153,8 @@ class Dump(object):
         ttfont = font.ttfonts[face_index]
         tttable = ttfont.get(tag)
         table = tttable.table
+        if not table or not table.FeatureList:
+            return
         feature_records = table.FeatureList.FeatureRecord
         script_records = table.ScriptList.ScriptRecord
         for script_record in script_records:
