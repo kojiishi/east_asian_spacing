@@ -38,6 +38,7 @@ class Builder(object):
         path_before_save = font.path
         output_path = self.calc_output_path(path_before_save, output_path,
                                             stem_suffix)
+        logger.info('Saving to "%s"', output_path)
         font.save(output_path)
         paths = [output_path, path_before_save]
         if glyph_out:
@@ -69,12 +70,16 @@ class Builder(object):
             return await self.build_collection()
 
         assert not font.is_collection
+        config = self.config.for_font(font)
+        if config is None:
+            logger.info('Skipping by config: "%s"', font)
+            return
         if EastAsianSpacing.font_has_feature(font):
             return
         spacing = EastAsianSpacing()
         await spacing.add_glyphs(font, config)
         if not spacing.can_add_to_font:
-            logger.info('Skipping due to no pairs: %s', font)
+            logger.info('Skipping due to no pairs: "%s"', font)
             return
         spacing.add_to_font(font)
         self._spacings.append(spacing)
@@ -88,8 +93,10 @@ class Builder(object):
         for font in self.font.fonts_in_collection:
             config = self.config.for_font(font)
             if config is None:
+                logger.info('Skipping by config: "%s"', font)
                 continue
             if EastAsianSpacing.font_has_feature(font):
+                logger.info('Feature already exists: "%s"', font)
                 return
             reader_offset = font.reader_offset("GPOS")
             # If the font does not have `GPOS`, `reader_offset` is `None`.
@@ -112,7 +119,7 @@ class Builder(object):
         built_fonts = []
         for spacing, fonts in spacing_by_offset.values():
             if not spacing.can_add_to_font:
-                logger.info('Skipping due to no pairs: %s',
+                logger.info('Skipping due to no pairs: "%s"',
                             list(font.font_index for font in fonts))
                 continue
             logger.info('Adding feature to: %s',
@@ -144,7 +151,7 @@ class Builder(object):
                 self.save_glyphs(out_file)
             return output
 
-        logger.info("Saving glyphs to %s", output)
+        logger.debug("Saving glyphs to %s", output)
         united_spacing = self._united_spacings()
         united_spacing.save_glyphs(output)
 
@@ -222,7 +229,7 @@ class Builder(object):
                             action="count",
                             default=0)
         args = parser.parse_args()
-        init_logging(args.verbose)
+        init_logging(args.verbose, main=logger)
         if args.output:
             args.output.mkdir(exist_ok=True, parents=True)
         for input in Builder.expand_paths(args.inputs):
@@ -239,7 +246,7 @@ class Builder(object):
             builder = Builder(font, config)
             await builder.build()
             if not builder.has_spacings:
-                logger.info('Skip due to no changes: "%s"', input)
+                logger.warning('Skipped due to no changes: "%s"', input)
                 continue
             builder.save(args.output,
                          stem_suffix=args.suffix,

@@ -46,9 +46,20 @@ class Config(object):
     def clone(self):
         return copy.deepcopy(self)
 
+    def clone_if_is(self, other):
+        if self is other:
+            return self.clone()
+        return self
+
     def for_font(self, font):
         """Returns a tweaked copy if the `font` needs special treatments.
         Otherwise returns `self`."""
+        name = font.debug_name(1)
+        if name:
+            return self.for_font_name(name, font.is_vertical)
+        return self
+
+    def for_font_name(self, name, is_vertical):
         return self
 
     def for_language(self, language):
@@ -88,32 +99,26 @@ class Config(object):
 
 
 class DefaultConfig(Config):
-    def for_font(self, font):
-        name = font.debug_name(1)
-        if not name:
-            return self
+    def for_font_name(self, name, is_vertical):
         if name.startswith("Meiryo"):
             config = self.for_language('JAN')
-            if font.is_vertical:
-                if config is self:
-                    config = config.clone()
+            if is_vertical:
+                config = config.clone_if_is(self)
                 config.change_quotes_closing_to_opening(0x2019)
                 config.remove(0xFF0C, 0xFF0E)
             return config
         if name.startswith("Microsoft JhengHei"):
             config = self.for_language('ZHT')
-            if config is self:
-                config = config.clone()
+            config = config.clone_if_is(self)
             config.remove(0xFF08, 0xFF09, 0xFF3B, 0xFF3D, 0xFF5B, 0xFF5D,
                           0xFF5F, 0xFF60)
-            if font.is_vertical:
+            if is_vertical:
                 config.change_quotes_closing_to_opening(0x2019, 0x201D)
             return config
         if name.startswith("Microsoft YaHei"):
             config = self.for_language('ZHS')
-            if font.is_vertical:
-                if config is self:
-                    config = config.clone()
+            if is_vertical:
+                config = config.clone_if_is(self)
                 config.remove(0x3001, 0x3002, 0x3018, 0x3019, 0x301A, 0x301B,
                               0xFF08, 0xFF09, 0xFF0C, 0xFF0E)
             return config

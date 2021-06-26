@@ -16,17 +16,14 @@ logger = logging.getLogger('build')
 class NotoCJKConfig(Config):
     default = None  # This will be set later in this file.
 
-    def for_font(self, font):
-        name = font.debug_name(1)
-        if not name:
-            return self
-        lang = self._lang_from_debug_name(name)
+    def for_font_name(self, name, is_vertical):
+        lang = NotoCJKConfig._lang_from_font_name(name)
         if lang is None:
             return None
         return self.for_language(lang)
 
     @staticmethod
-    def _lang_from_debug_name(name):
+    def _lang_from_font_name(name):
         assert name.startswith('Noto ')
         if 'Mono' in name:
             return None
@@ -95,7 +92,7 @@ class NotoCJKBuilder(Builder):
                             action="count",
                             default=0)
         args = parser.parse_args()
-        init_logging(args.verbose)
+        init_logging(args.verbose, main=logger)
         if args.glyph_out:
             args.glyph_out.mkdir(exist_ok=True, parents=True)
         if args.output:

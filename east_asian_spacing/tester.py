@@ -120,6 +120,8 @@ class EastAsianSpacingTester(object):
         coros = []
         font = self.font
         config = config.for_font(font)
+        if not config:
+            return tuple()
 
         opening = config.cjk_opening
         closing = config.cjk_closing

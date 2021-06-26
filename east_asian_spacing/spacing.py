@@ -70,6 +70,8 @@ class GlyphSetTrio(object):
     async def add_glyphs(self, font, config):
         self.assert_font(font)
         config = config.for_font(font)
+        if not config:
+            return
         results = await asyncio.gather(self.get_opening_closing(font, config),
                                        self.get_period_comma(font, config),
                                        self.get_colon_semicolon(font, config),

@@ -513,7 +513,7 @@ class Dump(object):
                             action="count",
                             default=0)
         args = parser.parse_args()
-        init_logging(args.verbose)
+        init_logging(args.verbose, main=logger)
         if args.output:
             args.output.mkdir(exist_ok=True, parents=True)
         dump_file_name = args.output is None and len(args.path) > 1
