@@ -18,8 +18,12 @@ class Config(object):
         self.quotes_closing = {0x2019, 0x201D}
         self.cjk_middle = {0x3000, 0x30FB}
         self.cjk_period_comma = {0x3001, 0x3002, 0xFF0C, 0xFF0E}
+        # These code points are on the left-half of the glyph spaces only in
+        # ZHS fonts, though not all ZHS fonts follow the convention.
         self.cjk_column_semicolon = {0xFF1A, 0xFF1B}
+        self.is_colon_semicolon_middle = None
         self.cjk_exclam_question = {0xFF01, 0xFF1F}
+        self.is_exclam_question_middle = None
         self.language = None
 
     default = None  # This will be set later in this file.

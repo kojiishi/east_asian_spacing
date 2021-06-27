@@ -153,26 +153,38 @@ class GlyphSetTrio(object):
     async def get_colon_semicolon(font, config):
         # Colon/semicolon are at middle for Japanese, left in ZHS.
         text = config.cjk_column_semicolon
-        ja, zhs = await asyncio.gather(
-            GlyphSetTrio._shape(font, text, language="JAN"),
-            GlyphSetTrio._shape(font, text, language="ZHS"))
-        if __debug__ and not font.is_vertical:
-            zht, kor = await asyncio.gather(
-                GlyphSetTrio._shape(font, text, language="ZHT"),
-                GlyphSetTrio._shape(font, text, language="KOR"))
-            assert zht == ja
-            assert kor == ja
+        is_colon_semicolon_middle = config.is_colon_semicolon_middle
         result = GlyphSetTrio()
-        ja = result.add_from_cache(font, ja)
-        zhs = result.add_from_cache(font, zhs)
-        if not ja and not zhs:
-            return result
-        if ja == zhs:
-            if not config.language: font.raise_require_language()
-            if config.language == "ZHS":
-                ja.clear()
+        if is_colon_semicolon_middle is None:
+            ja, zhs = await asyncio.gather(
+                GlyphSetTrio._shape(font, text, language="JAN"),
+                GlyphSetTrio._shape(font, text, language="ZHS"))
+            if __debug__ and not font.is_vertical:
+                zht, kor = await asyncio.gather(
+                    GlyphSetTrio._shape(font, text, language="ZHT"),
+                    GlyphSetTrio._shape(font, text, language="KOR"))
+                assert zht == ja
+                assert kor == ja
+            ja = result.add_from_cache(font, ja)
+            zhs = result.add_from_cache(font, zhs)
+            if not ja and not zhs:
+                return result
+            if ja == zhs:
+                if not config.language: font.raise_require_language()
+                if config.language == "ZHS":
+                    ja.clear()
+                else:
+                    zhs.clear()
+        else:
+            glyphs = await GlyphSetTrio._shape(font,
+                                               text,
+                                               language=config.language)
+            if is_colon_semicolon_middle:
+                ja = glyphs
+                zhs = set()
             else:
-                zhs.clear()
+                zhs = glyphs
+                ja = set()
         assert ja.isdisjoint(zhs)
         if font.is_vertical:
             # In vertical flow, add colon/semicolon to middle if they have vertical
@@ -197,22 +209,32 @@ class GlyphSetTrio(object):
             return None
         # Fullwidth exclamation mark and question mark are on left only in ZHS.
         text = config.cjk_exclam_question
-        ja, zhs = await asyncio.gather(
-            GlyphSetTrio._shape(font, text, language="JAN"),
-            GlyphSetTrio._shape(font, text, language="ZHS"))
-        if __debug__:
-            zht, kor = await asyncio.gather(
-                GlyphSetTrio._shape(font, text, language="ZHT"),
-                GlyphSetTrio._shape(font, text, language="KOR"))
-            assert zht == ja
-            assert kor == ja
-        if ja == zhs:
-            if not config.language: font.raise_require_language()
-            if config.language == "ZHS":
-                ja.clear()
-            else:
-                zhs.clear()
-        assert ja.isdisjoint(zhs)
+        is_exclam_question_middle = config.is_exclam_question_middle
+        if is_exclam_question_middle is None:
+            ja, zhs = await asyncio.gather(
+                GlyphSetTrio._shape(font, text, language="JAN"),
+                GlyphSetTrio._shape(font, text, language="ZHS"))
+            if __debug__:
+                zht, kor = await asyncio.gather(
+                    GlyphSetTrio._shape(font, text, language="ZHT"),
+                    GlyphSetTrio._shape(font, text, language="KOR"))
+                assert zht == ja
+                assert kor == ja
+            if ja == zhs:
+                if not config.language: font.raise_require_language()
+                if config.language == "ZHS":
+                    ja.clear()
+                else:
+                    zhs.clear()
+            assert ja.isdisjoint(zhs)
+        elif is_exclam_question_middle:
+            # When exclamation/question marks are at the middle, their spacings
+            # are not adjustable.
+            return None
+        else:
+            zhs = await GlyphSetTrio._shape(font,
+                                            text,
+                                            language=config.language)
         result = GlyphSetTrio(zhs, None, None)
         result.assert_glyphs_are_disjoint()
         return result
