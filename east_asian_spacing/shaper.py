@@ -39,7 +39,7 @@ class GlyphData(object):
 
 
 class ShapeResult(object):
-    def __init__(self, glyphs):
+    def __init__(self, glyphs=tuple()):
         self._glyphs = glyphs
 
     def __eq__(self, other):
@@ -100,7 +100,7 @@ class ShaperBase(object):
 class UHarfBuzzShaper(ShaperBase):
     async def shape(self, text):
         if not text:
-            return ()
+            return ShapeResult()
         buffer = hb.Buffer()
         buffer.add_str(text)
         font = self.font
@@ -145,7 +145,7 @@ class UHarfBuzzShaper(ShaperBase):
 class HbShapeShaper(ShaperBase):
     async def shape(self, text):
         if not text:
-            return ()
+            return ShapeResult()
         hb_shape = HbShapeShaper._hb_shape_path or 'hb-shape'
         args = [hb_shape, '--output-format=json', '--no-glyph-names']
         self.append_hb_args(text, args)
