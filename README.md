@@ -1,3 +1,6 @@
+[![CI](https://github.com/kojiishi/east_asian_spacing/actions/workflows/ci.yml/badge.svg)](https://github.com/kojiishi/east_asian_spacing/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/east-asian-spacing.svg)](https://pypi.org/project/east-asian-spacing/)
+
 # East Asian Contextual Spacing
 
 This directory contains tools for
@@ -183,8 +186,11 @@ Some fonts may not have expected spacings for some characters,
 and you may want to adjust which character-pairs should adjust spacings.
 
 Currently, this is possible only from a Python program.
-Please see `test_config` in `tests/test_config.py` for an example.
+For examples, please see
+`test_config` in [`tests/config_test.py`](tests/config_test.py)
+or [chws_tool].
 
+[chws_tool]: https://github.com/googlefonts/chws_tool
 
 ### HarfBuzz
 
