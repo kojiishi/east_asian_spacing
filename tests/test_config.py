@@ -4,6 +4,7 @@ from east_asian_spacing import Builder
 from east_asian_spacing import CollectionConfig
 from east_asian_spacing import Config
 from east_asian_spacing import EastAsianSpacingTester
+from east_asian_spacing import NotoCJKConfig
 
 
 @pytest.mark.asyncio
@@ -48,3 +49,29 @@ def test_calc_indices_and_languages():
     assert call(4, '0,2', 'JAN,ZHS') == [(0, 'JAN'), (2, 'ZHS')]
     assert call(6, '0,2,5', 'JAN,ZHS') == [(0, 'JAN'), (2, 'ZHS'), (5, None)]
     assert call(6, '0,2,5', 'JAN,,ZHS') == [(0, 'JAN'), (2, ''), (5, 'ZHS')]
+
+
+def test_config_for_font_name():
+    config = Config.default
+
+    meiryo = config.for_font_name('Meiryo', False)
+    assert meiryo is not config
+    assert meiryo.language == 'JAN'
+
+    # Unknown fonts should use the default config.
+    assert config.for_font_name('never exists', False) is config
+
+
+def test_noto_cjk_config_for_font_name():
+    config = NotoCJKConfig.default
+
+    noto_cjk_jp = config.for_font_name('Noto Sans CJK JP', False)
+    assert noto_cjk_jp is not config
+    assert noto_cjk_jp.language == 'JAN'
+
+    # 'Mono' fonts should be not applicable.
+    assert config.for_font_name('Noto Sans Mono CJK JP', False) is None
+
+    # `NotoCJKConfig` is only for Noto fonts.
+    with pytest.raises(AssertionError):
+        config.for_font_name('Meiryo', False)
