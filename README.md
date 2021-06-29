@@ -1,5 +1,6 @@
 [![CI](https://github.com/kojiishi/east_asian_spacing/actions/workflows/ci.yml/badge.svg)](https://github.com/kojiishi/east_asian_spacing/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/east-asian-spacing.svg)](https://pypi.org/project/east-asian-spacing/)
+[![Dependencies](https://badgen.net/github/dependabot/kojiishi/east_asian_spacing)](https://github.com/kojiishi/east_asian_spacing/network/updates)
 
 # East Asian Contextual Spacing
 
