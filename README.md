@@ -32,6 +32,30 @@ may help to understand the feature better.
 There are 3 ways to install this package,
 depending on your neeeds.
 
+### Command Line Tool
+
+If all what you need is the command line tool,
+[pipx] can install it globally
+while still isolating it in a virtual environment:
+```sh
+pipx install east-asian-spacing
+```
+You can also install with [pip].
+If you install in the global environment,
+its dependencies may cause conflicts with other packages.
+```sh
+pip install east-asian-spacing
+```
+
+### For Your Python Programs
+
+If you want to use this tool from your Python programs,
+you can install using your package management tools
+such as [poetry], [pipenv], or [pip].
+```sh
+pip install east-asian-spacing
+```
+
 ### Clone and Install
 
 If you may need to diagnose fonts or the code,
@@ -48,32 +72,6 @@ This method:
 (i.e., [pip "`-e`" option] or setuptools "[development mode]").
 * Installs testing tools too.
 You can run [unit tests] to verify your installation if needed.
-
-### Command Line Tool
-
-If all what you need is the command line tool,
-[pipx] can install it globally
-while still isolating it in a virtual environment:
-```sh
-pipx install east-asian-spacing
-```
-You can also install with [pip].
-When installing with [pip],
-it is still recommended to install into a virtual environment:
-```sh
-python3 -m venv venv
-source venv/bin/activate
-pip install east-asian-spacing
-```
-
-### For Your Python Programs
-
-If you want to use this tool from your Python programs,
-you can install using your package management tools
-such as [poetry], [pipenv], or [pip].
-```sh
-pip install east-asian-spacing
-```
 
 
 [development mode]: https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html
