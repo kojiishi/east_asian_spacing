@@ -226,6 +226,28 @@ class Font(object):
         return self._units_per_em
 
     @property
+    def fullwidth_advance(self):
+        """Returns the advance of a "fullwidth" glyph.
+
+        Normally this is the same as `units_per_em`,
+        but non-square fonts may have different values.
+
+        Note, this value must be set by other classes,
+        because this class can't compute this.
+        Please see the `ShaperBase.ensure_fullwidth_advance`."""
+        return getattr(self, '_fullwidth_advance', None)
+
+    @fullwidth_advance.setter
+    def fullwidth_advance(self, value):
+        units_per_em = self.units_per_em
+        if value != units_per_em:
+            logger.info('fullwidth_advance=%d (upem=%d) for "%s"', value,
+                        units_per_em, self)
+        else:
+            logger.debug('fullwidth_advance=%d for "%s"', value, self)
+        self._fullwidth_advance = value
+
+    @property
     def script_and_langsys_tags(self, tags=("GSUB", "GPOS")):
         result = ()
         for tag in tags:

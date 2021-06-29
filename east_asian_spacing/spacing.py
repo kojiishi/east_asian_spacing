@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import logging
+import math
 import sys
 
 from fontTools.otlLib.builder import buildValue
@@ -69,6 +70,9 @@ class GlyphSetTrio(object):
 
     async def add_glyphs(self, font, config):
         self.assert_font(font)
+        if not await Shaper.ensure_fullwidth_advance(font):
+            logger.info('Failed to compute the fullwidth advance: "%s"', font)
+            return
         config = config.for_font(font)
         if not config:
             return
@@ -87,14 +91,14 @@ class GlyphSetTrio(object):
         # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
         # Enable "fwid" feature to get fullwidth glyphs.
         features = ['fwid', 'vert'] if font.is_vertical else ['fwid']
-        glyphs = await Shaper(font,
-                              language=language,
-                              script='hani',
-                              features=features).shape(text)
+        shaper = Shaper(font,
+                        language=language,
+                        script='hani',
+                        features=features)
+        glyphs = await shaper.shape(text)
 
         # East Asian spacing applies only to fullwidth glyphs.
-        em = font.units_per_em
-        assert isinstance(em, int)
+        em = font.fullwidth_advance
         glyphs.filter(lambda g: g.advance == em)
 
         return set(glyphs.glyph_ids)
@@ -327,7 +331,10 @@ class GlyphSetTrio(object):
                                               self.middle))
         logger.info("Adding Lookups for %d left, %d right, %d middle glyphs",
                     len(left), len(right), len(middle))
-        half_em = int(font.units_per_em / 2)
+        em = font.fullwidth_advance
+        # When `em` is an odd number, ceil the advance. To do this, use floor
+        # to compute the adjustment of the advance and the offset.
+        half_em = math.floor(em / 2)
         assert half_em > 0
         if font.is_vertical:
             left_half_value = buildValue({"YAdvance": -half_em})

@@ -92,6 +92,30 @@ class ShaperBase(object):
             features_dict[feature] = True
         return features_dict
 
+    async def compute_fullwidth_advance(self):
+        """Computes the advance of a "fullwidth" glyph heuristically
+        by measuring a few representative glyphs."""
+        text = '四國水漢'  # Sample characters used in CJKV.
+        result = await self.shape(text)
+        result.filter(lambda g: g.glyph_id)
+        advances = set(g.advance for g in result)
+        if len(advances) == 1:
+            advance = next(iter(advances))
+            return advance
+        return None
+
+    @staticmethod
+    async def ensure_fullwidth_advance(font):
+        """Ensures that the `Font.fullwidth_advance` is set."""
+        if font.fullwidth_advance:
+            return True
+        shaper = Shaper(font, features=['vert'] if font.is_vertical else None)
+        advance = await shaper.compute_fullwidth_advance()
+        if advance:
+            font.fullwidth_advance = advance
+            return True
+        return False
+
     _dump_images = False
     _shapers = None
     _show_shaper_logs = False
@@ -237,7 +261,6 @@ async def main():
     parser.add_argument("text")
     parser.add_argument("-l", "--language")
     parser.add_argument("-s", "--script")
-    parser.add_argument("--units-per-em", type=int)
     parser.add_argument("--vertical", dest="is_vertical", action="store_true")
     parser.add_argument("-v",
                         "--verbose",
@@ -252,7 +275,7 @@ async def main():
             ShaperBase._show_shaper_logs = True
     else:
         logging.basicConfig(level=logging.INFO)
-    _init_shaper()
+    _init_shaper()  # Re-initialize to show logging.
     font = Font.load(args.font_path)
     if font.is_collection:
         font = font.fonts_in_collection[args.index]
@@ -263,6 +286,8 @@ async def main():
                     language=args.language,
                     script=args.script,
                     features=features)
+    print(f'fullwidth={await shaper.compute_fullwidth_advance()}, '
+          f'upem={font.units_per_em}')
     glyphs = await shaper.shape(args.text)
     print('glyphs=', '\n        '.join(str(g) for g in glyphs))
 

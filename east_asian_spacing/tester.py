@@ -3,6 +3,7 @@ import argparse
 import asyncio
 import itertools
 import logging
+import math
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
@@ -46,7 +47,7 @@ class ShapeTest(object):
         # If any glyphs are missing, or their advances are not em,
         # the feature should not apply.
         if em is None:
-            em = self.font.units_per_em
+            em = self.font.fullwidth_advance
         if any(g.glyph_id == 0 or g.advance != em for g in self.off_glyphs):
             return False
         if glyphs:
@@ -145,8 +146,9 @@ class EastAsianSpacingTester(object):
         coros = (test.shape(language=config.language) for test in tests)
         await EastAsianSpacingTester.run_coros(coros)
 
-        em = font.units_per_em
-        half_em = em / 2
+        em = font.fullwidth_advance
+        half_em = math.ceil(em / 2)
+        offset = em - half_em
         tested = []
         for test in tests:
             if not test.should_apply(em=em, glyphs=self._glyphs):
@@ -157,8 +159,8 @@ class EastAsianSpacingTester(object):
             if test.glyphs[index].advance != half_em:
                 test.fail(f'{index}.advance != {half_em}')
             if (assert_offset and test.glyphs[index].offset -
-                    test.off_glyphs[index].offset != -half_em):
-                test.fail(f'{index}.offset != {half_em}')
+                    test.off_glyphs[index].offset != -offset):
+                test.fail(f'{index}.offset != {offset}')
             tested.append(test)
         return tested
 
