@@ -12,6 +12,7 @@ from subprocess import CalledProcessError
 import uharfbuzz as hb
 
 from east_asian_spacing.font import Font
+import east_asian_spacing.log_utils as log_utils
 
 logger = logging.getLogger('shaper')
 
@@ -34,8 +35,13 @@ class GlyphData(object):
                 and self.offset == other.offset)
 
     def __str__(self):
-        return (f'{{g={self.glyph_id},c={self.cluster_index}'
-                f',a={self.advance},o={self.offset}}}')
+        text = getattr(self, 'text', None)
+        text = f't:"{text}",' if text else ''
+        return (f'{{{text}'
+                f'g:{self.glyph_id},'
+                f'a:{self.advance},'
+                f'o:{self.offset},'
+                f'c:{self.cluster_index}}}')
 
 
 class ShapeResult(object):
@@ -70,6 +76,16 @@ class ShapeResult(object):
         glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
         return glyph_ids
 
+    def set_text(self, text):
+        self.freeze()
+        if len(self._glyphs) == 0:
+            return
+        last = self._glyphs[0]
+        for glyph in self._glyphs[1:]:
+            last.text = text[last.cluster_index:glyph.cluster_index]
+            last = glyph
+        last.text = text[last.cluster_index:]
+
     def __str__(self):
         self.freeze()  # Make sure it is still iterable.
         return f'[{",".join(str(g) for g in self._glyphs)}]'
@@ -95,10 +111,11 @@ class ShaperBase(object):
     async def compute_fullwidth_advance(self):
         """Computes the advance of a "fullwidth" glyph heuristically
         by measuring a few representative glyphs."""
-        text = '四國水漢'  # Sample characters used in CJKV.
+        text = '四园水城'  # Sample characters used in CJKV.
         result = await self.shape(text)
         result.filter(lambda g: g.glyph_id)
         advances = set(g.advance for g in result)
+        logger.debug('fullwidth_advance=%s for "%s"', advances, self.font)
         if len(advances) == 1:
             advance = next(iter(advances))
             return advance
@@ -114,11 +131,16 @@ class ShaperBase(object):
         if advance:
             font.fullwidth_advance = advance
             return True
+        logger.info('No fullwidth advance for "%s"', font)
         return False
+
+    def log_result(self, result, text):
+        if logger.getEffectiveLevel() <= logging.DEBUG:
+            result.set_text(text)
+            logger.debug('result=%s', result)
 
     _dump_images = False
     _shapers = None
-    _show_shaper_logs = False
 
 
 class UHarfBuzzShaper(ShaperBase):
@@ -146,7 +168,7 @@ class UHarfBuzzShaper(ShaperBase):
                      self.language, self.script, features)
         # logger.debug('lang=%s, script=%s, features=%s', buffer.language,
         #              buffer.script, features)
-        if self._show_shaper_logs:
+        if log_utils._log_shaper_logs:
             buffer.set_message_func(
                 lambda message: logger.debug('uharfbuzz: %s', message))
         # buffer.cluster_level = hb.BufferClusterLevel.DEFAULT
@@ -163,7 +185,9 @@ class UHarfBuzzShaper(ShaperBase):
             glyphs = (GlyphData(info.codepoint, info.cluster, pos.x_advance,
                                 pos.x_offset)
                       for info, pos in zip(infos, positions))
-        return ShapeResult(glyphs)
+        result = ShapeResult(glyphs)
+        self.log_result(result, text)
+        return result
 
 
 class HbShapeShaper(ShaperBase):
@@ -173,7 +197,7 @@ class HbShapeShaper(ShaperBase):
         hb_shape = HbShapeShaper._hb_shape_path or 'hb-shape'
         args = [hb_shape, '--output-format=json', '--no-glyph-names']
         self.append_hb_args(text, args)
-        if self._show_shaper_logs:
+        if log_utils._log_shaper_logs:
             args.append('--trace')
         logger.debug('subprocess.run: %s', shlex.join(args))
         proc = await asyncio.create_subprocess_exec(
@@ -183,7 +207,7 @@ class HbShapeShaper(ShaperBase):
             raise CalledProcessError(proc.returncode, hb_shape, stdout, stderr)
         with io.StringIO(stdout.decode('utf-8')) as file:
             for line in file:
-                if self._show_shaper_logs:
+                if log_utils._log_shaper_logs:
                     logger.debug('hb-shape: %s', line.rstrip())
                 if line.startswith('['):
                     glyphs = json.loads(line)
@@ -199,7 +223,9 @@ class HbShapeShaper(ShaperBase):
         else:
             glyphs = (GlyphData(g["g"], g["cl"], g["ax"], g["dx"])
                       for g in glyphs)
-        return ShapeResult(glyphs)
+        result = ShapeResult(glyphs)
+        self.log_result(result, text)
+        return result
 
     async def dump(self, text):
         args = ['hb-view', '--font-size=128']
@@ -269,12 +295,7 @@ async def main():
                         default=0)
     args = parser.parse_args()
     show_dump_images()
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-        if args.verbose > 1:
-            ShaperBase._show_shaper_logs = True
-    else:
-        logging.basicConfig(level=logging.INFO)
+    log_utils.init_logging(args.verbose)
     _init_shaper()  # Re-initialize to show logging.
     font = Font.load(args.font_path)
     if font.is_collection:
@@ -288,8 +309,9 @@ async def main():
                     features=features)
     print(f'fullwidth={await shaper.compute_fullwidth_advance()}, '
           f'upem={font.units_per_em}')
-    glyphs = await shaper.shape(args.text)
-    print('glyphs=', '\n        '.join(str(g) for g in glyphs))
+    result = await shaper.shape(args.text)
+    result.set_text(args.text)
+    print('glyphs=', '\n        '.join(str(g) for g in result))
 
 
 if __name__ == '__main__':

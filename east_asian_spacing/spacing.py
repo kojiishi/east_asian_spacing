@@ -71,7 +71,6 @@ class GlyphSetTrio(object):
     async def add_glyphs(self, font, config):
         self.assert_font(font)
         if not await Shaper.ensure_fullwidth_advance(font):
-            logger.info('Failed to compute the fullwidth advance: "%s"', font)
             return
         config = config.for_font(font)
         if not config:
@@ -95,13 +94,13 @@ class GlyphSetTrio(object):
                         language=language,
                         script='hani',
                         features=features)
-        glyphs = await shaper.shape(text)
+        result = await shaper.shape(text)
 
         # East Asian spacing applies only to fullwidth glyphs.
         em = font.fullwidth_advance
-        glyphs.filter(lambda g: g.advance == em)
+        result.filter(lambda g: g.advance == em)
 
-        return set(glyphs.glyph_ids)
+        return set(result.glyph_ids)
 
     @staticmethod
     async def get_opening_closing(font, config):

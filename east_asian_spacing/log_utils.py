@@ -1,6 +1,6 @@
 import logging
 
-from east_asian_spacing.shaper import ShaperBase
+_log_shaper_logs = False
 
 
 def init_logging(verbose, main=None):
@@ -23,4 +23,5 @@ def init_logging(verbose, main=None):
     if verbose <= 2:
         return
 
-    ShaperBase._show_shaper_logs = True
+    global _log_shaper_logs
+    _log_shaper_logs = True
