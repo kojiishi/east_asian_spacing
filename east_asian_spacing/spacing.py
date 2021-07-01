@@ -462,9 +462,9 @@ class EastAsianSpacing(object):
             font = font.fonts_in_collection[args.index]
         if args.is_vertical:
             font = font.vertical_font
-        spacing = EastAsianSpacing(font)
+        spacing = EastAsianSpacing()
         config = Config.default
-        await spacing.add_glyphs(config)
+        await spacing.add_glyphs(font, config)
         spacing.save_glyphs(sys.stdout, separator=', ')
 
 

@@ -15,7 +15,18 @@ logger = logging.getLogger('font')
 
 class Font(object):
     def __init__(self):
-        pass
+        self._byte_array = None
+        self.font_index = None
+        self._fonts_in_collection = None
+        self._hbfont = None
+        self.horizontal_font = None
+        self.is_vertical = False
+        self.parent_collection = None
+        self.path = None
+        self.ttcollection = None
+        self.ttfont = None
+        self._units_per_em = None
+        self._vertical_font = None
 
     @staticmethod
     def load(path):
@@ -23,17 +34,9 @@ class Font(object):
         if isinstance(path, str):
             path = pathlib.Path(path)
         self = Font()
-        self._byte_array = None
-        self.font_index = None
-        self._hbfont = None
-        self.is_vertical = False
-        self.parent_collection = None
         self.path = path
-        self._units_per_em = None
-        self._vertical_font = None
         if Font.is_ttc_font_extension(self.path.suffix):
             self.ttcollection = TTCollection(path, allowVID=True)
-            self.ttfont = None
             self._fonts_in_collection = tuple(
                 self._create_font_in_collection(index, ttfont)
                 for index, ttfont in enumerate(self.ttcollection))
@@ -41,8 +44,6 @@ class Font(object):
                         len(self.ttcollection))
             return self
         self.ttfont = TTFont(path, allowVID=True)
-        self.ttcollection = None
-        self._fonts_in_collection = None
         return self
 
     def _clone(self):
@@ -164,6 +165,7 @@ class Font(object):
         return (self.ttfont, )
 
     def tttable(self, name):
+        assert self.ttfont
         return self.ttfont.get(name)
 
     @property
@@ -349,10 +351,11 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--index", type=int, default=0)
     args = parser.parse_args()
     font = Font.load(args.path)
-    font = font.fonts[args.index]
+    if font.is_collection:
+        font = font.fonts_in_collection[args.index]
     print("debug_name:", font.debug_name)
     for tag in ("GSUB", "GPOS"):
-        tttable = font.ttfont.get(tag)
+        tttable = font.tttable(tag)
         if not tttable:
             continue
         table = tttable.table

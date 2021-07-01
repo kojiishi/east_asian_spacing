@@ -29,6 +29,8 @@ class ShapeTest(object):
         self.features = features
         self.off_features = off_features
         self.fail_reasons = []
+        self.off_glyphs = None
+        self.glyphs = None
 
     async def shape(self, language):
         font = self.font

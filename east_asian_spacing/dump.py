@@ -295,7 +295,8 @@ class Dump(object):
                      for line in lines)
 
         if output:
-            out_path = output / f'{(dst or src).name}.diff'
+            out_name = (dst or src).name  # pytype: disable=attribute-error
+            out_path = output / f'{out_name}.diff'
             with out_path.open('w') as out_file:
                 out_file.writelines(lines)
             return out_path

@@ -8,6 +8,7 @@ import os
 import pathlib
 import shlex
 from subprocess import CalledProcessError
+import typing
 
 import uharfbuzz as hb
 
@@ -45,8 +46,8 @@ class GlyphData(object):
 
 
 class ShapeResult(object):
-    def __init__(self, glyphs=tuple()):
-        self._glyphs = glyphs
+    def __init__(self, glyphs=()):
+        self._glyphs = glyphs  # type: typing.Union[typing.Iterator[GlyphData], typing.Tuple[GlyphData, ...]]
 
     def __eq__(self, other):
         return self._glyphs == other._glyphs
@@ -107,6 +108,10 @@ class ShaperBase(object):
         for feature in self.features:
             features_dict[feature] = True
         return features_dict
+
+    async def shape(self, text):
+        assert False, "Not implemented"
+        return ShapeResult()
 
     async def compute_fullwidth_advance(self):
         """Computes the advance of a "fullwidth" glyph heuristically
