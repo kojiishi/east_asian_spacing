@@ -142,7 +142,7 @@ class ShaperBase(object):
     def log_result(self, result, text):
         if logger.getEffectiveLevel() <= logging.DEBUG:
             result.set_text(text)
-            logger.debug('result=%s', result)
+            logger.debug('ShapeResult=%s', result)
 
     _dump_images = False
     _shapers = None

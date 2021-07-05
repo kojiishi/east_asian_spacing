@@ -100,6 +100,11 @@ class GlyphSetTrio(object):
         em = font.fullwidth_advance
         result.filter(lambda g: g.advance == em)
 
+        if logger.getEffectiveLevel() <= logging.DEBUG:
+            result.freeze()
+            if len(result):
+                logger.debug('ShapeResult=%s', result)
+
         return set(result.glyph_ids)
 
     @staticmethod
