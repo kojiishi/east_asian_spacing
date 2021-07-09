@@ -36,3 +36,9 @@ async def test_build_and_diff(test_font_path, refs_dir, tmp_path):
         logger.info('Diff=%s', diff_path)
         ref_path = refs_dir / diff_path.name
         assert diff_path.read_text() == ref_path.read_text(), (diff_path.name)
+
+    # Try to build against the `out_path`.
+    # This should not add anything because the features already exist.
+    builder2 = NotoCJKBuilder(out_path)
+    await builder2.build()
+    assert not builder2.has_spacings
