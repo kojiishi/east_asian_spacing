@@ -167,35 +167,25 @@ east-asian-spacing noto ~/googlefonts/noto-cjk
 
 ## Advanced Topics
 
-### Scripts
-[scripts]: (#scripts)
-
-Some small shell scripts are available in the `scripts` directory.
-
-`build*.sh` scripts are useful to build fonts,
-compute [diff] from source fonts,
-and compare the diff files with [references].
-Followings are example usages.
-```sh
-./scripts/build.sh input-font-file.otf -v
-./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
-```
-
 ### Character-Pairs
 
-Some fonts may not have expected spacings for some characters,
-and you may want to adjust which character-pairs should adjust spacings.
-Currently, this is possible only from a Python program.
+You may want to adjust which character-pairs should adjust spacings,
+in cases such as when
+your fonts may not have expected spacings for some characters.
+Currently, this is possible only from Python programs.
 
-The [chws_tool] is an example project that
-extends the `Config` class to provide default options
-and customized character-pairs for fonts at [fonts.google.com].
+The [chws_tool] is a project that
+extends the [`Config` class] to provide default languages and
+customized character-pairs for fonts at [fonts.google.com].
 
-For a simpler example, please see
-`test_config` in [`tests/config_test.py`](tests/config_test.py).
+For a simpler example, please see the `test_config` function
+in [`tests/config_test.py`].
 
 [chws_tool]: https://github.com/googlefonts/chws_tool
 [fonts.google.com]: https://fonts.google.com
+
+[`Config` class]: east_asian_spacing/config.py
+[`tests/config_test.py`]: tests/config_test.py
 
 ### HarfBuzz
 
@@ -376,3 +366,17 @@ tox
 
 [pytest]: https://pytest.org/
 [tox]: https://tox.readthedocs.io/en/latest/index.html
+
+### Scripts
+[scripts]: (#scripts)
+
+Some small shell scripts are available in the `scripts` directory.
+
+`build*.sh` scripts are useful to build fonts,
+compute [diff] from source fonts,
+and compare the diff files with [references].
+Followings are example usages.
+```sh
+./scripts/build.sh input-font-file.otf -v
+./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
+```
