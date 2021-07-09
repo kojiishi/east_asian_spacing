@@ -165,6 +165,8 @@ east-asian-spacing noto ~/googlefonts/noto-cjk
 
 [Noto CJK]: https://www.google.com/get/noto/help/cjk/
 
+## Advanced Topics
+
 ### Scripts
 [scripts]: (#scripts)
 
@@ -178,8 +180,6 @@ Followings are example usages.
 ./scripts/build.sh input-font-file.otf -v
 ./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
 ```
-
-## Advanced Topics
 
 ### Character-Pairs
 
