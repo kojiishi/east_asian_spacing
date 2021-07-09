@@ -179,24 +179,31 @@ Followings are example usages.
 ./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
 ```
 
+## Advanced Topics
+
 ### Character-Pairs
 
 Some fonts may not have expected spacings for some characters,
 and you may want to adjust which character-pairs should adjust spacings.
-
 Currently, this is possible only from a Python program.
-For examples, please see
-`test_config` in [`tests/config_test.py`](tests/config_test.py)
-or [chws_tool].
+
+The [chws_tool] is an example project that
+extends the `Config` class to provide default options
+and customized character-pairs for fonts at [fonts.google.com].
+
+For a simpler example, please see
+`test_config` in [`tests/config_test.py`](tests/config_test.py).
 
 [chws_tool]: https://github.com/googlefonts/chws_tool
+[fonts.google.com]: https://fonts.google.com
 
 ### HarfBuzz
 
 This package uses the [HarfBuzz] shaping engine
 using a Cython bindings [uharfbuzz].
 
-You can use the [hb-shape] command line tool instead
+If you want to use a specific build of the [HarfBuzz],
+this tool can invoke the external [hb-shape] command line tool instead
 by settting the `SHAPER` environment variable.
 ```sh
 export SHAPER=hb-shape
