@@ -16,15 +16,20 @@ class Config(object):
         }
         self.quotes_opening = {0x2018, 0x201C}
         self.quotes_closing = {0x2019, 0x201D}
-        self.cjk_middle = {0x3000, 0x30FB}
+        self.cjk_middle = {0x30FB}
+        self.fullwidth_space = {0x3000}
         self.cjk_period_comma = {0x3001, 0x3002, 0xFF0C, 0xFF0E}
-        self.cjk_column_semicolon = {0xFF1A, 0xFF1B}
+        self.cjk_colon_semicolon = {0xFF1A, 0xFF1B}
         self.cjk_exclam_question = {0xFF01, 0xFF1F}
+
+        # Skip adding the features to fonts with monospace ASCII
+        # because they are generally for code.
+        self.skip_monospace_ascii = True
+        # Determines the applicability by computing ink bounds.
+        self.use_ink_bounds = True
+        # Specify which language behavior the font is.
+        # Valid only when `use_ink_bounds` is `False`.
         self.language = None
-        # These code points are on the left-half of the glyph spaces only in
-        # ZHS fonts, though not all ZHS fonts follow the convention.
-        # Setting to `True` or `False` disables the heuristic detection.
-        self.is_colon_semicolon_middle = None
 
     default = None  # This will be set later in this file.
 
@@ -39,8 +44,9 @@ class Config(object):
         yield self.quotes_opening
         yield self.quotes_closing
         yield self.cjk_middle
+        yield self.fullwidth_space
         yield self.cjk_period_comma
-        yield self.cjk_column_semicolon
+        yield self.cjk_colon_semicolon
         yield self.cjk_exclam_question
 
     def clear(self):
@@ -67,11 +73,14 @@ class Config(object):
         return self
 
     def for_language(self, language):
-        """Returns a copy with the specified language."""
+        """Returns a copy with the specified language.
+
+        This also sets `use_ink_bounds` to `False`."""
         if language == self.language:
             return self
         clone = self.clone()
         clone.language = language
+        clone.use_ink_bounds = not language
         return clone
 
     def for_smoke_testing(self):
@@ -102,34 +111,7 @@ class Config(object):
         return set(itertools.islice(input, 0, None, interval))
 
 
-class DefaultConfig(Config):
-    def for_font_name(self, name, is_vertical):
-        if name.startswith("Meiryo"):
-            config = self.for_language('JAN')
-            if is_vertical:
-                config = config.clone_if_is(self)
-                config.change_quotes_closing_to_opening(0x2019)
-                config.remove(0xFF0C, 0xFF0E)
-            return config
-        if name.startswith("Microsoft JhengHei"):
-            config = self.for_language('ZHT')
-            config = config.clone_if_is(self)
-            config.remove(0xFF08, 0xFF09, 0xFF3B, 0xFF3D, 0xFF5B, 0xFF5D,
-                          0xFF5F, 0xFF60)
-            if is_vertical:
-                config.change_quotes_closing_to_opening(0x2019, 0x201D)
-            return config
-        if name.startswith("Microsoft YaHei"):
-            config = self.for_language('ZHS')
-            if is_vertical:
-                config = config.clone_if_is(self)
-                config.remove(0x3001, 0x3002, 0x3018, 0x3019, 0x301A, 0x301B,
-                              0xFF08, 0xFF09, 0xFF0C, 0xFF0E)
-            return config
-        return self
-
-
-class CollectionConfig(DefaultConfig):
+class CollectionConfig(Config):
     def __init__(self, font, languages=None, indices=None):
         assert font.is_collection
         super().__init__()
@@ -164,4 +146,4 @@ class CollectionConfig(DefaultConfig):
         return itertools.zip_longest(indices, ())
 
 
-Config.default = DefaultConfig()
+Config.default = Config()

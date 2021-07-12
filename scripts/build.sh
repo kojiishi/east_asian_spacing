@@ -2,8 +2,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." &>/dev/null && pwd)"
 PY_DIR="$(cd "$ROOT_DIR/east_asian_spacing" &>/dev/null && pwd)"
-BUILDER_NAME=${BUILDER_NAME:-builder.py}
-BUILDER=${BUILDER:-$PY_DIR/$BUILDER_NAME}
+BUILDER=${BUILDER:-$PY_DIR/builder.py}
 BUILD_DIR=${BUILD_DIR:-build}
 LOG_NAME=${LOG_NAME:-build.log}
 LOG=${LOG:-$BUILD_DIR/log/$LOG_NAME}

@@ -8,6 +8,7 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
+from fontTools.pens.boundsPen import BoundsPen
 import uharfbuzz as hb
 
 logger = logging.getLogger('font')
@@ -25,6 +26,7 @@ class Font(object):
         self._path = None
         self.ttcollection = None
         self._ttfont = None
+        self._ttglyphset = None
         self._units_per_em = None
         self._vertical_font = None
 
@@ -52,6 +54,7 @@ class Font(object):
         font._hbfont = self._hbfont
         font.ttcollection = self.ttcollection
         font._ttfont = self.ttfont
+        self._ttglyphset = self._ttglyphset
         font._units_per_em = self._units_per_em
         # Setup a vertical font.
         font.is_vertical = True
@@ -157,8 +160,11 @@ class Font(object):
     def _before_save(ttfont):
         # `TTFont.save()` compiles all loaded tables. Unload tables we know we did
         # not modify, so that it copies instead of re-compile.
-        for key in ("CFF ", "GSUB", "name"):
-            if ttfont.isLoaded(key):
+        loaded_keys = ttfont.tables.keys()
+        logger.debug("loaded_keys=%s", loaded_keys)
+        keys_to_save = set(('head', 'GPOS'))
+        for key in tuple(loaded_keys):
+            if key not in keys_to_save and ttfont.isLoaded(key):
                 del ttfont.tables[key]
 
     @property
@@ -168,6 +174,12 @@ class Font(object):
     @property
     def ttfont(self):
         return self._ttfont
+
+    @property
+    def ttglyphset(self):
+        if not self._ttglyphset:
+            self._ttglyphset = self.ttfont.getGlyphSet()
+        return self._ttglyphset
 
     @property
     def ttfonts(self):
@@ -260,6 +272,27 @@ class Font(object):
             logger.debug('fullwidth_advance=%d for "%s"', value, self)
         self._fullwidth_advance = value
 
+    def glyph_name(self, glyph_id):
+        assert isinstance(glyph_id, int)
+        ttfont = self.ttfont
+        if ttfont:
+            return ttfont.getGlyphName(glyph_id)
+        return f'glyph{glyph_id:05}'
+
+    def glyph_names(self, glyph_ids):
+        ttfont = self.ttfont
+        if ttfont:
+            return (ttfont.getGlyphName(glyph_id) for glyph_id in glyph_ids)
+        return (f'glyph{glyph_id:05}' for glyph_id in glyph_ids)
+
+    def glyph_bounds(self, glyph):
+        glyph = self.glyph_name(glyph)
+        ttglyphset = self.ttglyphset
+        ttglyph = ttglyphset[glyph]
+        bounds = BoundsPen(ttglyphset)
+        ttglyph.draw(bounds)
+        return bounds.bounds
+
     @property
     def script_and_langsys_tags(self, tags=("GSUB", "GPOS")):
         result = ()
@@ -288,12 +321,6 @@ class Font(object):
                 for t in sorted(set(self.script_and_langsys_tags),
                                 key=lambda t: t[0] +
                                 ("" if t[1] is None else t[1]))))
-
-    def glyph_names(self, glyph_ids):
-        ttfont = self.ttfont
-        if ttfont:
-            return (ttfont.getGlyphName(glyph_id) for glyph_id in glyph_ids)
-        return (f'glyph{glyph_id:05}' for glyph_id in glyph_ids)
 
     @staticmethod
     def _has_ottable_feature(ottable, feature_tag):

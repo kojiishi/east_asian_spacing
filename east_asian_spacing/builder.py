@@ -62,6 +62,20 @@ class Builder(object):
         return (output_path.parent /
                 f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
+    async def _config_for_font(self, font):
+        config = self.config.for_font(font)
+        if config is None:
+            logger.info('Skipped by config: "%s"', font)
+            return None
+        if (config.skip_monospace_ascii
+                and await EastAsianSpacing.is_monospace_ascii(font)):
+            logger.info('Skipped because monospace: "%s"', font)
+            return None
+        if EastAsianSpacing.font_has_feature(font):
+            logger.info('Skipped because the features exist: "%s"', font)
+            return None
+        return config
+
     async def build(self):
         font = self.font
         config = self.config
@@ -70,17 +84,15 @@ class Builder(object):
             return await self.build_collection()
 
         assert not font.is_collection
-        config = self.config.for_font(font)
+        config = await self._config_for_font(font)
         if config is None:
-            logger.info('Skipping by config: "%s"', font)
-            return
-        if EastAsianSpacing.font_has_feature(font):
             return
         spacing = EastAsianSpacing()
         await spacing.add_glyphs(font, config)
         if not spacing.can_add_to_font:
             logger.info('Skipping due to no pairs: "%s"', font)
             return
+        logger.info('Adding features to: "%s" %s', font, spacing)
         spacing.add_to_font(font)
         self._spacings.append(spacing)
 
@@ -91,13 +103,9 @@ class Builder(object):
         # font, make sure we add the same data so that the new GPOS is also shared.
         spacing_by_offset = {}
         for font in self.font.fonts_in_collection:
-            config = self.config.for_font(font)
+            config = await self._config_for_font(font)
             if config is None:
-                logger.info('Skipping by config: "%s"', font)
                 continue
-            if EastAsianSpacing.font_has_feature(font):
-                logger.info('Feature already exists: "%s"', font)
-                return
             reader_offset = font.reader_offset("GPOS")
             # If the font does not have `GPOS`, `reader_offset` is `None`.
             # Create a shared `GPOS` for all fonts in the case. e.g., BIZ-UD.
@@ -119,11 +127,11 @@ class Builder(object):
         built_fonts = []
         for spacing, fonts in spacing_by_offset.values():
             if not spacing.can_add_to_font:
-                logger.info('Skipping due to no pairs: "%s"',
+                logger.info('Skipping due to no pairs: %s',
                             list(font.font_index for font in fonts))
                 continue
-            logger.info('Adding feature to: %s',
-                        list(font.font_index for font in fonts))
+            logger.info('Adding features to: %s %s',
+                        list(font.font_index for font in fonts), spacing)
             for font in fonts:
                 spacing.add_to_font(font)
             self._spacings.append(spacing)
@@ -230,6 +238,8 @@ class Builder(object):
                             default=0)
         args = parser.parse_args()
         init_logging(args.verbose, main=logger)
+        if args.glyph_out:
+            args.glyph_out.mkdir(exist_ok=True, parents=True)
         if args.output:
             args.output.mkdir(exist_ok=True, parents=True)
         for input in Builder.expand_paths(args.inputs):
@@ -246,7 +256,7 @@ class Builder(object):
             builder = Builder(font, config)
             await builder.build()
             if not builder.has_spacings:
-                logger.warning('Skipped due to no changes: "%s"', input)
+                logger.warning('Skipped saving due to no changes: "%s"', input)
                 continue
             builder.save(args.output,
                          stem_suffix=args.suffix,

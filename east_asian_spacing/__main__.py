@@ -13,11 +13,6 @@ def main():
             asyncio.run(east_asian_spacing.Dump.main())
             return
 
-        if sub_command == 'noto':
-            del args[1]
-            asyncio.run(east_asian_spacing.NotoCJKBuilder.main())
-            return
-
     asyncio.run(east_asian_spacing.Builder.main())
 
 

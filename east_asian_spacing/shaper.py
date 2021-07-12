@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
+import enum
 import io
 import json
 import logging
@@ -22,6 +23,46 @@ def show_dump_images():
     ShaperBase._dump_images = True
 
 
+class InkPart(enum.Enum):
+    LEFT = enum.auto()
+    RIGHT = enum.auto()
+    MIDDLE = enum.auto()
+    OTHER = enum.auto()
+
+    def __str__(self):
+        return self.name
+
+
+class InkPartMargin(object):
+    _current = 0
+
+    def __init__(self, margin):
+        self.margin = margin
+
+    def __enter__(self):
+        self.saved_margin = InkPartMargin._current
+        InkPartMargin._current = self.margin
+
+    def __exit__(self, ex_type, ex_value, trace):
+        InkPartMargin._current = self.saved_margin
+
+
+def _compute_ink_part(min, max, left, right):
+    assert min <= max
+    assert left < right
+    margin = InkPartMargin._current
+    middle = (left + right) / 2
+    if max <= middle + margin:
+        return InkPart.LEFT
+    if min >= middle - margin:
+        return InkPart.RIGHT
+    qleft = (left + middle) / 2
+    qright = (right + middle) / 2
+    if min >= qleft - margin and max <= qright + margin:
+        return InkPart.MIDDLE
+    return InkPart.OTHER
+
+
 class GlyphData(object):
     def __init__(self, glyph_id, cluster_index, advance, offset):
         self.glyph_id = glyph_id
@@ -36,13 +77,45 @@ class GlyphData(object):
                 and self.offset == other.offset)
 
     def __str__(self):
+        values = []
         text = getattr(self, 'text', None)
-        text = f't:"{text}",' if text else ''
-        return (f'{{{text}'
-                f'g:{self.glyph_id},'
-                f'a:{self.advance},'
-                f'o:{self.offset},'
-                f'c:{self.cluster_index}}}')
+        if text:
+            values.append(f't:"{text}"')
+        values.extend((f'g:{self.glyph_id}', f'a:{self.advance}',
+                       f'o:{self.offset}', f'c:{self.cluster_index}'))
+        bounds = getattr(self, 'bounds', None)
+        if bounds:
+            values.append(f'b:{bounds}')
+        ink_part = getattr(self, 'ink_part', None)
+        if ink_part:
+            values.append(f'i:{ink_part}')
+        return f'{{{",".join(values)}}}'
+
+    def compute_ink_part(self, font):
+        self.bounds = bounds = font.glyph_bounds(self.glyph_id)
+        if bounds is None:
+            self.ink_part = InkPart.OTHER
+            return
+        if font.is_vertical:
+            self.ink_part = _compute_ink_part(self.offset - bounds[3],
+                                              self.offset - bounds[1], 0,
+                                              self.advance)
+            return
+        self.ink_part = _compute_ink_part(bounds[0], bounds[2], 0,
+                                          self.advance)
+
+    def get_ink_part(self, font):
+        ink_pos = getattr(self, 'ink_part', None)
+        if ink_pos is not None:
+            return ink_pos
+        self.compute_ink_part(font)
+        return self.ink_part
+
+    @staticmethod
+    def _ink_part_pred(glyph, font, ink_part):
+        if glyph.get_ink_part(font) == ink_part:
+            return True
+        logger.debug('ink_part: not %s %s', ink_part, glyph)
 
 
 class ShapeResult(object):
@@ -64,21 +137,25 @@ class ShapeResult(object):
     def filter(self, predicate):
         self._glyphs = filter(predicate, self._glyphs)
 
-    def freeze(self):
-        """Freeze the internal generator as a tuple.
-        Once frozen, it can iterate multiple times."""
+    def filter_missing_glyphs(self):
+        # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
+        # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
+        self.filter(lambda g: g.glyph_id)
+
+    def filter_ink_part(self, font, ink_part):
+        self.filter(lambda g: GlyphData._ink_part_pred(g, font, ink_part))
+
+    def ensure_multi_iterations(self):
+        """Ensure this can iterate multiple times
+        by capturing the internal generator as a tuple."""
         self._glyphs = tuple(self._glyphs)
 
     @property
     def glyph_ids(self):
-        glyph_ids = (g.glyph_id for g in self._glyphs)
-        # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
-        # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
-        glyph_ids = filter(lambda glyph_id: glyph_id, glyph_ids)
-        return glyph_ids
+        return (g.glyph_id for g in self._glyphs)
 
     def set_text(self, text):
-        self.freeze()
+        self.ensure_multi_iterations()
         if len(self._glyphs) == 0:
             return
         last = self._glyphs[0]
@@ -87,8 +164,13 @@ class ShapeResult(object):
             last = glyph
         last.text = text[last.cluster_index:]
 
+    def compute_ink_parts(self, font):
+        self.ensure_multi_iterations()
+        for g in self._glyphs:
+            g.compute_ink_part(font)
+
     def __str__(self):
-        self.freeze()  # Make sure it is still iterable.
+        self.ensure_multi_iterations()  # Make sure it is still iterable.
         return f'[{",".join(str(g) for g in self._glyphs)}]'
 
 
@@ -123,6 +205,7 @@ class ShaperBase(object):
         logger.debug('fullwidth_advance=%s for "%s"', advances, self.font)
         if len(advances) == 1:
             advance = next(iter(advances))
+            self.font.fullwidth_advance = advance
             return advance
         return None
 
@@ -132,9 +215,7 @@ class ShaperBase(object):
         if font.fullwidth_advance:
             return True
         shaper = Shaper(font, features=['vert'] if font.is_vertical else None)
-        advance = await shaper.compute_fullwidth_advance()
-        if advance:
-            font.fullwidth_advance = advance
+        if await shaper.compute_fullwidth_advance():
             return True
         logger.info('No fullwidth advance for "%s"', font)
         return False
@@ -292,7 +373,6 @@ async def main():
     parser.add_argument("text")
     parser.add_argument("-l", "--language")
     parser.add_argument("-s", "--script")
-    parser.add_argument("--vertical", dest="is_vertical", action="store_true")
     parser.add_argument("-v",
                         "--verbose",
                         help="increase output verbosity",
@@ -305,9 +385,12 @@ async def main():
     font = Font.load(args.font_path)
     if font.is_collection:
         font = font.fonts_in_collection[args.index]
-    if args.is_vertical:
-        font = font.vertical_font
-    features = args.feature.split(',') if args.feature else None
+    if args.feature:
+        features = args.feature.split(',')
+        if 'vert' in features:
+            font = font.vertical_font
+    else:
+        features = None
     shaper = Shaper(font,
                     language=args.language,
                     script=args.script,
@@ -316,7 +399,9 @@ async def main():
           f'upem={font.units_per_em}')
     result = await shaper.shape(args.text)
     result.set_text(args.text)
-    print('glyphs=', '\n        '.join(str(g) for g in result))
+    result.compute_ink_parts(font)
+    for g in result:
+        print(g)
 
 
 if __name__ == '__main__':

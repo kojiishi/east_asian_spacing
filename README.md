@@ -60,7 +60,7 @@ pip install east-asian-spacing
 ### Clone and Install
 
 If you may need to diagnose fonts or the code,
-installing using [poetry] is recommended:
+cloning and installing using [poetry] is recommended:
 ```sh
 git clone https://github.com/kojiishi/east_asian_spacing
 cd east_asian_spacing
@@ -84,7 +84,7 @@ You can run [unit tests] to verify your installation if needed.
 [pipenv]: https://github.com/pypa/pipenv
 [poetry]: https://github.com/python-poetry/poetry
 
-## Adding the feature to your fonts
+## Adding the features to your fonts
 
 ### Usage
 
@@ -95,26 +95,32 @@ east-asian-spacing -o build input-font-file
 ```
 The `--help` option shows the full list of options.
 
-### Languages
+### Supported Fonts
 
-Because the glyph for a code point may vary by languages,
-different tables are desired for different languages.
+Following fonts are tested on each release:
+* [Noto CJK]
+* Meiryo
 
-In many cases, when the font supports multiple East Asian languages,
-this tool can detect the languages automatically.
-But it shows an error when it failed to detect.
-You need to specify the [OpenType language system tag] of the font in that case.
+Several more fonts were tested during the development.
+The [algorithm] is generic and is applicable to any fonts.
+The [chws_tool] package extends this package and
+covers fonts at [fonts.google.com].
 
-The following example specifies that the font is a Japanese font.
-```sh
-east-asian-spacing --language=JAN input-font-file
-```
+The [test HTML] is a handy tool to check the fonts you build.
+If you encounter any problems with your fonts,
+please report to [issues].
 
-[OpenType language system tag]: https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
+Please also see the [Advanced Topics] below
+if you want to customize the default behaviors of this package.
+
+[chws_tool]: https://github.com/googlefonts/chws_tool
+[fonts.google.com]: https://fonts.google.com
+[issues]: https://github.com/kojiishi/east_asian_spacing/issues
+[Noto CJK]: https://www.google.com/get/noto/help/cjk/
 
 ### TrueType Collection (TTC)
 
-When the `input-font-file` is a TrueType Collection (TTC),
+When the input font file is a TrueType Collection (TTC),
 this tool adds the feature to all fonts in the TTC by default.
 
 If you want to add the feature to only some of fonts in the TTC,
@@ -125,7 +131,45 @@ but not to other fonts in the TTC.
 east-asian-spacing --index=0,1 input-font-file.ttc
 ```
 
-The language option applies to all fonts in the TTC by default.
+## Advanced Topics
+[Advanced Topics]: #advanced-topics
+
+### Algorithm
+[Algorithm]: #algorithm
+
+This package determines the glyph pairs to adjust spacings
+by a pre-defined set of Unicode code points.
+
+Then for each pair, it computes if the spacings are applicable
+by examining glyph outlines and computing ink bounding boxes of glyphs.
+For example, when glyphs are very thick,
+glyphs may not have enough internal spacings,
+and applying the spacings may cause glyphs to collide.
+This package automatically detects such cases and
+stops applying spacings to such pairs.
+
+This automatic behavior can be disabled
+by specifying the [languages] below,
+or by setting `Config.use_ink_bounds` to `False` in your Python program.
+
+### Languages
+[languages]: #languages
+
+Because the glyph for a code point may vary by languages,
+different tables are desired for different languages.
+This package determines such differences by examining glyph outlines
+as described in the [algorithm] section above.
+
+Instead of using glyph outlines,
+you can specify the [OpenType language system tag] of the font.
+The following example specifies that the font is a Japanese font,
+and disables the automatic determination by glyph outlines.
+```sh
+east-asian-spacing --language=JAN input-font-file
+```
+
+For TrueType Collections (TTC),
+the language option applies to all fonts in the TTC by default.
 When you want to specify different languages to each font in the TTC,
 it accepts a comma-separated list.
 The following example specifies
@@ -145,27 +189,7 @@ Other fonts in the TTC are not changed.
 east-asian-spacing --index=2,3 --language=JAN,ZHS input-font-file.ttc
 ```
 
-### Noto CJK
-
-For [Noto CJK] fonts,
-this tool has a built-in support
-to determine the font indices and the languages automatically.
-
-When the first argument is `noto`, it
-a) computes the appropriate language for each font, and
-b) skips `Mono` fonts,
-both determined by the font name.
-```sh
-east-asian-spacing noto NotoSansCJK.ttc
-```
-You can also run it for a directory to find all font files recursively.
-```sh
-east-asian-spacing noto ~/googlefonts/noto-cjk
-```
-
-[Noto CJK]: https://www.google.com/get/noto/help/cjk/
-
-## Advanced Topics
+[OpenType language system tag]: https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
 
 ### Character-Pairs
 
@@ -174,15 +198,11 @@ in cases such as when
 your fonts may not have expected spacings for some characters.
 Currently, this is possible only from Python programs.
 
-The [chws_tool] is a project that
-extends the [`Config` class] to provide default languages and
-customized character-pairs for fonts at [fonts.google.com].
-
-For a simpler example, please see the `test_config` function
+For a simple example, please see the `test_config` function
 in [`tests/config_test.py`].
 
-[chws_tool]: https://github.com/googlefonts/chws_tool
-[fonts.google.com]: https://fonts.google.com
+The [chws_tool] project is another example
+of how to customize this package.
 
 [`Config` class]: east_asian_spacing/config.py
 [`tests/config_test.py`]: tests/config_test.py
@@ -190,7 +210,7 @@ in [`tests/config_test.py`].
 ### HarfBuzz
 
 This package uses the [HarfBuzz] shaping engine
-using a Cython bindings [uharfbuzz].
+by using a Cython bindings [uharfbuzz].
 
 If you want to use a specific build of the [HarfBuzz],
 this tool can invoke the external [hb-shape] command line tool instead
@@ -218,14 +238,17 @@ Instructions for other platforms may be available at
 ## Testing
 
 ### Test HTML
+[test HTML]: #test-html
 
 A [test HTML] is available
 to check the behavior of fonts on browsers.
 
 It can test fonts you built locally.
-Download it to your local drive and
-add your fonts to the "`fonts`" list
-at the beginning of the `<script>` block.
+1. Save the page to your local drive.
+   The HTML is a single file, saving the HTML file should work.
+2. Add your font files to the "`fonts`" list
+   at the beginning of the `<script>` block.
+3. Open it in your browser and choose your font.
 
 [test HTML]: https://kojiishi.github.io/chws/test.html
 
