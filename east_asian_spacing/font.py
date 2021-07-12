@@ -22,11 +22,48 @@ class Font(object):
         self.horizontal_font = None
         self.is_vertical = False
         self.parent_collection = None
-        self.path = None
+        self._path = None
         self.ttcollection = None
-        self.ttfont = None
+        self._ttfont = None
         self._units_per_em = None
         self._vertical_font = None
+
+    def _clone_base(self):
+        font = Font()
+        font._path = self._path
+        return font
+
+    def _create_font_in_collection(self, font_index, ttfont):
+        assert self.is_collection
+        font = self._clone_base()
+        font.is_vertical = self.is_vertical
+        font.font_index = font_index
+        font.parent_collection = self
+        font._ttfont = ttfont
+        return font
+
+    def _create_vertical_font(self):
+        assert not self.is_vertical
+        if not self.is_collection and not self.has_gsub_feature("vert"):
+            return None
+        font = self._clone_base()
+        # Copy `ttfont` and its derived properties.
+        font.font_index = self.font_index
+        font._hbfont = self._hbfont
+        font.ttcollection = self.ttcollection
+        font._ttfont = self.ttfont
+        font._units_per_em = self._units_per_em
+        # Setup a vertical font.
+        font.is_vertical = True
+        font.horizontal_font = self
+        self._vertical_font = font
+        if self.is_collection:
+            font._fonts_in_collection = tuple(
+                font.vertical_font for font in self.fonts_in_collection)
+            assert self.parent_collection is None
+        elif self.parent_collection:
+            font.parent_collection = self.parent_collection.vertical_font
+        return font
 
     @staticmethod
     def load(path):
@@ -34,7 +71,7 @@ class Font(object):
         if isinstance(path, str):
             path = pathlib.Path(path)
         self = Font()
-        self.path = path
+        self._path = path
         if Font.is_ttc_font_extension(self.path.suffix):
             self.ttcollection = TTCollection(path, allowVID=True)
             self._fonts_in_collection = tuple(
@@ -43,32 +80,8 @@ class Font(object):
             logger.info("%d fonts found in the collection",
                         len(self.ttcollection))
             return self
-        self.ttfont = TTFont(path, allowVID=True)
+        self._ttfont = TTFont(path, allowVID=True)
         return self
-
-    def _clone(self):
-        clone = Font()
-        clone.font_index = self.font_index
-        clone._hbfont = self._hbfont
-        clone.is_vertical = self.is_vertical
-        clone.parent_collection = self.parent_collection
-        clone.path = self.path
-        clone.ttcollection = self.ttcollection
-        clone.ttfont = self.ttfont
-        clone._units_per_em = self._units_per_em
-        clone._vertical_font = None
-        return clone
-
-    def _create_font_in_collection(self, font_index, ttfont):
-        font = self._clone()
-        font.font_index = font_index
-        self._hbfont = None
-        font.parent_collection = self
-        font.ttfont = ttfont
-        font._fonts_in_collection = None
-        font.ttcollection = None
-        font._vertical_font = None
-        return font
 
     @property
     def is_root(self):
@@ -93,13 +106,19 @@ class Font(object):
             yield from itertools.chain(*(font.self_and_derived_fonts(
                 create=create) for font in self._fonts_in_collection))
 
+    @property
+    def path(self):
+        assert self._path
+        return self._path
+
     def _set_path(self, path):
         assert self.is_root
+        self._byte_array = None
         old_path = self.path
         for font in self.self_and_derived_fonts(create=False):
             assert font.path == old_path
-            font.path = path
-            font._byte_array = None
+            font._path = path
+            assert font._byte_array is None
             font._hbfont = None
 
     @property
@@ -112,19 +131,7 @@ class Font(object):
         if self._vertical_font:
             assert self._vertical_font.is_vertical
             return self._vertical_font
-        if not self.is_collection and not self.has_gsub_feature("vert"):
-            return None
-        vertical_font = self._clone()
-        vertical_font.is_vertical = True
-        vertical_font.horizontal_font = self
-        self._vertical_font = vertical_font
-        if self.is_collection:
-            vertical_font._fonts_in_collection = tuple(
-                font.vertical_font for font in self.fonts_in_collection)
-            assert self.parent_collection is None
-        elif self.parent_collection:
-            vertical_font.parent_collection = self.parent_collection.vertical_font
-        return vertical_font
+        return self._create_vertical_font()
 
     def save(self, out_path=None):
         if not out_path:
@@ -157,6 +164,10 @@ class Font(object):
     @property
     def is_collection(self):
         return self.ttcollection is not None
+
+    @property
+    def ttfont(self):
+        return self._ttfont
 
     @property
     def ttfonts(self):
