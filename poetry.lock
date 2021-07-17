@@ -92,7 +92,7 @@ python-versions = "*"
 
 [[package]]
 name = "fonttools"
-version = "4.25.0"
+version = "4.25.1"
 description = "Tools to manipulate font files"
 category = "main"
 optional = false
@@ -513,8 +513,8 @@ filelock = [
     {file = "filelock-3.0.12.tar.gz", hash = "sha256:18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59"},
 ]
 fonttools = [
-    {file = "fonttools-4.25.0-py3-none-any.whl", hash = "sha256:65357a7af9e80b26538ba4aca90d56526812d9e91a1b840e97cd2c8639034ec7"},
-    {file = "fonttools-4.25.0.zip", hash = "sha256:4c9e42265d48264da8a001ce94933fb90b69e035738ba7839be7357534aeab0b"},
+    {file = "fonttools-4.25.1-py3-none-any.whl", hash = "sha256:c2da99435b11886cfb11323c877674070487ace783f15dc2545ced6eb3b64764"},
+    {file = "fonttools-4.25.1.zip", hash = "sha256:86ac279648828beec635731c338b40cadca9681a7653653a84fc85fd6be60083"},
 ]
 importlab = [
     {file = "importlab-0.6.1.tar.gz", hash = "sha256:056503329df1ba8f6291a4b548042aa18620ad91d39388ba58044f0fd44ff83e"},
