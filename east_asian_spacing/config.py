@@ -72,10 +72,21 @@ class Config(object):
     def for_font_name(self, name, is_vertical):
         return self
 
+    def for_smoke_testing(self):
+        """Returns a copy with the number of code points reduced for testing."""
+        clone = self.clone()
+        clone.cjk_opening = self._down_sample_to(clone.cjk_opening, 3)
+        clone.cjk_closing = self._down_sample_to(clone.cjk_closing, 3)
+        return clone
+
     def for_language(self, language):
+        "Old name for `with_language`."
+        return self.with_language(language)
+
+    def with_language(self, language):
         """Returns a copy with the specified language.
 
-        This also sets `use_ink_bounds` to `False`."""
+        This also sets `use_ink_bounds` to `False` if `language` is not None."""
         if language == self.language:
             return self
         clone = self.clone()
@@ -83,11 +94,13 @@ class Config(object):
         clone.use_ink_bounds = not language
         return clone
 
-    def for_smoke_testing(self):
-        """Returns a copy with the number of code points reduced for testing."""
+    def with_skip_monospace_ascii(self, skip_monospace_ascii):
+        """Returns a copy with `skip_monospace_ascii`
+        set to the specified value."""
+        if self.skip_monospace_ascii == skip_monospace_ascii:
+            return self
         clone = self.clone()
-        clone.cjk_opening = self._down_sample_to(clone.cjk_opening, 3)
-        clone.cjk_closing = self._down_sample_to(clone.cjk_closing, 3)
+        clone.skip_monospace_ascii = skip_monospace_ascii
         return clone
 
     def remove(self, *codes):
