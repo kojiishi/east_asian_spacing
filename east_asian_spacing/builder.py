@@ -205,35 +205,38 @@ class Builder(object):
         parser.add_argument("-i",
                             "--index",
                             help="font index, or a list of font indices"
-                            " for a font collection (TTC).")
+                            " for a font collection (TTC)")
         parser.add_argument("-g",
                             "--glyph-out",
                             type=pathlib.Path,
-                            help="output glyph list.")
+                            help="output glyph list")
         parser.add_argument("-l",
                             "--language",
                             help="language if the font is language-specific,"
                             " or a comma separated list of languages"
-                            " for a font collection (TTC).")
+                            " for a font collection (TTC)")
+        parser.add_argument("--monospace",
+                            action="store_true",
+                            help="add the features to monospace fonts")
         parser.add_argument("-o",
                             "--output",
                             default="build",
                             type=pathlib.Path,
-                            help="output directory.")
+                            help="output directory")
         parser.add_argument("-p",
                             "--print-path",
                             action="store_true",
-                            help="print the file paths to stdout.")
+                            help="print the file paths to stdout")
         parser.add_argument("-s",
                             "--suffix",
-                            help="suffix to add to the output file name.")
+                            help="suffix to add to the output file name")
         parser.add_argument("--test",
                             type=int,
                             default=1,
-                            help="0=no tests, 1=smoke tests, 2=full tests.")
+                            help="0=no tests, 1=smoke tests, 2=full tests")
         parser.add_argument("-v",
                             "--verbose",
-                            help="increase output verbosity.",
+                            help="increase output verbosity",
                             action="count",
                             default=0)
         args = parser.parse_args()
@@ -253,6 +256,8 @@ class Builder(object):
                 if args.language:
                     assert ',' not in args.language
                     config = config.for_language(args.language)
+            config = config.with_skip_monospace_ascii(not args.monospace)
+
             builder = Builder(font, config)
             await builder.build()
             if not builder.has_spacings:
