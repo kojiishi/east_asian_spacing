@@ -97,21 +97,20 @@ The `--help` option shows the full list of options.
 
 ### Supported Fonts
 
-The [algorithm] is generic and is applicable to any fonts.
+The [algorithm] is applicable to any fonts.
 Following fonts are tested on each release:
 * [Noto CJK]
 * Meiryo
 
-but several more fonts were tested during the development.
+Several other fonts were also tested during the development.
 
 When adding the features to your fonts,
-the [test HTML] is a handy tool to check the fonts you build.
+the [test HTML] is a handy tool to check the results.
 If you encounter any problems with your fonts,
 please report to [issues].
 
 For fonts at [fonts.google.com],
-the [chws_tool] package extends this package and
-covers them.
+the [chws_tool] package extends this package for them.
 
 Please also see the [Advanced Topics] below
 if you want to customize the default behaviors for your fonts.
