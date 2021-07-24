@@ -201,12 +201,13 @@ class Builder(object):
             yield path
 
     @classmethod
-    def expand_dir(cls, path):
+    def expand_dir(cls, path: pathlib.Path):
         assert path.is_dir()
-        child_paths = path.rglob('*')
-        child_paths = filter(lambda path: Font.is_font_extension(path.suffix),
-                             child_paths)
-        return child_paths
+        for child in path.iterdir():
+            if child.is_dir():
+                yield from cls.expand_dir(child)
+            elif Font.is_font_extension(child.suffix):
+                yield child
 
     @staticmethod
     async def main():
