@@ -22,8 +22,7 @@ class Config(object):
         self.cjk_colon_semicolon = {0xFF1A, 0xFF1B}
         self.cjk_exclam_question = {0xFF01, 0xFF1F}
 
-        # Skip adding the features to fonts with monospace ASCII
-        # because they are generally for code.
+        # Skip adding the features to fonts with monospace ASCII.
         self.skip_monospace_ascii = True
         # Determines the applicability by computing ink bounds.
         self.use_ink_bounds = True
@@ -80,7 +79,7 @@ class Config(object):
         return clone
 
     def for_language(self, language):
-        "Old name for `with_language`."
+        "Alias of `with_language`."
         return self.with_language(language)
 
     def with_language(self, language):

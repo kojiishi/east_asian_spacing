@@ -76,10 +76,19 @@ class Builder(object):
             return None
         return config
 
+    @staticmethod
+    def _config_for_log(config: Config):
+        if config.use_ink_bounds:
+            return 'use_ink'
+        if config.language:
+            return f'lang={config.language}'
+        return 'lang=auto'
+
     async def build(self):
         font = self.font
         config = self.config
-        logger.info('Building Font "%s" lang=%s', font, config.language)
+        logger.info('Building Font "%s" %s', font,
+                    Builder._config_for_log(config))
         if font.is_collection:
             return await self.build_collection()
 
@@ -110,8 +119,9 @@ class Builder(object):
             # If the font does not have `GPOS`, `reader_offset` is `None`.
             # Create a shared `GPOS` for all fonts in the case. e.g., BIZ-UD.
             spacing_entry = spacing_by_offset.get(reader_offset)
-            logger.info('%d "%s" lang=%s GPOS=%d%s', font.font_index, font,
-                        config.language, reader_offset if reader_offset else 0,
+            logger.info('%d "%s" %s GPOS=%d%s', font.font_index, font,
+                        Builder._config_for_log(config),
+                        reader_offset if reader_offset else 0,
                         ' (shared)' if spacing_entry else '')
             if spacing_entry:
                 spacing, fonts = spacing_entry
