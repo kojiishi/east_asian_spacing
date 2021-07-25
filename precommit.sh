@@ -3,5 +3,5 @@ set -e
 
 yapf -ir -vv east_asian_spacing tests
 # pytest -v
-tox
+tox -p
 pytype east_asian_spacing
