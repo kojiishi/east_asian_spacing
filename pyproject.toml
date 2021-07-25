@@ -14,7 +14,7 @@ license = "Apache-2.0"
 [tool.poetry.dependencies]
 python = ">=3.8,<3.10"
 fonttools = {version = ">=4.13.0", extras = ["woff"]}
-uharfbuzz = "^0.16.1"
+uharfbuzz = ">=0.17"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
