@@ -99,7 +99,7 @@ python-versions = "*"
 
 [[package]]
 name = "fonttools"
-version = "4.25.1"
+version = "4.25.2"
 description = "Tools to manipulate font files"
 category = "main"
 optional = false
@@ -465,7 +465,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.10"
-content-hash = "00cbb6b4e232d4bc953e1e8226459cf52f8995f19105f9d463f26810f9724af3"
+content-hash = "a0d634c1de754cf4d55d110f9ee7bc08e41c1fc5afe8c71a9c9b5df130178356"
 
 [metadata.files]
 atomicwrites = [
@@ -610,8 +610,8 @@ filelock = [
     {file = "filelock-3.0.12.tar.gz", hash = "sha256:18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59"},
 ]
 fonttools = [
-    {file = "fonttools-4.25.1-py3-none-any.whl", hash = "sha256:c2da99435b11886cfb11323c877674070487ace783f15dc2545ced6eb3b64764"},
-    {file = "fonttools-4.25.1.zip", hash = "sha256:86ac279648828beec635731c338b40cadca9681a7653653a84fc85fd6be60083"},
+    {file = "fonttools-4.25.2-py3-none-any.whl", hash = "sha256:e5221298b235f1747fbbf9a7c71d9b665e2b017508f7c14d3496a6d049a7740d"},
+    {file = "fonttools-4.25.2.zip", hash = "sha256:507f8e027967fe4ebfa913856b3acc6b77201e67d6a6978d3666863cbba884c3"},
 ]
 importlab = [
     {file = "importlab-0.6.1.tar.gz", hash = "sha256:056503329df1ba8f6291a4b548042aa18620ad91d39388ba58044f0fd44ff83e"},
