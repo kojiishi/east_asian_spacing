@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
+import itertools
 import logging
 import pathlib
 import sys
@@ -98,12 +99,9 @@ class Builder(object):
             return
         spacing = EastAsianSpacing()
         await spacing.add_glyphs(font, config)
-        if not spacing.can_add_to_font:
-            logger.info('Skipping due to no pairs: "%s"', font)
-            return
-        logger.info('Adding features to: "%s" %s', font, spacing)
-        spacing.add_to_font(font)
-        self._spacings.append(spacing)
+        if spacing.add_to_font(font):
+            assert len(spacing.changed_fonts) > 0
+            self._spacings.append(spacing)
 
     async def build_collection(self):
         assert self.font.is_collection
@@ -134,20 +132,15 @@ class Builder(object):
             spacing_by_offset[reader_offset] = (spacing, [font])
 
         # Add to each font using the united `EastAsianSpacing`s.
-        built_fonts = []
         for spacing, fonts in spacing_by_offset.values():
-            if not spacing.can_add_to_font:
-                logger.info('Skipping due to no pairs: %s',
-                            list(font.font_index for font in fonts))
-                continue
             logger.info('Adding features to: %s %s',
                         list(font.font_index for font in fonts), spacing)
+            result = False
             for font in fonts:
-                spacing.add_to_font(font)
-            self._spacings.append(spacing)
-            built_fonts.extend(fonts)
-
-        self._fonts_in_collection = built_fonts
+                result |= spacing.add_to_font(font)
+            if result:
+                assert len(spacing.changed_fonts) > 0
+                self._spacings.append(spacing)
 
     def _united_spacings(self):
         assert self.has_spacings
@@ -185,7 +178,8 @@ class Builder(object):
             self.font,
             glyphs=spacing.horizontal.glyph_ids,
             vertical_glyphs=spacing.vertical.glyph_ids)
-        await tester.test(config, fonts=self._fonts_in_collection)
+        assert len(spacing.changed_fonts) > 0
+        await tester.test(config, fonts=spacing.changed_fonts)
 
     @classmethod
     def expand_paths(cls, paths):

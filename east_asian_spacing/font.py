@@ -342,8 +342,18 @@ class Font(object):
     def has_gsub_feature(self, feature_tag):
         return Font._has_tttable_feature(self.tttable('GSUB'), feature_tag)
 
-    def add_gpos_table(self):
-        logger.info("Adding GPOS table")
+    def gpos_ottable(self, create=False) -> otTables.GPOS:
+        tttable = self.tttable('GPOS')
+        if not tttable:
+            if not create:
+                return None
+            tttable = self._add_gpos_table()
+        ottable = tttable.table
+        assert ottable
+        return ottable
+
+    def _add_gpos_table(self):
+        logger.info('Adding GPOS table to "%s"', self)
         ttfont = self.ttfont
         assert ttfont.get('GPOS') is None
         table = otTables.GPOS()

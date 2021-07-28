@@ -308,22 +308,27 @@ class GlyphSetTrio(object):
         return cache.add_to_trio(self, glyphs)
 
     @property
-    def can_add_to_table(self):
+    def _can_add_to_table(self):
         return self.left and self.right
 
-    def add_to_table(self, font, table, feature_tag):
-        logger.debug('add_to_table "%s" %s %s', font, feature_tag,
-                     self._to_str(glyph_ids=True))
-        assert self.can_add_to_table, self
+    def add_to_font(self, font: Font) -> bool:
         self.assert_font(font)
         self.assert_glyphs_are_disjoint()
+        if not self._can_add_to_table:
+            logger.info('Skipped because no pairs: "%s"', font)
+            return False
+
+        table = font.gpos_ottable(create=True)
+        feature_tag = 'vchw' if font.is_vertical else 'chws'
+        logger.debug('Adding "%s" to: "%s" %s', feature_tag, font,
+                     self._to_str(glyph_ids=True))
         assert not Font._has_ottable_feature(table, feature_tag)
         lookups = table.LookupList.Lookup
         lookup_indices = self.build_lookup(font, lookups)
 
         features = table.FeatureList.FeatureRecord
         feature_index = len(features)
-        logger.info("Adding Feature '%s' at index %d for lookup %s",
+        logger.info('Adding Feature "%s" at index %d for lookup %s',
                     feature_tag, feature_index, lookup_indices)
         feature_record = otTables.FeatureRecord()
         feature_record.FeatureTag = feature_tag
@@ -346,6 +351,8 @@ class GlyphSetTrio(object):
                     feature_index, script_record.ScriptTag,
                     lang_sys.LangSysTag)
                 lang_sys.LangSys.FeatureIndex.append(feature_index)
+
+        return True
 
     def build_lookup(self, font, lookups):
         self.assert_font(font)
@@ -411,6 +418,7 @@ class EastAsianSpacing(object):
     def __init__(self):
         self.horizontal = GlyphSetTrio()
         self.vertical = GlyphSetTrio()
+        self.changed_fonts = []
 
     def __str__(self):
         return f'{self.horizontal}, vertical={self.vertical}'
@@ -426,6 +434,7 @@ class EastAsianSpacing(object):
         self.horizontal.unite(other.horizontal)
         if self.vertical and other.vertical:
             self.vertical.unite(other.vertical)
+        self.changed_fonts.extend(other.changed_fonts)
 
     async def add_glyphs(self, font, config):
         assert not font.is_vertical
@@ -452,25 +461,14 @@ class EastAsianSpacing(object):
         assert len(advances) > 0
         return len(advances) == 1
 
-    @property
-    def can_add_to_font(self):
-        return (self.horizontal.can_add_to_table
-                or self.vertical.can_add_to_table)
-
-    def add_to_font(self, font):
-        assert self.can_add_to_font
-        assert not font.is_vertical
-        gpos = font.tttable('GPOS')
-        if not gpos:
-            gpos = font.add_gpos_table()
-        table = gpos.table
-        assert table
-
-        if self.horizontal.can_add_to_table:
-            self.horizontal.add_to_table(font, table, 'chws')
+    def add_to_font(self, font) -> bool:
+        result = self.horizontal.add_to_font(font)
         vertical_font = font.vertical_font
-        if vertical_font and self.vertical.can_add_to_table:
-            self.vertical.add_to_table(vertical_font, table, 'vchw')
+        if vertical_font:
+            result |= self.vertical.add_to_font(vertical_font)
+        if result:
+            self.changed_fonts.append(font)
+        return result
 
     @staticmethod
     async def main():
