@@ -226,9 +226,9 @@ class Builder(object):
                             help="language if the font is language-specific,"
                             " or a comma separated list of languages"
                             " for a font collection (TTC)")
-        parser.add_argument("--monospace",
+        parser.add_argument("--no-monospace",
                             action="store_true",
-                            help="add the features to monospace fonts")
+                            help="Skips adding the features to monospace fonts")
         parser.add_argument("-o",
                             "--output",
                             default="build",
@@ -267,7 +267,8 @@ class Builder(object):
                 if args.language:
                     assert ',' not in args.language
                     config = config.for_language(args.language)
-            config = config.with_skip_monospace_ascii(not args.monospace)
+            if args.no_monospace:
+                config = config.with_skip_monospace_ascii(True)
 
             builder = Builder(font, config)
             await builder.build()
