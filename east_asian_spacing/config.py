@@ -23,7 +23,7 @@ class Config(object):
         self.cjk_exclam_question = {0xFF01, 0xFF1F}
 
         # Skip adding the features to fonts with monospace ASCII.
-        self.skip_monospace_ascii = True
+        self.skip_monospace_ascii = False
         # Determines the applicability by computing ink bounds.
         self.use_ink_bounds = True
         # Specify which language behavior the font is.
@@ -69,6 +69,10 @@ class Config(object):
         return self
 
     def for_font_name(self, name, is_vertical):
+        # Noto has ASCII-mono vaiations. It is intended for code and grid-like
+        # layout that skip adding the features.
+        if name.startswith('Noto '):
+            return self.with_skip_monospace_ascii(True)
         return self
 
     def for_smoke_testing(self):
