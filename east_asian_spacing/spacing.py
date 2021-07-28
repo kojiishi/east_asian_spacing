@@ -5,6 +5,7 @@ import itertools
 import logging
 import math
 import sys
+import typing
 
 from fontTools.otlLib.builder import buildValue
 from fontTools.otlLib.builder import ChainContextPosBuilder
@@ -307,6 +308,30 @@ class GlyphSetTrio(object):
             return glyphs
         return cache.add_to_trio(self, glyphs)
 
+    class PosValues(object):
+        def __init__(self, font: Font, trio) -> None:
+            self.left = tuple(font.glyph_names(sorted(trio.left)))
+            self.right = tuple(font.glyph_names(sorted(trio.right)))
+            self.middle = tuple(font.glyph_names(sorted(trio.middle)))
+
+            em = font.fullwidth_advance
+            # When `em` is an odd number, ceil the advance. To do this, use
+            # floor to compute the adjustment of the advance and the offset.
+            half_em = math.floor(em / 2)
+            assert half_em > 0
+            if font.is_vertical:
+                self.left_value = buildValue({"YAdvance": -half_em})
+                self.right_value = buildValue({
+                    "YPlacement": half_em,
+                    "YAdvance": -half_em
+                })
+            else:
+                self.left_value = buildValue({"XAdvance": -half_em})
+                self.right_value = buildValue({
+                    "XPlacement": -half_em,
+                    "XAdvance": -half_em
+                })
+
     @property
     def _can_add_to_table(self):
         return self.left and self.right
@@ -319,13 +344,18 @@ class GlyphSetTrio(object):
             return False
 
         table = font.gpos_ottable(create=True)
+        lookups = table.LookupList.Lookup
+        pos = GlyphSetTrio.PosValues(font, self)
         feature_tag = 'vchw' if font.is_vertical else 'chws'
+        lookup_indices = self._build_chws_lookup(font, lookups, pos)
+        self._add_feature(font, table, feature_tag, lookup_indices)
+        return True
+
+    def _add_feature(self, font: Font, table: otTables.GPOS, feature_tag: str,
+                     lookup_indices: typing.List[int]) -> None:
         logger.debug('Adding "%s" to: "%s" %s', feature_tag, font,
                      self._to_str(glyph_ids=True))
         assert not Font._has_ottable_feature(table, feature_tag)
-        lookups = table.LookupList.Lookup
-        lookup_indices = self.build_lookup(font, lookups)
-
         features = table.FeatureList.FeatureRecord
         feature_index = len(features)
         logger.info('Adding Feature "%s" at index %d for lookup %s',
@@ -352,39 +382,19 @@ class GlyphSetTrio(object):
                     lang_sys.LangSysTag)
                 lang_sys.LangSys.FeatureIndex.append(feature_index)
 
-        return True
-
-    def build_lookup(self, font, lookups):
+    def _build_chws_lookup(self, font: Font,
+                           lookups: typing.List[otTables.Lookup],
+                           pos) -> typing.List[int]:
         self.assert_font(font)
-        left, right, middle = (tuple(font.glyph_names(sorted(glyphs)))
-                               for glyphs in (self.left, self.right,
-                                              self.middle))
         logger.info("Adding Lookups for %d left, %d right, %d middle glyphs",
-                    len(left), len(right), len(middle))
-        em = font.fullwidth_advance
-        # When `em` is an odd number, ceil the advance. To do this, use floor
-        # to compute the adjustment of the advance and the offset.
-        half_em = math.floor(em / 2)
-        assert half_em > 0
-        if font.is_vertical:
-            left_half_value = buildValue({"YAdvance": -half_em})
-            right_half_value = buildValue({
-                "YPlacement": half_em,
-                "YAdvance": -half_em
-            })
-        else:
-            left_half_value = buildValue({"XAdvance": -half_em})
-            right_half_value = buildValue({
-                "XPlacement": -half_em,
-                "XAdvance": -half_em
-            })
+                    len(pos.left), len(pos.right), len(pos.middle))
         lookup_indices = []
 
         # Build lookup for adjusting the left glyph, using type 2 pair positioning.
         ttfont = font.ttfont
         pair_pos_builder = PairPosBuilder(ttfont, None)
-        pair_pos_builder.addClassPair(None, left, left_half_value,
-                                      left + middle + right, None)
+        pair_pos_builder.addClassPair(None, pos.left, pos.left_value,
+                                      pos.left + pos.middle + pos.right, None)
         lookup = pair_pos_builder.build()
         assert lookup
         lookup_indices.append(len(lookups))
@@ -395,8 +405,8 @@ class GlyphSetTrio(object):
         # adjustment should be applied to the second glyph. Use type 8 instead.
         # https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
         lookup_builder = SinglePosBuilder(ttfont, None)
-        for glyph_name in right:
-            lookup_builder.mapping[glyph_name] = right_half_value
+        for glyph_name in pos.right:
+            lookup_builder.mapping[glyph_name] = pos.right_value
         lookup = lookup_builder.build()
         assert lookup
         lookup.lookup_index = len(lookups)
@@ -404,7 +414,8 @@ class GlyphSetTrio(object):
 
         chain_context_pos_builder = ChainContextPosBuilder(ttfont, None)
         chain_context_pos_builder.rules.append(
-            ChainContextualRule([middle + right], [right], [], [[lookup]]))
+            ChainContextualRule([pos.middle + pos.right], [pos.right], [],
+                                [[lookup]]))
         lookup = chain_context_pos_builder.build()
         assert lookup
         lookup_indices.append(len(lookups))
