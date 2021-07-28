@@ -331,7 +331,7 @@ six = ">=1.5"
 
 [[package]]
 name = "pytype"
-version = "2021.7.19"
+version = "2021.7.27"
 description = "Python type inferencer"
 category = "dev"
 optional = false
@@ -343,6 +343,7 @@ importlab = ">=0.6.1"
 ninja = ">=1.10.0.post2"
 pyyaml = ">=3.11"
 six = "*"
+tabulate = "*"
 toml = "*"
 typed_ast = ">=1.4.3"
 
@@ -380,6 +381,17 @@ description = "Python 2 and 3 compatibility utilities"
 category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+
+[[package]]
+name = "tabulate"
+version = "0.8.9"
+description = "Pretty-print tabular data"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.extras]
+widechars = ["wcwidth"]
 
 [[package]]
 name = "toml"
@@ -819,15 +831,15 @@ python-dateutil = [
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
 ]
 pytype = [
-    {file = "pytype-2021.7.19-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:dcb525177f762869e6c992a03b0eb9a5941b9e255630ee6f8c6ca3b73d9f8a2e"},
-    {file = "pytype-2021.7.19-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f40211fe4ea470a12041c00afa371064e81baae5a999ad2ab4808730021e6583"},
-    {file = "pytype-2021.7.19-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:61825939f9ad4ba4909e69ff37f9092d526b94a0419c21a770cd2a240c32de97"},
-    {file = "pytype-2021.7.19-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0cf6102c00d62d2503c67ff30bbf0152df1a32f22ad1b573a0e6caf6817420a0"},
-    {file = "pytype-2021.7.19-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:dcb12db21b2b3183d8552114333675a2fad3b7eeb76bb07662833a83fb1f70d0"},
-    {file = "pytype-2021.7.19-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:74e0f027c2cc0382ec04342cb5f5860453d0163358bbcc8489684334fd457ba4"},
-    {file = "pytype-2021.7.19-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:fed3b6fc4ed2948980f3ed6e73b9bf0e58b47c1672c465740b4894da1dfb4be1"},
-    {file = "pytype-2021.7.19-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f0b4605d07547ce8a0ec74d26951ee6d3c24a4c3010dddb73a0502a110a703a5"},
-    {file = "pytype-2021.7.19.tar.gz", hash = "sha256:8dba4e42defd145cd6a933f3673304a2e8aaa319ce9842fbf0eea670e4f3e89f"},
+    {file = "pytype-2021.7.27-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:8376a196b00984be7b65562d6a739c168b0599fbc7617c214771ffa7e953add5"},
+    {file = "pytype-2021.7.27-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f04f7ab370957fcb4ebb8edcad570c2f1acb17ff9e5380a959e7fd9074a415f8"},
+    {file = "pytype-2021.7.27-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:7fe23f901007653ae3dce9903a846f4c9aa6787ea14c284b193c06bca718c6a7"},
+    {file = "pytype-2021.7.27-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5ae65184435957f36f48d7ff78be4d73c0659ea9c2d05cd64fd275eb60610436"},
+    {file = "pytype-2021.7.27-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:6c75b09d795f09c94ff31467c43c1aaddb3648f9edb51b80cce58917363cbc87"},
+    {file = "pytype-2021.7.27-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c3f91df57efb61557c20e3887f17c2374c61e1e736c2bb99ab9ebe31f176a706"},
+    {file = "pytype-2021.7.27-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:96e82a5d5ec2c0856920b031d583747d4d90171d5b88b9bb742f35762aee0d70"},
+    {file = "pytype-2021.7.27-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:545c07ba0afb0616aa4ae9a853336eed815394e86600161ceecfb8e98f3e8b4c"},
+    {file = "pytype-2021.7.27.tar.gz", hash = "sha256:130c0da905a70d2ee441f1bd156b186cb962e52d9fa024a6f067b0822a62b24e"},
 ]
 pytz = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
@@ -888,6 +900,10 @@ scipy = [
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
+tabulate = [
+    {file = "tabulate-0.8.9-py3-none-any.whl", hash = "sha256:d7c013fe7abbc5e491394e10fa845f8f32fe54f8dc60c6622c6cf482d25d47e4"},
+    {file = "tabulate-0.8.9.tar.gz", hash = "sha256:eb1d13f25760052e8931f2ef80aaf6045a6cceb47514db8beab24cded16f13a7"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
