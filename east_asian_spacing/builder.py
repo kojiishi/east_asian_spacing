@@ -228,7 +228,7 @@ class Builder(object):
                             " for a font collection (TTC)")
         parser.add_argument("--no-monospace",
                             action="store_true",
-                            help="Skips adding the features to monospace fonts")
+                            help="Skip ASCII-monospace fonts")
         parser.add_argument("-o",
                             "--output",
                             default="build",

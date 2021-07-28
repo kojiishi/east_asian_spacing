@@ -6,17 +6,24 @@
 
 This directory contains tools for
 the OpenType Contextual Half-width Spacing feature
-("[`chws`]" and "[`vchw`]" feature tags)
 for Japanese/Chinese/Korean typography.
+
 This feature enables the typography described in
 [JLREQ 3.1.2 Positioning of Punctuation Marks (Commas, Periods and Brackets)
 <span lang="ja">句読点や，括弧類などの基本的な配置方法</span>](https://w3c.github.io/jlreq/#positioning_of_punctuation_marks)
+for Japanese,
 and [CLREQ 3.1.6.1 Punctuation Adjustment Space
-<span lang="zh">标点符号的调整空间 標點符號的調整空間</span>](https://w3c.github.io/clreq/#h-punctuation_adjustment_space).
+<span lang="zh">标点符号的调整空间 標點符號的調整空間</span>](https://w3c.github.io/clreq/#h-punctuation_adjustment_space)
+for Chinese.
 Following is a figure from JLREQ:
 
 <img src="https://w3c.github.io/jlreq/images/img2_13.png"
    title="East Asian contextual spacing examples">
+
+For fonts to implement this feature,
+OpenType defines the "[`chws`]" feature tag for horizontal flow,
+and the "[`vchw`]" feature tag for vertical flow.
+This package can add these features to any fonts.
 
 You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
 The sample page uses fonts built with this tool.
@@ -31,7 +38,7 @@ may help to understand the feature better.
 [install]: #install
 
 There are 3 ways to install this package,
-depending on your neeeds.
+depending on your needs.
 
 ### Command Line Tool
 
@@ -42,7 +49,8 @@ while still isolating it in a virtual environment:
 pipx install east-asian-spacing
 ```
 You can also install with [pip].
-If you install in the global environment,
+Please be aware that,
+if you install with [pip] in the global environment,
 its dependencies may cause conflicts with other packages.
 ```sh
 pip install east-asian-spacing
@@ -157,15 +165,33 @@ or by setting `Config.use_ink_bounds` to `False` in your Python program.
 ### Languages
 [languages]: #languages
 
-Because the glyph for a code point may vary by languages,
-different tables are desired for different languages.
-This package determines such differences by examining glyph outlines
-as described in the [algorithm] section above.
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=block&text=。');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=block&text=。');
+.glyph {
+    border: 2px solid lightblue;
+}
+.notojp { font-family: 'Noto Sans JP', sans-serif; }
+.nototc { font-family: 'Noto Sans TC', sans-serif; }
+</style>
+There are language-specific conventions
+for where punctuation characters are placed in the glyph spaces.
+For example,
+U+3002 IDEOGRAPHIC FULL STOP
+should be placed at the left-bottom corner of the glyph space in Japanese,
+like this <span lang="ja" class="glyph notojp">。</span>,
+while it should be placed at the center in Traditional Chinese,
+like this <span lang="zh-Hant" class="glyph nototc">。</span>.
 
-Instead of using glyph outlines,
-you can specify the [OpenType language system tag] of the font.
-The following example specifies that the font is a Japanese font,
-and disables the automatic determination by glyph outlines.
+By default,
+this package determines such differences from glyph outlines
+as described in the [Algorithm] section above.
+But you can specify the [OpenType language system tag]
+to let this package follow the language convention
+instead of using glyph outlines.
+The following example
+disables the automatic determination by glyph outlines,
+and specifies that the font is a Japanese font.
 ```sh
 east-asian-spacing --language=JAN input-font-file
 ```
