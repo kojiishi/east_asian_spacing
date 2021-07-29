@@ -2,16 +2,6 @@
 [![PyPI](https://img.shields.io/pypi/v/east-asian-spacing.svg)](https://pypi.org/project/east-asian-spacing/)
 [![Dependencies](https://badgen.net/github/dependabot/kojiishi/east_asian_spacing)](https://github.com/kojiishi/east_asian_spacing/network/updates)
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=block&text=。');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=block&text=。');
-.glyph {
-    border: 2px solid lightblue;
-}
-.notojp { font-family: 'Noto Sans JP', sans-serif; }
-.nototc { font-family: 'Noto Sans TC', sans-serif; }
-</style>
-
 # East Asian Contextual Spacing
 
 This directory contains tools for
@@ -180,9 +170,7 @@ for where punctuation characters are placed in the glyph spaces.
 For example,
 U+3002 IDEOGRAPHIC FULL STOP
 should be placed at the left-bottom corner of the glyph space in Japanese,
-like this <span lang="ja" class="glyph notojp">。</span>,
-while it should be placed at the center in Traditional Chinese,
-like this <span lang="zh-Hant" class="glyph nototc">。</span>.
+while it should be placed at the center in Traditional Chinese.
 
 By default,
 this package determines such differences from glyph outlines
