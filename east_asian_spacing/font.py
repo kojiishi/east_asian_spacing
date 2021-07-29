@@ -187,9 +187,19 @@ class Font(object):
             return self.ttcollection.fonts
         return (self.ttfont, )
 
+    def has_tttable(self, name: str) -> bool:
+        assert self.ttfont
+        return self.ttfont.has_key(name)
+
     def tttable(self, name):
         assert self.ttfont
         return self.ttfont.get(name)
+
+    @property
+    def is_aat_morx(self) -> bool:
+        # If the font has `morx`, HB/CoreText does not use `GPOS`.
+        # https://github.com/harfbuzz/harfbuzz/issues/3008
+        return self.has_tttable('morx')
 
     @property
     def reader(self):

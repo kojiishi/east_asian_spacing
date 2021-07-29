@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-import itertools
 import logging
 import pathlib
 import sys
 import time
+import typing
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
@@ -63,7 +63,7 @@ class Builder(object):
         return (output_path.parent /
                 f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
-    async def _config_for_font(self, font):
+    async def _config_for_font(self, font: Font) -> typing.Optional[Config]:
         config = self.config.for_font(font)
         if config is None:
             logger.info('Skipped by config: "%s"', font)
@@ -71,6 +71,10 @@ class Builder(object):
         if (config.skip_monospace_ascii
                 and await EastAsianSpacing.is_monospace_ascii(font)):
             logger.info('Skipped because monospace: "%s"', font)
+            return None
+        if font.is_aat_morx:
+            logger.info('Skipped because AAT morx is not supported: "%s"',
+                        font)
             return None
         if EastAsianSpacing.font_has_feature(font):
             logger.info('Skipped because the features exist: "%s"', font)
