@@ -2,6 +2,16 @@
 [![PyPI](https://img.shields.io/pypi/v/east-asian-spacing.svg)](https://pypi.org/project/east-asian-spacing/)
 [![Dependencies](https://badgen.net/github/dependabot/kojiishi/east_asian_spacing)](https://github.com/kojiishi/east_asian_spacing/network/updates)
 
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=block&text=。');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=block&text=。');
+.glyph {
+    border: 2px solid lightblue;
+}
+.notojp { font-family: 'Noto Sans JP', sans-serif; }
+.nototc { font-family: 'Noto Sans TC', sans-serif; }
+</style>
+
 # East Asian Contextual Spacing
 
 This directory contains tools for
@@ -165,15 +175,6 @@ or by setting `Config.use_ink_bounds` to `False` in your Python program.
 ### Languages
 [languages]: #languages
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=block&text=。');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=block&text=。');
-.glyph {
-    border: 2px solid lightblue;
-}
-.notojp { font-family: 'Noto Sans JP', sans-serif; }
-.nototc { font-family: 'Noto Sans TC', sans-serif; }
-</style>
 There are language-specific conventions
 for where punctuation characters are placed in the glyph spaces.
 For example,
