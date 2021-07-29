@@ -1,13 +1,13 @@
 from east_asian_spacing import Config
 from east_asian_spacing import Font
-from east_asian_spacing import GlyphSetTrio
+from east_asian_spacing import GlyphSets
 
 
 def test_cache(test_font_path):
     font = Font.load(test_font_path)
-    trio = GlyphSetTrio({1}, {2}, {3})
+    trio = GlyphSets({1}, {2}, {3})
     trio.add_to_cache(font)
-    trio2 = GlyphSetTrio()
+    trio2 = GlyphSets()
     glyphs = {1, 2, 3, 4}
     glyphs = trio2.add_from_cache(font, glyphs)
     assert trio2.left == {1}

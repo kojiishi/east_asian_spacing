@@ -22,7 +22,7 @@ from east_asian_spacing.shaper import show_dump_images
 logger = logging.getLogger('spacing')
 
 
-class GlyphSetTrio(object):
+class GlyphSets(object):
     def __init__(self, left=None, right=None, middle=None):
         self.left = left if left is not None else set()
         self.right = right if right is not None else set()
@@ -133,7 +133,7 @@ class GlyphSetTrio(object):
 
     @staticmethod
     async def _glyph_id_set(font, unicodes, language=None):
-        result = await GlyphSetTrio._shape(font, unicodes, language=language)
+        result = await GlyphSets._shape(font, unicodes, language=language)
         return set(result.glyph_ids)
 
     @staticmethod
@@ -141,21 +141,20 @@ class GlyphSetTrio(object):
         opening = config.cjk_opening | config.quotes_opening
         closing = config.cjk_closing | config.quotes_closing
         left, right, middle, space = await asyncio.gather(
-            GlyphSetTrio._shape(font, closing),
-            GlyphSetTrio._shape(font, opening),
-            GlyphSetTrio._shape(font, config.cjk_middle),
-            GlyphSetTrio._shape(font, config.fullwidth_space))
+            GlyphSets._shape(font, closing), GlyphSets._shape(font, opening),
+            GlyphSets._shape(font, config.cjk_middle),
+            GlyphSets._shape(font, config.fullwidth_space))
         if config.use_ink_bounds:
             left.filter_ink_part(font, InkPart.LEFT)
             right.filter_ink_part(font, InkPart.RIGHT)
             middle.filter_ink_part(font, InkPart.MIDDLE)
-        trio = GlyphSetTrio(set(left.glyph_ids), set(right.glyph_ids),
-                            set(middle.glyph_ids) | set(space.glyph_ids))
+        trio = GlyphSets(set(left.glyph_ids), set(right.glyph_ids),
+                         set(middle.glyph_ids) | set(space.glyph_ids))
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
-            horizontal = await GlyphSetTrio._glyph_id_set(
-                font.horizontal_font, opening | closing)
+            horizontal = await GlyphSets._glyph_id_set(font.horizontal_font,
+                                                       opening | closing)
             trio.left -= horizontal
             trio.right -= horizontal
         trio.assert_glyphs_are_disjoint()
@@ -170,8 +169,8 @@ class GlyphSetTrio(object):
         if not text:
             return None
         ja, zht = await asyncio.gather(
-            GlyphSetTrio._shape(font, text, language="JAN"),
-            GlyphSetTrio._shape(font, text, language="ZHT"))
+            GlyphSets._shape(font, text, language="JAN"),
+            GlyphSets._shape(font, text, language="ZHT"))
         if config.use_ink_bounds:
             ja.filter_ink_part(font, InkPart.LEFT)
             zht.filter_ink_part(font, InkPart.MIDDLE)
@@ -184,7 +183,7 @@ class GlyphSetTrio(object):
             else:
                 zht.clear()
         assert ja.isdisjoint(zht)
-        trio = GlyphSetTrio(ja, None, zht)
+        trio = GlyphSets(ja, None, zht)
         trio.assert_glyphs_are_disjoint()
         return trio
 
@@ -192,10 +191,10 @@ class GlyphSetTrio(object):
     async def get_colon_semicolon(font, config):
         # Colon/semicolon are at middle for Japanese, left in ZHS.
         text = config.cjk_colon_semicolon
-        trio = GlyphSetTrio()
+        trio = GlyphSets()
         ja, zhs = await asyncio.gather(
-            GlyphSetTrio._shape(font, text, language="JAN"),
-            GlyphSetTrio._shape(font, text, language="ZHS"))
+            GlyphSets._shape(font, text, language="JAN"),
+            GlyphSets._shape(font, text, language="ZHS"))
         if config.use_ink_bounds:
             trio.add_by_ink_part(itertools.chain(ja, zhs), font)
         else:
@@ -219,7 +218,7 @@ class GlyphSetTrio(object):
                 # glyphs indicate they are rotated. In ZHT, they may be upright
                 # even when there are vertical glyphs.
                 if config.language is None or config.language == "JAN":
-                    ja_horizontal = await GlyphSetTrio._glyph_id_set(
+                    ja_horizontal = await GlyphSets._glyph_id_set(
                         font.horizontal_font, text, language="JAN")
                     ja -= ja_horizontal
                     trio.middle |= ja
@@ -236,8 +235,8 @@ class GlyphSetTrio(object):
         # Fullwidth exclamation mark and question mark are on left only in ZHS.
         text = config.cjk_exclam_question
         ja, zhs = await asyncio.gather(
-            GlyphSetTrio._shape(font, text, language="JAN"),
-            GlyphSetTrio._shape(font, text, language="ZHS"))
+            GlyphSets._shape(font, text, language="JAN"),
+            GlyphSets._shape(font, text, language="ZHS"))
         if config.use_ink_bounds:
             ja = set()
             zhs.filter_ink_part(font, InkPart.LEFT)
@@ -251,7 +250,7 @@ class GlyphSetTrio(object):
             else:
                 zhs.clear()
         assert ja.isdisjoint(zhs)
-        result = GlyphSetTrio(zhs, None, None)
+        result = GlyphSets(zhs, None, None)
         result.assert_glyphs_are_disjoint()
         return result
 
@@ -276,7 +275,7 @@ class GlyphSetTrio(object):
                 return font.east_asian_spacing_
             if not create:
                 return None
-            cache = GlyphSetTrio.GlyphTypeCache()
+            cache = GlyphSets.GlyphTypeCache()
             font.east_asian_spacing_ = cache
             return cache
 
@@ -299,11 +298,11 @@ class GlyphSetTrio(object):
             return not_cached
 
     def add_to_cache(self, font):
-        cache = GlyphSetTrio.GlyphTypeCache.get(font, create=True)
+        cache = GlyphSets.GlyphTypeCache.get(font, create=True)
         cache.add_trio(self)
 
     def add_from_cache(self, font, glyphs):
-        cache = GlyphSetTrio.GlyphTypeCache.get(font, create=False)
+        cache = GlyphSets.GlyphTypeCache.get(font, create=False)
         if cache is None:
             return glyphs
         return cache.add_to_trio(self, glyphs)
@@ -345,7 +344,7 @@ class GlyphSetTrio(object):
 
         table = font.gpos_ottable(create=True)
         lookups = table.LookupList.Lookup
-        pos = GlyphSetTrio.PosValues(font, self)
+        pos = GlyphSets.PosValues(font, self)
         feature_tag = 'vchw' if font.is_vertical else 'chws'
         lookup_indices = self._build_chws_lookup(font, lookups, pos)
         self._add_feature(font, table, feature_tag, lookup_indices)
@@ -427,8 +426,8 @@ class GlyphSetTrio(object):
 
 class EastAsianSpacing(object):
     def __init__(self):
-        self.horizontal = GlyphSetTrio()
-        self.vertical = GlyphSetTrio()
+        self.horizontal = GlyphSets()
+        self.vertical = GlyphSets()
         self.changed_fonts = []
 
     def __str__(self):
