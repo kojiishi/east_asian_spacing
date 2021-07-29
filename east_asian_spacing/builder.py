@@ -99,6 +99,7 @@ class Builder(object):
             return
         spacing = EastAsianSpacing()
         await spacing.add_glyphs(font, config)
+        logger.info('Adding features to: "%s" %s', font, spacing)
         if spacing.add_to_font(font):
             assert len(spacing.changed_fonts) > 0
             self._spacings.append(spacing)
