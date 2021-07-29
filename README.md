@@ -27,16 +27,15 @@ may help to understand the feature better.
 
 [Adobe CJK Type blog article]: https://ccjktype.fonts.adobe.com/2018/04/contextual-spacing.html
 
-### Technical Details
+### OpenType Font Features
 
 Some applications implement this feature by their own.
 However,
-implementing this feature without appropriate support from fonts is not easy,
-or sometimes problematic.
+implementing this feature without appropriate support from fonts is not easy.
 Often applications must implement font-specific behaviors,
 or require users to apply differently by fonts.
 
-For fonts to support applications to implement this feature,
+For fonts to support implementing this feature,
 OpenType defines 4 feature tags:
 * The "[`chws`]" feature tag,
 and the "[`vchw`]" feature tag as its vertical flow counterpart.
@@ -44,14 +43,16 @@ and the "[`vchw`]" feature tag as its vertical flow counterpart.
 and the "[`vhal`]" feature tag as its vertical flow counterpart.
 
 When fonts support these features,
-applications or users can enable them as needed.
-The "[`chws`]" feature should be applied for horizontal flow by default,
+applications or users can apply them as needed.
+For example,
+the "[`chws`]" feature should be applied for horizontal flow by default
+unless the applications implement heurstic behaviors,
 while the "[`halt`]" should be applied depending on
 the users' choice of the document style,
 and the context such as only at the beginning of lines.
 Please see the OpenType spec for more details.
 
-This package can add these features to any fonts
+This package can add these features to any OpenType fonts
 by computing the feature tables from the data
 such as Unicode code points and glyph outlines
 
