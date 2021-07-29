@@ -5,13 +5,15 @@ import itertools
 import logging
 import math
 import sys
-import typing
+from typing import List
+from typing import Tuple
 
 from fontTools.otlLib.builder import buildValue
 from fontTools.otlLib.builder import ChainContextPosBuilder
 from fontTools.otlLib.builder import ChainContextualRule
 from fontTools.otlLib.builder import PairPosBuilder
 from fontTools.otlLib.builder import SinglePosBuilder
+from fontTools.ttLib.tables import otBase
 from fontTools.ttLib.tables import otTables
 
 from east_asian_spacing.config import Config
@@ -23,10 +25,11 @@ logger = logging.getLogger('spacing')
 
 
 class GlyphSets(object):
-    def __init__(self, left=None, right=None, middle=None):
+    def __init__(self, left=None, right=None, middle=None, space=None):
         self.left = left if left is not None else set()
         self.right = right if right is not None else set()
         self.middle = middle if middle is not None else set()
+        self.space = space if space is not None else set()
         self._root_font = None  # For checking purposes.
 
     def assert_font(self, font):
@@ -37,17 +40,20 @@ class GlyphSets(object):
 
     @property
     def _name_and_glyphs(self):
-        return (('left', self.left), ('right', self.right), ('middle',
-                                                             self.middle))
+        return (('left', self.left), ('right', self.right),
+                ('middle', self.middle), ('space', self.space))
 
     @property
     def glyph_ids(self):
-        return self.left | self.middle | self.right
+        return self.left | self.middle | self.right | self.space
 
     def assert_glyphs_are_disjoint(self):
         assert self.left.isdisjoint(self.middle)
         assert self.left.isdisjoint(self.right)
+        assert self.left.isdisjoint(self.space)
         assert self.middle.isdisjoint(self.right)
+        assert self.middle.isdisjoint(self.space)
+        assert self.right.isdisjoint(self.space)
 
     def _to_str(self, glyph_ids=False):
         name_and_glyphs = self._name_and_glyphs
@@ -57,7 +63,7 @@ class GlyphSets(object):
             strs = (f'{name}={sorted(glyphs)}'
                     for name, glyphs in name_and_glyphs)
         else:
-            strs = (f'{len(glyphs)} {name}'
+            strs = (f'{len(glyphs)}{name[0].upper()}'
                     for name, glyphs in name_and_glyphs)
         return ', '.join(strs)
 
@@ -77,6 +83,7 @@ class GlyphSets(object):
         self.left |= other.left
         self.middle |= other.middle
         self.right |= other.right
+        self.space |= other.space
 
     def add_by_ink_part(self, glyphs, font):
         for glyph in glyphs:
@@ -149,7 +156,7 @@ class GlyphSets(object):
             right.filter_ink_part(font, InkPart.RIGHT)
             middle.filter_ink_part(font, InkPart.MIDDLE)
         trio = GlyphSets(set(left.glyph_ids), set(right.glyph_ids),
-                         set(middle.glyph_ids) | set(space.glyph_ids))
+                         set(middle.glyph_ids), set(space.glyph_ids))
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
@@ -312,16 +319,22 @@ class GlyphSets(object):
             self.left = tuple(font.glyph_names(sorted(trio.left)))
             self.right = tuple(font.glyph_names(sorted(trio.right)))
             self.middle = tuple(font.glyph_names(sorted(trio.middle)))
+            self.space = tuple(font.glyph_names(sorted(trio.space)))
 
             em = font.fullwidth_advance
             # When `em` is an odd number, ceil the advance. To do this, use
             # floor to compute the adjustment of the advance and the offset.
             half_em = math.floor(em / 2)
             assert half_em > 0
+            quad_em = math.floor(half_em / 2)
             if font.is_vertical:
                 self.left_value = buildValue({"YAdvance": -half_em})
                 self.right_value = buildValue({
                     "YPlacement": half_em,
+                    "YAdvance": -half_em
+                })
+                self.middle_value = buildValue({
+                    "YPlacement": quad_em,
                     "YAdvance": -half_em
                 })
             else:
@@ -330,6 +343,21 @@ class GlyphSets(object):
                     "XPlacement": -half_em,
                     "XAdvance": -half_em
                 })
+                self.middle_value = buildValue({
+                    "XPlacement": -quad_em,
+                    "XAdvance": -half_em
+                })
+
+        @property
+        def glyphs_value_for_right(
+                self) -> Tuple[Tuple[Tuple[str], otBase.ValueRecord]]:
+            return ((self.right, self.right_value), )
+
+        @property
+        def glyphs_value_for_left_right_middle(self):
+            return ((self.left, self.left_value),
+                    (self.right, self.right_value), (self.middle,
+                                                     self.middle_value))
 
     @property
     def _can_add_to_table(self):
@@ -345,13 +373,21 @@ class GlyphSets(object):
         table = font.gpos_ottable(create=True)
         lookups = table.LookupList.Lookup
         pos = GlyphSets.PosValues(font, self)
+        logger.info('Adding Lookups for %dL, %dR, %dM, %dS', len(pos.left),
+                    len(pos.right), len(pos.middle), len(pos.space))
+
+        feature_tag = 'vhal' if font.is_vertical else 'halt'
+        if not Font._has_ottable_feature(table, feature_tag):
+            lookup_index = self._build_halt_lookup(font, lookups, pos)
+            self._add_feature(font, table, feature_tag, [lookup_index])
+
         feature_tag = 'vchw' if font.is_vertical else 'chws'
         lookup_indices = self._build_chws_lookup(font, lookups, pos)
         self._add_feature(font, table, feature_tag, lookup_indices)
         return True
 
     def _add_feature(self, font: Font, table: otTables.GPOS, feature_tag: str,
-                     lookup_indices: typing.List[int]) -> None:
+                     lookup_indices: List[int]) -> None:
         logger.debug('Adding "%s" to: "%s" %s', feature_tag, font,
                      self._to_str(glyph_ids=True))
         assert not Font._has_ottable_feature(table, feature_tag)
@@ -381,19 +417,40 @@ class GlyphSets(object):
                     lang_sys.LangSysTag)
                 lang_sys.LangSys.FeatureIndex.append(feature_index)
 
-    def _build_chws_lookup(self, font: Font,
-                           lookups: typing.List[otTables.Lookup],
-                           pos) -> typing.List[int]:
+    def _build_halt_lookup(self, font: Font, lookups: List[otTables.Lookup],
+                           pos) -> int:
+        lookup = self._build_single_pos_lookup(
+            font, lookups, pos.glyphs_value_for_left_right_middle)
+        return lookup.lookup_index
+
+    def _build_single_pos_lookup(
+        self, font: Font, lookups: List[otTables.Lookup],
+        glyphs_value_list: Tuple[Tuple[Tuple[str], otBase.ValueRecord]]
+    ) -> otTables.Lookup:
         self.assert_font(font)
-        logger.info("Adding Lookups for %d left, %d right, %d middle glyphs",
-                    len(pos.left), len(pos.right), len(pos.middle))
+        ttfont = font.ttfont
+        lookup_builder = SinglePosBuilder(ttfont, None)
+        for glyphs, value in glyphs_value_list:
+            for glyph_name in glyphs:
+                lookup_builder.mapping[glyph_name] = value
+        lookup = lookup_builder.build()
+        assert lookup
+        # `lookup_index` is required for `ChainContextPosBuilder`.
+        lookup.lookup_index = len(lookups)
+        lookups.append(lookup)
+        return lookup
+
+    def _build_chws_lookup(self, font: Font, lookups: List[otTables.Lookup],
+                           pos) -> List[int]:
+        self.assert_font(font)
         lookup_indices = []
 
         # Build lookup for adjusting the left glyph, using type 2 pair positioning.
         ttfont = font.ttfont
         pair_pos_builder = PairPosBuilder(ttfont, None)
-        pair_pos_builder.addClassPair(None, pos.left, pos.left_value,
-                                      pos.left + pos.middle + pos.right, None)
+        pair_pos_builder.addClassPair(
+            None, pos.left, pos.left_value,
+            pos.left + pos.right + pos.middle + pos.space, None)
         lookup = pair_pos_builder.build()
         assert lookup
         lookup_indices.append(len(lookups))
@@ -403,18 +460,13 @@ class GlyphSets(object):
         # and the advance of the right glyph, but with type 2, no positioning
         # adjustment should be applied to the second glyph. Use type 8 instead.
         # https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
-        lookup_builder = SinglePosBuilder(ttfont, None)
-        for glyph_name in pos.right:
-            lookup_builder.mapping[glyph_name] = pos.right_value
-        lookup = lookup_builder.build()
-        assert lookup
-        lookup.lookup_index = len(lookups)
-        lookups.append(lookup)
+        single_pos_lookup = self._build_single_pos_lookup(
+            font, lookups, pos.glyphs_value_for_right)
 
         chain_context_pos_builder = ChainContextPosBuilder(ttfont, None)
         chain_context_pos_builder.rules.append(
-            ChainContextualRule([pos.middle + pos.right], [pos.right], [],
-                                [[lookup]]))
+            ChainContextualRule([pos.right + pos.middle + pos.space],
+                                [pos.right], [], [[single_pos_lookup]]))
         lookup = chain_context_pos_builder.build()
         assert lookup
         lookup_indices.append(len(lookups))
@@ -471,7 +523,7 @@ class EastAsianSpacing(object):
         assert len(advances) > 0
         return len(advances) == 1
 
-    def add_to_font(self, font) -> bool:
+    def add_to_font(self, font: Font) -> bool:
         result = self.horizontal.add_to_font(font)
         vertical_font = font.vertical_font
         if vertical_font:

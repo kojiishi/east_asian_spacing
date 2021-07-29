@@ -3,6 +3,8 @@ import argparse
 import itertools
 import logging
 import pathlib
+from typing import Any
+from typing import Generator
 
 from fontTools.ttLib import newTable
 from fontTools.ttLib import TTFont
@@ -289,7 +291,7 @@ class Font(object):
             return ttfont.getGlyphName(glyph_id)
         return f'glyph{glyph_id:05}'
 
-    def glyph_names(self, glyph_ids):
+    def glyph_names(self, glyph_ids) -> Generator[str, Any, None]:
         ttfont = self.ttfont
         if ttfont:
             return (ttfont.getGlyphName(glyph_id) for glyph_id in glyph_ids)

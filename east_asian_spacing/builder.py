@@ -5,7 +5,7 @@ import logging
 import pathlib
 import sys
 import time
-import typing
+from typing import Optional
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
@@ -63,7 +63,7 @@ class Builder(object):
         return (output_path.parent /
                 f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
-    async def _config_for_font(self, font: Font) -> typing.Optional[Config]:
+    async def _config_for_font(self, font: Font) -> Optional[Config]:
         config = self.config.for_font(font)
         if config is None:
             logger.info('Skipped by config: "%s"', font)

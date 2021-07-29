@@ -20,19 +20,45 @@ Following is a figure from JLREQ:
 <img src="https://w3c.github.io/jlreq/images/img2_13.png"
    title="East Asian contextual spacing examples">
 
-For fonts to implement this feature,
-OpenType defines the "[`chws`]" feature tag for horizontal flow,
-and the "[`vchw`]" feature tag for vertical flow.
-This package can add these features to any fonts.
-
 You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
 The sample page uses fonts built with this tool.
 Also, early discussion at [Adobe CJK Type blog article]
 may help to understand the feature better.
 
-[`chws`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
-[`vchw`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_uz#tag-vchw
 [Adobe CJK Type blog article]: https://ccjktype.fonts.adobe.com/2018/04/contextual-spacing.html
+
+### Technical Details
+
+Some applications implement this feature by their own.
+However,
+implementing this feature without appropriate support from fonts is not easy,
+or sometimes problematic.
+Often applications must implement font-specific behaviors,
+or require users to apply differently by fonts.
+
+For fonts to support applications to implement this feature,
+OpenType defines 4 feature tags:
+* The "[`chws`]" feature tag,
+and the "[`vchw`]" feature tag as its vertical flow counterpart.
+* The "[`halt`]" feature tag,
+and the "[`vhal`]" feature tag as its vertical flow counterpart.
+
+When fonts support these features,
+applications or users can enable them as needed.
+The "[`chws`]" feature should be applied for horizontal flow by default,
+while the "[`halt`]" should be applied depending on
+the users' choice of the document style,
+and the context such as only at the beginning of lines.
+Please see the OpenType spec for more details.
+
+This package can add these features to any fonts
+by computing the feature tables from the data
+such as Unicode code points and glyph outlines
+
+[`chws`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
+[`halt`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_fj#tag-halt
+[`vchw`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_uz#tag-vchw
+[`vhal`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_uz#tag-vhal
 
 ## Install
 [install]: #install
