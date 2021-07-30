@@ -20,12 +20,14 @@ def init_logging(verbose, loggers=None, main=None):
         verbose -= len(loggers)
         assert verbose > 0
 
-    if verbose <= 1:
+    verbose -= 1
+    if verbose <= 0:
         logging.basicConfig(level=logging.INFO)
         return
 
     logging.basicConfig(level=logging.DEBUG)
-    if verbose <= 2:
+    verbose -= 1
+    if verbose <= 0:
         return
 
     global _log_shaper_logs

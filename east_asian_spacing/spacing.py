@@ -18,6 +18,7 @@ from fontTools.ttLib.tables import otTables
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
+import east_asian_spacing.log_utils as log_utils
 from east_asian_spacing.shaper import InkPart, Shaper
 from east_asian_spacing.shaper import show_dump_images
 
@@ -482,8 +483,12 @@ class EastAsianSpacing(object):
         self.vertical = GlyphSets()
         self.changed_fonts = []
 
+    def _to_str(self, glyph_ids=False):
+        return (f'{self.horizontal._to_str(glyph_ids)}'
+                f', vertical={self.vertical._to_str(glyph_ids)}')
+
     def __str__(self):
-        return f'{self.horizontal}, vertical={self.vertical}'
+        return self._to_str(False)
 
     def save_glyphs(self, output, separator='\n'):
         self.horizontal.save_glyphs(output, separator=separator)
@@ -536,30 +541,23 @@ class EastAsianSpacing(object):
     async def main():
         parser = argparse.ArgumentParser()
         parser.add_argument("path")
-        parser.add_argument("-i", "--index", type=int, default=-1)
+        parser.add_argument("-i", "--index", type=int, default=0)
         parser.add_argument("-v",
                             "--verbose",
                             help="increase output verbosity",
                             action="count",
                             default=0)
-        parser.add_argument("--vertical",
-                            dest="is_vertical",
-                            action="store_true")
         args = parser.parse_args()
-        if args.verbose:
-            if args.verbose >= 2:
-                show_dump_images()
-            logging.basicConfig(level=logging.DEBUG)
-        else:
-            logging.basicConfig(level=logging.INFO)
+        log_utils.init_logging(args.verbose)
         font = Font.load(args.path)
-        if args.index >= 0:
+        if font.is_collection:
             font = font.fonts_in_collection[args.index]
-        if args.is_vertical:
-            font = font.vertical_font
         spacing = EastAsianSpacing()
         config = Config.default
         await spacing.add_glyphs(font, config)
+
+        print('horizontal:', spacing.horizontal._to_str(True))
+        print('vertical:', spacing.vertical._to_str(True))
         spacing.save_glyphs(sys.stdout, separator=', ')
 
 

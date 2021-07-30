@@ -29,7 +29,8 @@ may help to understand the feature better.
 
 ### OpenType Font Features
 
-Some applications implement this feature by their own.
+Some applications implement this feature by their own,
+so that it works with any fonts.
 However,
 implementing this feature without appropriate support from fonts is not easy.
 Often applications must implement font-specific behaviors,
@@ -46,10 +47,11 @@ When fonts support these features,
 applications or users can apply them as needed.
 For example,
 the "[`chws`]" feature should be applied for horizontal flow by default
-unless the applications implement heurstic behaviors,
+unless the applications implement their own logic,
 while the "[`halt`]" should be applied depending on
-the users' choice of the document style,
-and the context such as only at the beginning of lines.
+the users' choice of the document style
+and the context in the document,
+such as only at the beginning of lines.
 Please see the OpenType spec for more details.
 
 This package can add these features to any OpenType fonts
