@@ -32,9 +32,10 @@ may help to understand the feature better.
 Some applications implement this feature by their own,
 so that it works with any fonts.
 However,
-implementing this feature without appropriate support from fonts is not easy.
+implementing this feature without appropriate supports from fonts
+may lead to fragile rendering.
 Often applications must implement font-specific behaviors,
-or require users to apply differently by fonts.
+or require users to apply differently depending on fonts.
 
 For fonts to support implementing this feature,
 OpenType defines 4 feature tags:
