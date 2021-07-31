@@ -32,6 +32,8 @@ class GlyphSets(object):
         self.right = right if right is not None else set()
         self.middle = middle if middle is not None else set()
         self.space = space if space is not None else set()
+
+        self._add_glyphs_count = 0
         # For checking purposes. Because this class keeps glyph IDs, using the
         # same instance for different fonts may lead to unexpected behaviors,
         # except they share the same glyph set.
@@ -117,12 +119,12 @@ class GlyphSets(object):
 
     async def add_glyphs(self, font, config):
         self.assert_font(font)
-        if not await Shaper.ensure_fullwidth_advance(font):
-            logger.info('Skipped because proportional CJK: "%s"', font)
-            return
         config = config.for_font(font)
         if not config:
             logger.info('Skipped by config: "%s"', font)
+            return
+        if not await Shaper.ensure_fullwidth_advance(font):
+            logger.warning('Skipped because proportional CJK: "%s"', font)
             return
         results = await asyncio.gather(self.get_opening_closing(font, config),
                                        self.get_period_comma(font, config),
@@ -132,6 +134,7 @@ class GlyphSets(object):
             self.unite(result)
         self.add_to_cache(font)
         self.assert_glyphs_are_disjoint()
+        self._add_glyphs_count += 1
 
     async def _shape(self, font, unicodes, language=None, temporary=False):
         text = ''.join(chr(c) for c in unicodes)
@@ -384,7 +387,8 @@ class GlyphSets(object):
         self.assert_font(font)
         self.assert_glyphs_are_disjoint()
         if not self._can_add_to_table:
-            logger.info('Skipped because no pairs: "%s"', font)
+            if self._add_glyphs_count:
+                logger.warning('Skipped because no pairs: "%s"', font)
             return False
 
         table = font.gpos_ottable(create=True)

@@ -73,11 +73,11 @@ class Builder(object):
             logger.info('Skipped because monospace: "%s"', font)
             return None
         if font.is_aat_morx:
-            logger.info('Skipped because AAT morx is not supported: "%s"',
-                        font)
+            logger.warning('Skipped because AAT morx is not supported: "%s"',
+                           font)
             return None
         if EastAsianSpacing.font_has_feature(font):
-            logger.info('Skipped because the features exist: "%s"', font)
+            logger.warning('Skipped because the features exist: "%s"', font)
             return None
         return config
 
@@ -272,7 +272,10 @@ class Builder(object):
             builder = Builder(font, config)
             await builder.build()
             if not builder.has_spacings:
-                logger.warning('Skipped saving due to no changes: "%s"', input)
+                if builder.config.for_font(builder.font) is None:
+                    logger.info('Skipped by config: "%s"', input)
+                else:
+                    logger.warning('Skipped due to no changes: "%s"', input)
                 continue
             builder.save(args.output,
                          stem_suffix=args.suffix,
