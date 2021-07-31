@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from abc import abstractmethod
 import argparse
 import asyncio
 import enum
@@ -175,12 +176,18 @@ class ShapeResult(object):
 
 
 class ShaperBase(object):
-    def __init__(self, font, language=None, script=None, features=None):
+    def __init__(self,
+                 font,
+                 language=None,
+                 script=None,
+                 features=None,
+                 log_name=None):
         assert isinstance(font.path, pathlib.Path)
         self.font = font
         self.language = language
         self.script = script
         self.features = features
+        self.log_name = log_name
 
     @property
     def features_dict(self):
@@ -220,10 +227,11 @@ class ShaperBase(object):
         logger.info('No fullwidth advance for "%s"', font)
         return False
 
-    def log_result(self, result, text):
+    def _log_result(self, result, text) -> None:
         if logger.getEffectiveLevel() <= logging.DEBUG:
             result.set_text(text)
-            logger.debug('ShapeResult=%s', result)
+            result.compute_ink_parts(self.font)
+            logger.debug('%s=%s', self.log_name or 'ShapeResult', result)
 
     _dump_images = False
     _shapers = None
@@ -272,7 +280,7 @@ class UHarfBuzzShaper(ShaperBase):
                                 pos.x_offset)
                       for info, pos in zip(infos, positions))
         result = ShapeResult(glyphs)
-        self.log_result(result, text)
+        self._log_result(result, text)
         return result
 
 
@@ -310,7 +318,7 @@ class HbShapeShaper(ShaperBase):
             glyphs = (GlyphData(g["g"], g["cl"], g["ax"], g["dx"])
                       for g in glyphs)
         result = ShapeResult(glyphs)
-        self.log_result(result, text)
+        self._log_result(result, text)
         return result
 
     async def dump(self, text):

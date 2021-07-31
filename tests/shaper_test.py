@@ -14,13 +14,17 @@ def test_glyph_data_eq():
     assert glyph1 == glyph2
 
     glyph3 = GlyphData(2, 1, 1000, 0)
+    assert glyph1 != glyph3
+    assert glyph2 != glyph3
     glyph4 = GlyphData(2, 1, 1000, 0)
+    assert glyph3 == glyph4
+
     result1 = ShapeResult((glyph1, glyph3))
     result2 = ShapeResult((glyph2, glyph4))
     assert result1 == result2
 
     glyph3.advance = 500
-    assert glyph1 != glyph3
+    assert glyph3 != glyph4
     assert result1 != result2
 
 

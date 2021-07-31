@@ -5,7 +5,6 @@ import itertools
 import logging
 import math
 import sys
-from typing import Iterator
 from typing import List
 from typing import Tuple
 
@@ -20,10 +19,15 @@ from fontTools.ttLib.tables import otTables
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 import east_asian_spacing.log_utils as log_utils
-from east_asian_spacing.shaper import GlyphData, InkPart, Shaper
-from east_asian_spacing.shaper import show_dump_images
+from east_asian_spacing.shaper import InkPart
+from east_asian_spacing.shaper import Shaper
 
 logger = logging.getLogger('spacing')
+_log_shaper = logging.getLogger('shaper')
+
+
+def _is_shaper_log_enabled():
+    return _log_shaper.getEffectiveLevel() <= logging.DEBUG
 
 
 class GlyphSets(object):
@@ -39,7 +43,7 @@ class GlyphSets(object):
         # except they share the same glyph set.
         self._root_font = None
         # For debug/font analysis purpose, keeps all `GlyphData`.
-        self._glyph_data_list = None
+        self._glyph_data_list = [] if _is_shaper_log_enabled() else None
 
     def assert_font(self, font):
         if self._root_font:
@@ -79,12 +83,47 @@ class GlyphSets(object):
     def __str__(self):
         return self._to_str()
 
+    @property
+    def _glyph_data_by_glyph_id(self):
+        if not self._glyph_data_list:
+            return None
+        result = dict()
+        for glyph_data in self._glyph_data_list:
+            glyph_data.cluster_index = 0
+            glyph_data_list = result.get(glyph_data.glyph_id)
+            if glyph_data_list:
+                if glyph_data not in glyph_data_list:
+                    glyph_data_list.append(glyph_data)
+            else:
+                result[glyph_data.glyph_id] = [glyph_data]
+        return result
+
     def save_glyphs(self, output, prefix='', separator='\n'):
+        glyph_data_by_glyph_id = self._glyph_data_by_glyph_id
+
+        def str_from_glyph_id(glyph_id):
+            if glyph_data_by_glyph_id:
+                glyph_data_list = glyph_data_by_glyph_id.get(glyph_id)
+                if glyph_data_list:
+                    glyph_data_list = ', '.join(
+                        str(glyph_data) for glyph_data in glyph_data_list)
+                    return f'{glyph_id} # {glyph_data_list}'
+            return str(glyph_id)
+
         for name, glyphs in self._name_and_glyphs:
             output.write(f'# {prefix}{name}\n')
-            glyphs = (str(glyph_id) for glyph_id in sorted(glyphs))
+            glyphs = sorted(glyphs)
+            glyphs = (str_from_glyph_id(glyph_id) for glyph_id in glyphs)
             output.write(separator.join(glyphs))
             output.write('\n')
+
+        if glyph_data_by_glyph_id:
+            output.write(f'# {prefix}filtered\n')
+            glyph_ids = self.glyph_ids
+            for glyph_id, glyph_data_list in glyph_data_by_glyph_id.items():
+                if glyph_id not in glyph_ids:
+                    for glyph_data in glyph_data_list:
+                        output.write(f'# {glyph_data}\n')
 
     def unite(self, other):
         if not other:
@@ -93,18 +132,8 @@ class GlyphSets(object):
         self.middle |= other.middle
         self.right |= other.right
         self.space |= other.space
-        if self._glyph_data_list and other._glyph_data_list:
+        if self._glyph_data_list is not None and other._glyph_data_list:
             self._glyph_data_list.extend(other._glyph_data_list)
-
-    def _keep_glyph_data(self) -> None:
-        if self._glyph_data_list is None:
-            self._glyph_data_list = []
-
-    def _removed_glyph_data(self) -> Iterator[GlyphData]:
-        assert self._glyph_data_list is not None
-        glyph_ids = self.glyph_ids
-        return (glyph for glyph in self._glyph_data_list
-                if glyph.glyph_id not in glyph_ids)
 
     def add_by_ink_part(self, glyphs, font):
         for glyph in glyphs:
@@ -114,7 +143,7 @@ class GlyphSets(object):
             elif ink_pos == InkPart.MIDDLE:
                 self.middle.add(glyph.glyph_id)
             else:
-                logger.debug('add_by_ink_part: ignored %s', glyph)
+                _log_shaper.debug('ink_part: ignored %s', glyph)
         self.assert_glyphs_are_disjoint()
 
     async def add_glyphs(self, font, config):
@@ -136,47 +165,51 @@ class GlyphSets(object):
         self.assert_glyphs_are_disjoint()
         self._add_glyphs_count += 1
 
-    async def _shape(self, font, unicodes, language=None, temporary=False):
-        text = ''.join(chr(c) for c in unicodes)
-        # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
-        # Enable "fwid" feature to get fullwidth glyphs.
-        features = ['fwid', 'vert'] if font.is_vertical else ['fwid']
-        shaper = Shaper(font,
-                        language=language,
-                        script='hani',
-                        features=features)
-        result = await shaper.shape(text)
-        result.filter_missing_glyphs()
+    class _ShapeHelper(object):
+        def __init__(self, glyph_sets, font, log_name=None):
+            self._font = font
+            self._glyph_data_list = glyph_sets._glyph_data_list
+            self._log_name = log_name
 
-        if not temporary and self._glyph_data_list is not None:
-            result.ensure_multi_iterations()
-            self._glyph_data_list.extend(result)
+        async def shape(self, unicodes, language=None, temporary=False):
+            font = self._font
+            text = ''.join(chr(c) for c in unicodes)
+            # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
+            # Enable "fwid" feature to get fullwidth glyphs.
+            features = ['fwid', 'vert'] if font.is_vertical else ['fwid']
+            shaper = Shaper(font,
+                            language=language,
+                            script='hani',
+                            features=features,
+                            log_name=self._log_name)
+            result = await shaper.shape(text)
+            result.filter_missing_glyphs()
 
-        # East Asian spacing applies only to fullwidth glyphs.
-        em = font.fullwidth_advance
-        result.filter(lambda g: g.advance == em)
+            if not temporary and self._glyph_data_list is not None:
+                result.ensure_multi_iterations()
+                self._glyph_data_list.extend(result)
 
-        if logger.getEffectiveLevel() <= logging.DEBUG:
-            result.ensure_multi_iterations()
-            if len(result):
-                result.compute_ink_parts(font)
-                logger.debug('ShapeResult=%s', result)
-        return result
+            # East Asian spacing applies only to fullwidth glyphs.
+            em = font.fullwidth_advance
+            result.filter(lambda g: g.advance == em)
+
+            return result
 
     async def _glyph_id_set(self, font, unicodes, language=None):
-        result = await self._shape(font,
-                                   unicodes,
-                                   language=language,
-                                   temporary=True)
+        shaper = GlyphSets._ShapeHelper(self, font)
+        result = await shaper.shape(unicodes,
+                                    language=language,
+                                    temporary=True)
         return set(result.glyph_ids)
 
     async def get_opening_closing(self, font, config):
         opening = config.cjk_opening | config.quotes_opening
         closing = config.cjk_closing | config.quotes_closing
+        shaper = GlyphSets._ShapeHelper(self, font, log_name='opening_closing')
         left, right, middle, space = await asyncio.gather(
-            self._shape(font, closing), self._shape(font, opening),
-            self._shape(font, config.cjk_middle),
-            self._shape(font, config.fullwidth_space))
+            shaper.shape(closing), shaper.shape(opening),
+            shaper.shape(config.cjk_middle),
+            shaper.shape(config.fullwidth_space))
         if config.use_ink_bounds:
             left.filter_ink_part(font, InkPart.LEFT)
             right.filter_ink_part(font, InkPart.RIGHT)
@@ -200,8 +233,9 @@ class GlyphSets(object):
         text = config.cjk_period_comma
         if not text:
             return None
-        ja, zht = await asyncio.gather(self._shape(font, text, language="JAN"),
-                                       self._shape(font, text, language="ZHT"))
+        shaper = GlyphSets._ShapeHelper(self, font, log_name='period_comma')
+        ja, zht = await asyncio.gather(shaper.shape(text, language="JAN"),
+                                       shaper.shape(text, language="ZHT"))
         if config.use_ink_bounds:
             ja.filter_ink_part(font, InkPart.LEFT)
             zht.filter_ink_part(font, InkPart.MIDDLE)
@@ -222,8 +256,9 @@ class GlyphSets(object):
         # Colon/semicolon are at middle for Japanese, left in ZHS.
         text = config.cjk_colon_semicolon
         trio = GlyphSets()
-        ja, zhs = await asyncio.gather(self._shape(font, text, language="JAN"),
-                                       self._shape(font, text, language="ZHS"))
+        shaper = GlyphSets._ShapeHelper(self, font, log_name='colon_semicolon')
+        ja, zhs = await asyncio.gather(shaper.shape(text, language="JAN"),
+                                       shaper.shape(text, language="ZHS"))
         if config.use_ink_bounds:
             trio.add_by_ink_part(itertools.chain(ja, zhs), font)
         else:
@@ -262,8 +297,9 @@ class GlyphSets(object):
             return None
         # Fullwidth exclamation mark and question mark are on left only in ZHS.
         text = config.cjk_exclam_question
-        ja, zhs = await asyncio.gather(self._shape(font, text, language="JAN"),
-                                       self._shape(font, text, language="ZHS"))
+        shaper = GlyphSets._ShapeHelper(self, font, log_name='exclam_question')
+        ja, zhs = await asyncio.gather(shaper.shape(text, language="JAN"),
+                                       shaper.shape(text, language="ZHS"))
         if config.use_ink_bounds:
             ja = set()
             zhs.filter_ink_part(font, InkPart.LEFT)
@@ -569,26 +605,15 @@ class EastAsianSpacing(object):
                             default=0)
         args = parser.parse_args()
         log_utils.init_logging(args.verbose)
+
         font = Font.load(args.path)
         if font.is_collection:
             font = font.fonts_in_collection[args.index]
         spacing = EastAsianSpacing()
-        spacing.horizontal._keep_glyph_data()
-        spacing.vertical._keep_glyph_data()
         config = Config.default
         await spacing.add_glyphs(font, config)
 
-        print('horizontal:', spacing.horizontal._to_str(True))
-        print('vertical:', spacing.vertical._to_str(True))
-        spacing.save_glyphs(sys.stdout, separator=', ')
-
-        print('Removed GlyphData:')
-        for name, glyph_sets in (('horizontal', spacing.horizontal),
-                                 ('vertical', spacing.vertical)):
-            print(name)
-            print('\n'.join(
-                str(glyph_data)
-                for glyph_data in glyph_sets._removed_glyph_data()))
+        spacing.save_glyphs(sys.stdout)
 
 
 if __name__ == '__main__':

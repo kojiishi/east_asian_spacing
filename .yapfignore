@@ -1,0 +1,4 @@
+.eggs
+.tox
+.venv
+.vscode

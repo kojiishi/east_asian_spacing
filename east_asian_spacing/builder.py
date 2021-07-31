@@ -216,10 +216,7 @@ class Builder(object):
                             "--index",
                             help="font index, or a list of font indices"
                             " for a font collection (TTC)")
-        parser.add_argument("-g",
-                            "--glyph-out",
-                            type=pathlib.Path,
-                            help="output glyph list")
+        parser.add_argument("-g", "--glyph-out", help="output glyph list")
         parser.add_argument("-l",
                             "--language",
                             help="language if the font is language-specific,"
@@ -252,7 +249,11 @@ class Builder(object):
         args = parser.parse_args()
         init_logging(args.verbose, main=logger)
         if args.glyph_out:
-            args.glyph_out.mkdir(exist_ok=True, parents=True)
+            if args.glyph_out == '-':
+                args.glyph_out = sys.stdout
+            else:
+                args.glyph_out = pathlib.Path(args.glyph_out)
+                args.glyph_out.mkdir(exist_ok=True, parents=True)
         if args.output:
             args.output.mkdir(exist_ok=True, parents=True)
         for input in Builder.expand_paths(args.inputs):

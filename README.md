@@ -55,7 +55,8 @@ and the context in the document,
 such as only at the beginning of lines.
 Please see the OpenType spec for more details.
 
-This package can add these features to any OpenType fonts
+This package adds these features to any OpenType fonts
+if any of these features are missing,
 by computing the feature tables from the data
 such as Unicode code points and glyph outlines
 
