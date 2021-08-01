@@ -288,7 +288,7 @@ Instructions for other platforms may be available at
 ### Test HTML
 [test HTML]: #test-html
 
-A [test HTML] is available
+A [test HTML page] is available
 to check the behavior of fonts on browsers.
 
 It can test fonts you built locally.
@@ -298,7 +298,7 @@ It can test fonts you built locally.
    at the beginning of the `<script>` block.
 3. Open it in your browser and choose your font.
 
-[test HTML]: https://kojiishi.github.io/chws/test.html
+[test HTML page]: https://kojiishi.github.io/chws/test.html
 
 ### Dump
 [dump]: #dump
