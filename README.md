@@ -53,7 +53,7 @@ unless the applications implement their own logic,
 while the "[`halt`]" should be applied depending on
 the users' choice of the document style
 and the context in the document,
-such as only at the beginning of lines.
+such as at the beginning of lines.
 Please see the OpenType spec for more details.
 
 This package adds these features to any OpenType fonts
