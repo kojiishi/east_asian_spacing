@@ -45,7 +45,8 @@ and the "[`vchw`]" feature tag as its vertical flow counterpart.
 and the "[`vhal`]" feature tag as its vertical flow counterpart.
 
 When fonts support these features,
-applications or users can apply them as needed.
+applications or users can apply them
+to get the typographic effects described above.
 For example,
 the "[`chws`]" feature should be applied for horizontal flow by default
 unless the applications implement their own logic,
