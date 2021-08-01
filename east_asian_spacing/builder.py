@@ -273,10 +273,7 @@ class Builder(object):
             builder = Builder(font, config)
             await builder.build()
             if not builder.has_spacings:
-                if builder.config.for_font(builder.font) is None:
-                    logger.info('Skipped by config: "%s"', input)
-                else:
-                    logger.warning('Skipped due to no changes: "%s"', input)
+                logger.info('Skipped saving due to no changes: "%s"', input)
                 continue
             builder.save(args.output,
                          stem_suffix=args.suffix,
