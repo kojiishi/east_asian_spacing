@@ -29,37 +29,20 @@ may help to understand the feature better.
 
 ### OpenType Font Features
 
-Some applications implement this feature by their own,
-so that it works with any fonts.
-However,
-implementing this feature without appropriate supports from fonts
-may lead to fragile rendering.
-Often applications must implement font-specific behaviors,
-or require users to apply differently depending on fonts.
-
-For fonts to support implementing this feature,
-OpenType defines 4 feature tags:
+OpenType defines 4 feature tags
+for fonts to support this feature:
 * The "[`chws`]" feature tag,
 and the "[`vchw`]" feature tag as its vertical flow counterpart.
 * The "[`halt`]" feature tag,
 and the "[`vhal`]" feature tag as its vertical flow counterpart.
 
-When fonts support these features,
-applications or users can apply them
-to get the typographic effects described above.
-For example,
-the "[`chws`]" feature should be applied for horizontal flow by default
-unless the applications implement their own logic,
-while the "[`halt`]" should be applied depending on
-the users' choice of the document style
-and the context in the document,
-such as at the beginning of lines.
-Please see the OpenType spec for more details.
+All 4 features are desired,
+as each feature is applied in different context.
 
 This package adds these features to any OpenType fonts
-if any of these features are missing,
-by computing the feature tables from the data
-such as Unicode code points and glyph outlines
+when they are missing,
+by computing the feature tables from data
+such as Unicode code points and glyph outlines.
 
 [`chws`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#tag-chws
 [`halt`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_fj#tag-halt
