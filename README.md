@@ -132,8 +132,9 @@ the [test HTML] is a handy tool to check the results.
 If you encounter any problems with your fonts,
 please report to [issues].
 
-For fonts at [fonts.google.com],
-the [chws_tool] package extends this package for them.
+The [chws_tool] package is an example project
+that extends this package to support more fonts.
+It supports CJK fonts at [fonts.google.com].
 
 Please also see the [Advanced Topics] below
 if you want to customize the default behaviors for your fonts.
