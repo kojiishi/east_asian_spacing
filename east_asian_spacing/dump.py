@@ -10,6 +10,7 @@ import re
 import shutil
 import sys
 import tempfile
+from typing import Iterable
 
 from east_asian_spacing.font import Font
 from east_asian_spacing.log_utils import init_logging
@@ -320,19 +321,25 @@ class Dump(object):
         return tables
 
     @staticmethod
+    def _has_diff(lines: Iterable[str], ignore: re.Pattern) -> bool:
+        for line in lines:
+            if ignore.search(line):
+                continue
+            ch0 = line[0]
+            if ch0 == '-' or ch0 == '+':
+                return True
+            assert ch0 == ' ' or ch0 == '@'
+        return False
+
+    @staticmethod
     def has_table_diff(ttx_diff_path, table_name):
         if ttx_diff_path.stat().st_size == 0:
             return False
         if table_name == 'head':
+            ignore = re.compile(r'<checkSumAdjustment value=|<modified value=')
             with ttx_diff_path.open() as file:
-                for line in file:
-                    if ('<checkSumAdjustment value=' in line
-                            or '<modified value=' in line):
-                        continue
-                    if line[0] == '-' or line[0] == '+':
-                        return True
-            return False
-        return True
+                return Dump._has_diff(file, ignore)
+        return ttx_diff_path.stat().st_size > 0
 
     @staticmethod
     async def diff_font(font, src_font, diff_out=None, dump_dir=None):
@@ -435,6 +442,7 @@ class Dump(object):
         async def diff_with_references(self, targets):
             logger.info('Comparing %d files with reference files at "%s"',
                         len(targets), self.ref_dir)
+            ignore = re.compile(r'<ttFont ttLibVersion=')
             for target in targets:
                 target = pathlib.Path(target)
                 ref = self.ref_dir / target.name
@@ -444,7 +452,7 @@ class Dump(object):
                     continue
                 print(f'+ diff-ref {target}')
                 diff_lines = list(await Dump.diff(ref, target))
-                if len(diff_lines) == 0:
+                if not Dump._has_diff(diff_lines, ignore):
                     self.matches.append(target)
                     continue
                 self.differents.append(target)

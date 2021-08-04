@@ -1,3 +1,4 @@
+import re
 import shutil
 
 import pytest
@@ -25,6 +26,14 @@ async def test_diff(data_dir, diff_config):
     lines = list(lines)
     diffs = [line for line in lines if line[0] == '-' or line[0] == '+']
     assert len(diffs) == 4, ''.join(lines)
+
+
+def test_has_diff_ttlib_version(data_dir):
+    ignore = re.compile(r'<ttFont ttLibVersion=')
+    with (data_dir / 'diff-ttlib-version.diff').open() as file:
+        assert Dump._has_diff(file, ignore)
+    with (data_dir / 'diff-ttlib-version-no.diff').open() as file:
+        assert not Dump._has_diff(file, ignore)
 
 
 def test_has_table_diff_head(data_dir):
