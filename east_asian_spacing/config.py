@@ -29,6 +29,9 @@ class Config(object):
         # Specify which language behavior the font is.
         # Valid only when `use_ink_bounds` is `False`.
         self.language = None
+        # Characters to compute the "fullwidth" advance from.
+        # Set to `None` to use units_per_em.
+        self.fullwidth_advance = '「」（）'
 
     default = None  # This will be set later in this file.
 
@@ -104,6 +107,13 @@ class Config(object):
             return self
         clone = self.clone()
         clone.skip_monospace_ascii = skip_monospace_ascii
+        return clone
+
+    def with_fullwidth_advance(self, fullwidth_advance):
+        if self.fullwidth_advance == fullwidth_advance:
+            return self
+        clone = self.clone()
+        clone.fullwidth_advance = fullwidth_advance
         return clone
 
     def remove(self, *codes):

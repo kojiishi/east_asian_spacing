@@ -21,6 +21,7 @@ class Font(object):
         self._byte_array = None
         self.font_index = None
         self._fonts_in_collection = None
+        self._fullwidth_advance = None
         self._hbfont = None
         self.horizontal_font = None
         self.is_vertical = False
@@ -263,25 +264,25 @@ class Font(object):
         return self._units_per_em
 
     @property
+    def has_custom_fullwidth_advance(self):
+        return self._fullwidth_advance is not None
+
+    @property
     def fullwidth_advance(self):
         """Returns the advance of a "fullwidth" glyph.
 
-        Normally this is the same as `units_per_em`,
-        but non-square fonts may have different values.
+        Set this property when it is different from `units_per_em`,
+        such as when this is a non-square font.
 
-        Note, this value must be set by other classes,
-        because this class can't compute this.
-        Please see the `ShaperBase.ensure_fullwidth_advance`."""
-        return getattr(self, '_fullwidth_advance', None)
+        Returns `units_per_em` if this property is not set explicitly."""
+        if self._fullwidth_advance is not None:
+            return self._fullwidth_advance
+        return self.units_per_em
 
     @fullwidth_advance.setter
-    def fullwidth_advance(self, value):
-        units_per_em = self.units_per_em
-        if value != units_per_em:
-            logger.info('fullwidth_advance=%d (upem=%d) for "%s"', value,
-                        units_per_em, self)
-        else:
-            logger.debug('fullwidth_advance=%d for "%s"', value, self)
+    def fullwidth_advance(self, value: int):
+        logger.debug('fullwidth_advance=%d (upem=%d) for "%s"', value,
+                     self.units_per_em, self)
         self._fullwidth_advance = value
 
     def glyph_name(self, glyph_id):

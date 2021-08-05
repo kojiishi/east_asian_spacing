@@ -198,34 +198,23 @@ class ShaperBase(object):
             features_dict[feature] = True
         return features_dict
 
-    async def shape(self, text):
+    async def shape(self, text) -> ShapeResult:
         assert False, "Not implemented"
         return ShapeResult()
 
-    async def compute_fullwidth_advance(self):
+    async def compute_fullwidth_advance(self, text: str = '四水城'):
         """Computes the advance of a "fullwidth" glyph heuristically
         by measuring a few representative glyphs."""
-        text = '四园水城'  # Sample characters used in CJKV.
         result = await self.shape(text)
-        result.filter(lambda g: g.glyph_id)
+        result.filter_missing_glyphs()
         advances = set(g.advance for g in result)
-        logger.debug('fullwidth_advance=%s for "%s"', advances, self.font)
+        logger.debug('fullwidth_advance=%s, upem=%d for "%s"', advances,
+                     self.font.units_per_em, self.font)
         if len(advances) == 1:
             advance = next(iter(advances))
             self.font.fullwidth_advance = advance
             return advance
         return None
-
-    @staticmethod
-    async def ensure_fullwidth_advance(font):
-        """Ensures that the `Font.fullwidth_advance` is set."""
-        if font.fullwidth_advance:
-            return True
-        shaper = Shaper(font, features=['vert'] if font.is_vertical else None)
-        if await shaper.compute_fullwidth_advance():
-            return True
-        logger.info('No fullwidth advance for "%s"', font)
-        return False
 
     def _log_result(self, result, text) -> None:
         if logger.getEffectiveLevel() <= logging.DEBUG:

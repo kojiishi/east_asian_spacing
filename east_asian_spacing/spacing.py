@@ -152,7 +152,7 @@ class GlyphSets(object):
         if not config:
             logger.info('Skipped by config: "%s"', font)
             return
-        if not await Shaper.ensure_fullwidth_advance(font):
+        if not await self.ensure_fullwidth_advance(font, config):
             logger.warning('Skipped because proportional CJK: "%s"', font)
             return
         results = await asyncio.gather(self.get_opening_closing(font, config),
@@ -201,6 +201,30 @@ class GlyphSets(object):
                                     language=language,
                                     temporary=True)
         return set(result.glyph_ids)
+
+    @staticmethod
+    async def ensure_fullwidth_advance(font: Font, config: Config) -> bool:
+        if font.has_custom_fullwidth_advance:
+            return True
+        # If `fullwidth_advance_text` is not set, use `units_per_em`.
+        advance = config.fullwidth_advance
+        if not advance:
+            logger.debug('fullwidth_advance=%d (units_per_em) for "%s"',
+                         font.units_per_em, font)
+            return True
+        if isinstance(advance, int):
+            font.fullwidth_advance = advance
+            logger.debug('fullwidth_advance=%d (units_per_em=%d) for "%s"',
+                         font.fullwidth_advance, font.units_per_em, font)
+            return True
+        assert isinstance(advance, str)
+        features = ['fwid', 'vert'] if font.is_vertical else ['fwid']
+        shaper = Shaper(font, features=features)
+        if await shaper.compute_fullwidth_advance(text=advance):
+            logger.debug('fullwidth_advance=%d (units_per_em=%d) for "%s"',
+                         font.fullwidth_advance, font.units_per_em, font)
+            return True
+        return False
 
     async def get_opening_closing(self, font, config):
         opening = config.cjk_opening | config.quotes_opening

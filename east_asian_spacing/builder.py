@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
+import contextlib
 import logging
 import pathlib
 import sys
@@ -216,6 +217,7 @@ class Builder(object):
                             "--index",
                             help="font index, or a list of font indices"
                             " for a font collection (TTC)")
+        parser.add_argument("--em", help="set fullwidth")
         parser.add_argument("-g", "--glyph-out", help="output glyph list")
         parser.add_argument("-l",
                             "--language",
@@ -248,6 +250,9 @@ class Builder(object):
                             default=0)
         args = parser.parse_args()
         init_logging(args.verbose, main=logger)
+        if args.em is not None:
+            with contextlib.suppress(ValueError):
+                args.em = int(args.em)
         if args.glyph_out:
             if args.glyph_out == '-':
                 args.glyph_out = sys.stdout
@@ -269,6 +274,8 @@ class Builder(object):
                     config = config.for_language(args.language)
             if args.no_monospace:
                 config = config.with_skip_monospace_ascii(True)
+            if args.em is not None:
+                config = config.with_fullwidth_advance(args.em)
 
             builder = Builder(font, config)
             await builder.build()
