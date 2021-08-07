@@ -217,6 +217,7 @@ class Builder(object):
                             "--index",
                             help="font index, or a list of font indices"
                             " for a font collection (TTC)")
+        parser.add_argument("--debug", help="names of debug logs")
         parser.add_argument("--em",
                             help="fullwidth advance, "
                             "or characters to compute fullwidth advance from")
@@ -251,7 +252,7 @@ class Builder(object):
                             action="count",
                             default=0)
         args = parser.parse_args()
-        init_logging(args.verbose, main=logger)
+        init_logging(args.verbose, main=logger, debug=args.debug)
         if args.em is not None:
             with contextlib.suppress(ValueError):
                 args.em = int(args.em)

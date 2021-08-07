@@ -27,7 +27,7 @@ _log_shaper = logging.getLogger('shaper')
 
 
 def _is_shaper_log_enabled():
-    return _log_shaper.getEffectiveLevel() <= logging.DEBUG
+    return _log_shaper.isEnabledFor(logging.DEBUG)
 
 
 class GlyphSets(object):

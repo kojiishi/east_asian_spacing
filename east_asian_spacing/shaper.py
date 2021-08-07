@@ -217,7 +217,7 @@ class ShaperBase(object):
         return None
 
     def _log_result(self, result, text) -> None:
-        if logger.getEffectiveLevel() <= logging.DEBUG:
+        if logger.isEnabledFor(logging.DEBUG):
             result.set_text(text)
             result.compute_ink_parts(self.font)
             logger.debug('%s=%s', self.log_name or 'ShapeResult', result)

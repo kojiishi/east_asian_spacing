@@ -211,7 +211,7 @@ class Dump(object):
                 ttx_paths.append(None)
                 continue
             args = ['ttx', '-sf']
-            if logger.getEffectiveLevel() >= logging.INFO:
+            if not logger.isEnabledFor(logging.INFO):
                 args.append('-q')
             if font.is_collection:
                 indexed_ttx_name = f'{ttx_path.stem}-{index}{ttx_path.suffix}'
