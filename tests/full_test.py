@@ -20,8 +20,8 @@ async def test_build_and_diff(test_font_path, refs_dir, tmp_path):
     and if there were any differences, update the reference files.
     """
     builder = Builder(test_font_path)
-    await builder.build()
-    out_path = builder.save(tmp_path)
+    out_path = await builder.build_and_save(tmp_path)
+    assert out_path
 
     await builder.test()
 

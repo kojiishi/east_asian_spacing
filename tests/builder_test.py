@@ -1,9 +1,13 @@
 import io
 import os
 import pathlib
+import pytest
+import shutil
 import tempfile
 
 from east_asian_spacing import Builder
+from east_asian_spacing import EastAsianSpacing
+from east_asian_spacing import Font
 
 
 def test_calc_output_path(data_dir):
@@ -50,3 +54,18 @@ def test_expand_paths(monkeypatch):
     assert call(['-']) == ['line1', 'line2']
     monkeypatch.setattr('sys.stdin', io.StringIO('line1\nline2\n'))
     assert call(['a', '-', 'b']) == ['a', 'line1', 'line2', 'b']
+
+
+@pytest.mark.asyncio
+async def test_save_to_same_file(test_font_path, tmp_path):
+    tmp_font_path = tmp_path / test_font_path.name
+    shutil.copy(test_font_path, tmp_font_path)
+    font = Font.load(tmp_font_path)
+    assert not EastAsianSpacing.font_has_feature(font)
+
+    builder = Builder(font)
+    out_path = await builder.build_and_save()
+    assert out_path == tmp_font_path
+
+    font = Font.load(out_path)
+    assert EastAsianSpacing.font_has_feature(font)

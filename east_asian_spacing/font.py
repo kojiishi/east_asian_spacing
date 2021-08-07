@@ -141,7 +141,7 @@ class Font(object):
 
     def save(self, out_path=None):
         if not out_path:
-            out_path = pathlib.Path("out" + self.path.suffix)
+            out_path = self.path
         elif isinstance(out_path, str):
             out_path = pathlib.Path(out_path)
         logger.info("Saving to: \"%s\"", out_path)
@@ -154,15 +154,17 @@ class Font(object):
             self.ttfont.save(str(out_path))
         self._set_path(out_path)
 
-        size_before = self.path.stat().st_size
-        size_after = out_path.stat().st_size
-        logger.info("File sizes: %d -> %d Delta: %d", size_before, size_after,
-                    size_after - size_before)
+        if logger.isEnabledFor(logging.INFO):
+            size_before = self.path.stat().st_size
+            size_after = out_path.stat().st_size
+            logger.info("File sizes: %d -> %d Delta: %d", size_before,
+                        size_after, size_after - size_before)
 
     @staticmethod
     def _before_save(ttfont):
-        # `TTFont.save()` compiles all loaded tables. Unload tables we know we did
-        # not modify, so that it copies instead of re-compile.
+        # `TTFont.save()` compiles all loaded tables. Unload tables we know we
+        # did not modify, so that it copies instead of re-compile.
+        # This speeds up saving significantly for large fonts.
         loaded_keys = ttfont.tables.keys()
         logger.debug("loaded_keys=%s", loaded_keys)
         keys_to_save = set(('head', 'GPOS'))

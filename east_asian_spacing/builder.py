@@ -30,26 +30,31 @@ class Builder(object):
     def has_spacings(self):
         return len(self._spacings) > 0
 
+    async def build_and_save(self, output=None, **kwargs):
+        await self.build()
+        if not self.has_spacings:
+            return None
+        return self.save(output, **kwargs)
+
     def save(self,
-             output_path=None,
+             output=None,
              stem_suffix=None,
              glyph_out=None,
              print_path=False):
         assert self.has_spacings
         font = self.font
         path_before_save = font.path
-        output_path = self.calc_output_path(path_before_save, output_path,
-                                            stem_suffix)
-        logger.info('Saving to "%s"', output_path)
-        font.save(output_path)
-        paths = [output_path, path_before_save]
+        output = self.calc_output_path(path_before_save, output, stem_suffix)
+        logger.info('Saving to "%s"', output)
+        font.save(output)
+        paths = [output, path_before_save]
         if glyph_out:
             glyphs_path = self.save_glyphs(glyph_out)
             paths.append(glyphs_path)
         if print_path:
             print('\t'.join(str(path) for path in paths),
                   flush=True)  # Flush, for better parallelism when piping.
-        return output_path
+        return output
 
     @staticmethod
     def calc_output_path(input_path, output_path, stem_suffix=None):
@@ -281,14 +286,13 @@ class Builder(object):
                 config = config.with_fullwidth_advance(args.em)
 
             builder = Builder(font, config)
-            await builder.build()
-            if not builder.has_spacings:
+            output = await builder.build_and_save(args.output,
+                                                  stem_suffix=args.suffix,
+                                                  glyph_out=args.glyph_out,
+                                                  print_path=args.print_path)
+            if not output:
                 logger.info('Skipped saving due to no changes: "%s"', input)
                 continue
-            builder.save(args.output,
-                         stem_suffix=args.suffix,
-                         glyph_out=args.glyph_out,
-                         print_path=args.print_path)
             if args.test:
                 await builder.test(smoke=(args.test == 1))
 
