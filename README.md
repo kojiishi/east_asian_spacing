@@ -109,7 +109,7 @@ You can run [unit tests] to verify your installation if needed.
 
 ## Adding the features to your fonts
 
-### Usage
+### Command Line Usage
 
 The following example adds the feature to `input-font-file`
 and saves it to the `build` directory.
@@ -157,6 +157,20 @@ but not to other fonts in the TTC.
 east-asian-spacing --index=0,1 input-font-file.ttc
 ```
 
+## API
+
+```python
+import east_asian_spacing
+
+async def main_async():
+    builder = east_asian_spacing.Builder("fonts/input.otf")
+    output_path = await builder.build_and_save("build")
+    if output_path:
+        print(f"Saved to {output_path}")
+    else:
+        print("Skipped")
+```
+
 ## Advanced Topics
 [Advanced Topics]: #advanced-topics
 
@@ -164,7 +178,8 @@ east-asian-spacing --index=0,1 input-font-file.ttc
 [Algorithm]: #algorithm
 
 This package determines the glyph pairs to adjust spacings
-by a pre-defined set of Unicode code points.
+by a set of Unicode code points
+defined in the [`Config` class].
 
 Then for each pair, it computes if the spacings are applicable
 by examining glyph outlines and computing ink bounding boxes of glyphs.
@@ -237,8 +252,8 @@ in [`tests/config_test.py`].
 The [chws_tool] project is another example
 of how to customize this package.
 
-[`Config` class]: east_asian_spacing/config.py
-[`tests/config_test.py`]: tests/config_test.py
+[`Config` class]: https://github.com/kojiishi/east_asian_spacing/blob/main/east_asian_spacing/config.py
+[`tests/config_test.py`]: https://github.com/kojiishi/east_asian_spacing/blob/main/tests/config_test.py
 
 ### HarfBuzz
 
