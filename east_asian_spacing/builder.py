@@ -217,7 +217,9 @@ class Builder(object):
                             "--index",
                             help="font index, or a list of font indices"
                             " for a font collection (TTC)")
-        parser.add_argument("--em", help="set fullwidth")
+        parser.add_argument("--em",
+                            help="fullwidth advance, "
+                            "or characters to compute fullwidth advance from")
         parser.add_argument("-g", "--glyph-out", help="output glyph list")
         parser.add_argument("-l",
                             "--language",
