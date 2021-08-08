@@ -89,7 +89,7 @@ class GlyphSets(object):
             return None
         result = dict()
         for glyph_data in self._glyph_data_list:
-            glyph_data.cluster_index = 0
+            glyph_data.cluster_index = None
             glyph_data_list = result.get(glyph_data.glyph_id)
             if glyph_data_list:
                 if glyph_data not in glyph_data_list:
@@ -164,6 +164,7 @@ class GlyphSets(object):
         self.add_to_cache(font)
         self.assert_glyphs_are_disjoint()
         self._add_glyphs_count += 1
+        logger.debug('add_glyphs %s for "%s"', self, font)
 
     class _ShapeHelper(object):
         def __init__(self, glyph_sets, font, log_name=None):
@@ -190,8 +191,7 @@ class GlyphSets(object):
                 self._glyph_data_list.extend(result)
 
             # East Asian spacing applies only to fullwidth glyphs.
-            em = font.fullwidth_advance
-            result.filter(lambda g: g.advance == em)
+            result.filter_advance(font.fullwidth_advance)
 
             return result
 

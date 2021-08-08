@@ -82,8 +82,10 @@ class GlyphData(object):
         text = getattr(self, 'text', None)
         if text:
             values.append(f't:"{text}"')
-        values.extend((f'g:{self.glyph_id}', f'a:{self.advance}',
-                       f'o:{self.offset}', f'c:{self.cluster_index}'))
+        if self.cluster_index is not None:
+            values.append(f'c:{self.cluster_index}')
+        values.extend(
+            (f'g:{self.glyph_id}', f'a:{self.advance}', f'o:{self.offset}'))
         bounds = getattr(self, 'bounds', None)
         if bounds:
             values.append(f'b:{bounds}')
@@ -137,6 +139,9 @@ class ShapeResult(object):
 
     def filter(self, predicate):
         self._glyphs = filter(predicate, self._glyphs)
+
+    def filter_advance(self, advance: int) -> None:
+        self.filter(lambda g: g.advance == advance)
 
     def filter_missing_glyphs(self):
         # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
