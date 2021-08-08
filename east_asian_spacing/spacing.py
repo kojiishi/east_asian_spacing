@@ -186,12 +186,12 @@ class GlyphSets(object):
                             features=features,
                             log_name=self._log_name)
             result = await shaper.shape(text)
-            result.filter_missing_glyphs()
 
             if not temporary and self._glyph_data_list is not None:
                 result.ensure_multi_iterations()
                 self._glyph_data_list.extend(result)
 
+            result.filter_missing_glyphs()
             # East Asian spacing applies only to fullwidth glyphs.
             result.filter_advance(font.fullwidth_advance)
 

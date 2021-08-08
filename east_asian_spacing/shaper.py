@@ -64,6 +64,10 @@ def _compute_ink_part(min, max, left, right):
     return InkPart.OTHER
 
 
+def _eq_attr(a, b, attr):
+    return getattr(a, attr, None) == getattr(b, attr, None)
+
+
 class GlyphData(object):
     def __init__(self, glyph_id, cluster_index, advance, offset):
         self.glyph_id = glyph_id
@@ -75,7 +79,10 @@ class GlyphData(object):
         return (self.glyph_id == other.glyph_id
                 and self.cluster_index == other.cluster_index
                 and self.advance == other.advance
-                and self.offset == other.offset)
+                and self.offset == other.offset
+                and _eq_attr(self, other, 'text')
+                and _eq_attr(self, other, 'bounds')
+                and _eq_attr(self, other, 'ink_part'))
 
     def __str__(self):
         values = []
@@ -84,14 +91,15 @@ class GlyphData(object):
             values.append(f't:"{text}"')
         if self.cluster_index is not None:
             values.append(f'c:{self.cluster_index}')
-        values.extend(
-            (f'g:{self.glyph_id}', f'a:{self.advance}', f'o:{self.offset}'))
-        bounds = getattr(self, 'bounds', None)
-        if bounds:
-            values.append(f'b:{bounds}')
-        ink_part = getattr(self, 'ink_part', None)
-        if ink_part:
-            values.append(f'i:{ink_part}')
+        values.append(f'g:{self.glyph_id}')
+        if self.glyph_id:
+            values.extend((f'a:{self.advance}', f'o:{self.offset}'))
+            bounds = getattr(self, 'bounds', None)
+            if bounds:
+                values.append(f'b:{bounds}')
+            ink_part = getattr(self, 'ink_part', None)
+            if ink_part:
+                values.append(f'i:{ink_part}')
         return f'{{{",".join(values)}}}'
 
     def compute_ink_part(self, font):
