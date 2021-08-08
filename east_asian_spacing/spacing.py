@@ -120,7 +120,9 @@ class GlyphSets(object):
         if glyph_data_by_glyph_id:
             output.write(f'# {prefix}filtered\n')
             glyph_ids = self.glyph_ids
-            for glyph_id, glyph_data_list in glyph_data_by_glyph_id.items():
+            for glyph_id, glyph_data_list in sorted(
+                    glyph_data_by_glyph_id.items(),
+                    key=lambda key_value: key_value[0]):
                 if glyph_id not in glyph_ids:
                     for glyph_data in glyph_data_list:
                         output.write(f'# {glyph_data}\n')
