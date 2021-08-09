@@ -39,7 +39,7 @@ and the "[`vhal`]" feature tag as its vertical flow counterpart.
 All 4 features are desired,
 as each feature is applied in different context.
 
-This package adds these features to any OpenType fonts
+This package adds these features to any OpenType/TrueType fonts
 when they are missing,
 by computing the feature tables from data
 such as Unicode code points and glyph outlines.
