@@ -52,7 +52,7 @@ class ShapeTest(object):
             em = self.font.fullwidth_advance
         if any(g.glyph_id == 0 or g.advance != em for g in self.off_glyphs):
             return False
-        if glyphs:
+        if glyphs is not None:
             if not all(g.glyph_id in glyphs for g in self.off_glyphs):
                 return False
         return True

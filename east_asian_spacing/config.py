@@ -31,7 +31,7 @@ class Config(object):
         self.language = None
         # Characters to compute the "fullwidth" advance from.
         # Set to `None` to use units_per_em.
-        self.fullwidth_advance = '「」（）'
+        self.fullwidth_advance = '四水城「」（）'
 
     default = None  # This will be set later in this file.
 

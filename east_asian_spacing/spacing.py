@@ -563,6 +563,7 @@ class EastAsianSpacing(object):
     def __init__(self):
         self.horizontal = GlyphSets()
         self.vertical = GlyphSets()
+        self.from_fonts = []
         self.changed_fonts = []
 
     def _to_str(self, glyph_ids=False):
@@ -591,6 +592,7 @@ class EastAsianSpacing(object):
         vertical_font = font.vertical_font
         if vertical_font:
             await self.vertical.add_glyphs(vertical_font, config)
+        self.from_fonts.append(font)
 
     @staticmethod
     def font_has_feature(font):

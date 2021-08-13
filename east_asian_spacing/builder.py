@@ -120,34 +120,37 @@ class Builder(object):
         # A font collection can share tables. When GPOS is shared in the original
         # font, make sure we add the same data so that the new GPOS is also shared.
         spacing_by_offset = {}
+        spacings = []
         for font in self.font.fonts_in_collection:
             config = await self._config_for_font(font)
             if config is None:
                 continue
             reader_offset = font.reader_offset("GPOS")
             # If the font does not have `GPOS`, `reader_offset` is `None`.
-            # Create a shared `GPOS` for all fonts in the case. e.g., BIZ-UD.
-            spacing_entry = spacing_by_offset.get(reader_offset)
+            spacing = spacing_by_offset.get(reader_offset)
             logger.info('%d "%s" %s GPOS=%d%s', font.font_index, font,
                         Builder._config_for_log(config),
                         reader_offset if reader_offset else 0,
-                        ' (shared)' if spacing_entry else '')
-            if spacing_entry:
-                spacing, fonts = spacing_entry
+                        ' (shared)' if spacing else '')
+            if spacing:
                 # Different faces may have different set of glyphs. Unite them.
                 await spacing.add_glyphs(font, config)
-                fonts.append(font)
                 continue
             spacing = EastAsianSpacing()
             await spacing.add_glyphs(font, config)
-            spacing_by_offset[reader_offset] = (spacing, [font])
+            spacings.append(spacing)
+            # Do not share new `GPOS`. It may or may not be sharable.
+            # e.g., BIZ-UDGothic.
+            if reader_offset:
+                spacing_by_offset[reader_offset] = spacing
 
         # Add to each font using the united `EastAsianSpacing`s.
-        for spacing, fonts in spacing_by_offset.values():
+        for spacing in spacings:
             logger.info('Adding features to: %s %s',
-                        list(font.font_index for font in fonts), spacing)
+                        list(font.font_index for font in spacing.from_fonts),
+                        spacing)
             result = False
-            for font in fonts:
+            for font in spacing.from_fonts:
                 result |= spacing.add_to_font(font)
             if result:
                 assert len(spacing.changed_fonts) > 0
@@ -177,6 +180,16 @@ class Builder(object):
         united_spacing = self._united_spacings()
         united_spacing.save_glyphs(output)
 
+    def _testers(self):
+        for spacing in self._spacings:
+            assert len(spacing.changed_fonts) > 0
+            for font in spacing.changed_fonts:
+                tester = EastAsianSpacingTester(
+                    font,
+                    glyphs=spacing.horizontal.glyph_ids,
+                    vertical_glyphs=spacing.vertical.glyph_ids)
+                yield tester
+
     async def test(self, config=None, smoke=None):
         if config is None:
             config = self.config
@@ -184,13 +197,10 @@ class Builder(object):
                 config = config.for_smoke_testing()
         elif smoke:
             config.for_smoke_testing()
-        spacing = self._united_spacings()
-        tester = EastAsianSpacingTester(
-            self.font,
-            glyphs=spacing.horizontal.glyph_ids,
-            vertical_glyphs=spacing.vertical.glyph_ids)
-        assert len(spacing.changed_fonts) > 0
-        await tester.test(config, fonts=spacing.changed_fonts)
+        assert self.has_spacings
+        testers = self._testers()
+        coros = (tester.test(config) for tester in testers)
+        await EastAsianSpacingTester.run_coros(coros, parallel=True)
 
     @classmethod
     def expand_paths(cls, paths):

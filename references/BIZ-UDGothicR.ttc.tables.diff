@@ -1,13 +1,12 @@
-@@ -1,6 +1,8 @@
+@@ -1,6 +1,7 @@
  Font 0: "BIZ UDGothic" "Regular" PS="BIZ-UDGothic"
  Font 1: "BIZ UDPGothic" "Regular" PS="BIZ-UDPGothic"
  Tag  Size      
-+GPOS        704 [0]
-+GPOS        704 [1]
++GPOS        648 [0]
  GSUB     43,556 [0]
  GSUB     45,586 [1]
  OS/2         96 [0]
-@@ -25,7 +27,7 @@
+@@ -25,7 +26,7 @@
  prep        840 [0, 1]
  vhea         36 [0, 1]
  vmtx     55,244 [0, 1]
@@ -15,7 +14,7 @@
 -Data: 5,027,902
 -Gap: 650
 -Tables: 24
-+Total: 5,029,978
-+Data: 5,029,310
-+Gap: 668
-+Tables: 26
++Total: 5,029,202
++Data: 5,028,550
++Gap: 652
++Tables: 25
