@@ -298,6 +298,10 @@ It can test fonts you built locally.
    at the beginning of the `<script>` block.
 3. Open it in your browser and choose your font.
 
+Note, when you want to test a TTC (TrueType Collection)
+but your browser can load only the first font in the TTC,
+`script/splitttc.py` can split TTC into OTF/TTF.
+
 [test HTML page]: https://kojiishi.github.io/chws/test.html
 
 ### Dump

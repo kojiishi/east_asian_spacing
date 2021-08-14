@@ -406,6 +406,7 @@ class GlyphSets(object):
             em = font.fullwidth_advance
             # When `em` is an odd number, ceil the advance. To do this, use
             # floor to compute the adjustment of the advance and the offset.
+            # e.g., "ZCOOL QingKe HuangYou".
             half_em = math.floor(em / 2)
             assert half_em > 0
             quad_em = math.floor(half_em / 2)
