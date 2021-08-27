@@ -66,7 +66,10 @@ class Config(object):
     def for_font(self, font):
         """Returns a tweaked copy if the `font` needs special treatments.
         Otherwise returns `self`."""
-        name = font.debug_name(1)
+        # Prefer Typographic Family name (16) if the font has it.
+        # Otherwise fallback to Font Family name (1).
+        # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+        name = font.debug_name(16, 1)
         if name:
             return self.for_font_name(name, font.is_vertical)
         return self

@@ -3,7 +3,7 @@ import argparse
 import itertools
 import logging
 import pathlib
-from typing import Any
+from typing import Any, Iterable, Optional
 from typing import Generator
 
 from fontTools.ttLib import newTable
@@ -240,12 +240,15 @@ class Font(object):
         self._hbfont = hb.Font(hbface)
         return self._hbfont
 
-    def debug_name(self, name_id):
+    def debug_name(self, *name_ids: int) -> Optional[str]:
         # name_id:
         # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-id-examples
         if self.ttfont:
             name = self.tttable("name")
-            return name.getDebugName(name_id)
+            for name_id in name_ids:
+                result = name.getDebugName(name_id)
+                if result:
+                    return result
         return None
 
     def __str__(self):
