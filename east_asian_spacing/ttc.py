@@ -7,7 +7,19 @@ from fontTools.ttLib.ttCollection import TTCollection
 
 from east_asian_spacing.log_utils import init_logging
 
-logger = logging.getLogger('splitttc')
+logger = logging.getLogger('ttc')
+
+
+def ttc_split(path: pathlib.Path):
+    ttc = TTCollection(path)
+    for i, ttfont in enumerate(ttc.fonts):
+        if ttfont.has_key('glyf'):
+            ext = '.ttf'
+        else:
+            ext = '.otf'
+        output = path.with_name(f'{path.name}-{i}{ext}')
+        logger.info('%s', output)
+        ttfont.save(output)
 
 
 def main():
@@ -21,15 +33,7 @@ def main():
     args = parser.parse_args()
     init_logging(args.verbose, main=logger)
     for path in args.path:
-        ttc = TTCollection(path)
-        for i, ttfont in enumerate(ttc.fonts):
-            if ttfont.has_key('glyf'):
-                ext = '.ttf'
-            else:
-                ext = '.otf'
-            output = path.with_name(f'{path.name}-{i}{ext}')
-            logger.info('%s', output)
-            ttfont.save(output)
+        ttc_split(path)
 
 
 if __name__ == '__main__':

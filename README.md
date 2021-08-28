@@ -300,7 +300,11 @@ It can test fonts you built locally.
 
 Note, when you want to test a TTC (TrueType Collection)
 but your browser can load only the first font in the TTC,
-`script/splitttc.py` can split TTC into OTF/TTF.
+the following command extracts all OpenType fonts (.otf or .ttf)
+from an OpenType Collection font file (.ttc or .otc).
+```sh
+east-asian-spacing ttc build/NotoSansCJK-Regular.ttc
+```
 
 [test HTML page]: https://kojiishi.github.io/chws/test.html
 

@@ -2,6 +2,7 @@ import asyncio
 import sys
 
 import east_asian_spacing
+import east_asian_spacing.ttc
 
 
 def main():
@@ -11,6 +12,11 @@ def main():
         if sub_command == 'dump' or sub_command == 'd':
             del args[1]
             asyncio.run(east_asian_spacing.Dump.main())
+            return
+
+        if sub_command == 'ttc':
+            del args[1]
+            east_asian_spacing.ttc.main()
             return
 
     asyncio.run(east_asian_spacing.Builder.main())
