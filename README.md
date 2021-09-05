@@ -120,7 +120,7 @@ The `--help` option shows the full list of options.
 
 ### Supported Fonts
 
-The [algorithm] is applicable to any fonts.
+The [algorithm] is language agnostic and is applicable to any CJK fonts.
 Following fonts are tested on each release:
 * [Noto CJK]
 * Meiryo
@@ -159,6 +159,8 @@ east-asian-spacing --index=0,1 input-font-file.ttc
 
 ## API
 
+The following example creates a font with the features
+in the "`build`" directory if the features are applicable.
 ```python
 import east_asian_spacing
 
@@ -177,17 +179,19 @@ async def main_async():
 ### Algorithm
 [Algorithm]: #algorithm
 
+The algorithm is language agnostic and is applicable to any CJK fonts.
+
 This package determines the glyph pairs to adjust spacings
 by a set of Unicode code points
 defined in the [`Config` class].
 
-Then for each pair, it computes if the spacings are applicable
+Then for each pair, it checks if the spacings are applicable
 by examining glyph outlines and computing ink bounding boxes of glyphs.
 For example, when glyphs are very thick,
 glyphs may not have enough internal spacings,
 and applying the spacings may cause glyphs to collide.
 This package automatically detects such cases and
-stops applying spacings to such pairs.
+avoids applying spacings to such pairs.
 
 This automatic behavior can be disabled
 by specifying the [languages] below,
@@ -249,8 +253,7 @@ Currently, this is possible only from Python programs.
 For a simple example, please see the `test_config` function
 in [`tests/config_test.py`].
 
-The [chws_tool] project is another example
-of how to customize this package.
+The [chws_tool] project is an example of customizing this package.
 
 [`Config` class]: https://github.com/kojiishi/east_asian_spacing/blob/main/east_asian_spacing/config.py
 [`tests/config_test.py`]: https://github.com/kojiishi/east_asian_spacing/blob/main/tests/config_test.py
