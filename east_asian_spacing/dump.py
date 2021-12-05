@@ -270,6 +270,9 @@ class Dump(object):
                 Dump._diff, '-u', src if src else os.devnull,
                 dst if dst else os.devnull
             ]
+            # Python 3.7 `popen` requires args to be str or bytes.
+            # Path is allowed only in 3.8 or later.
+            args = [str(i) for i in args]
             logger.debug("run_diff: %s", args)
             proc = await asyncio.create_subprocess_exec(
                 *args, stdout=asyncio.subprocess.PIPE)
