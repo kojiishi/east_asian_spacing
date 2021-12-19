@@ -132,7 +132,7 @@ networkx = ">=2"
 
 [[package]]
 name = "importlib-metadata"
-version = "4.8.2"
+version = "4.8.3"
 description = "Read metadata from Python packages"
 category = "dev"
 optional = false
@@ -308,7 +308,7 @@ testing = ["coverage", "hypothesis (>=5.7.1)"]
 
 [[package]]
 name = "pytype"
-version = "2021.11.29"
+version = "2021.12.15"
 description = "Python type inferencer"
 category = "dev"
 optional = false
@@ -636,8 +636,8 @@ importlab = [
     {file = "importlab-0.6.1.tar.gz", hash = "sha256:056503329df1ba8f6291a4b548042aa18620ad91d39388ba58044f0fd44ff83e"},
 ]
 importlib-metadata = [
-    {file = "importlib_metadata-4.8.2-py3-none-any.whl", hash = "sha256:53ccfd5c134223e497627b9815d5030edf77d2ed573922f7a0b8f8bb81a1c100"},
-    {file = "importlib_metadata-4.8.2.tar.gz", hash = "sha256:75bdec14c397f528724c1bfd9709d660b33a4d2e77387a3358f20b848bb5e5fb"},
+    {file = "importlib_metadata-4.8.3-py3-none-any.whl", hash = "sha256:65a9576a5b2d58ca44d133c42a241905cc45e34d2c06fd5ba2bafa221e5d7b5e"},
+    {file = "importlib_metadata-4.8.3.tar.gz", hash = "sha256:766abffff765960fcc18003801f7044eb6755ffae4521c8e8ce8e83b9c9b0668"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
@@ -704,19 +704,19 @@ pytest-asyncio = [
     {file = "pytest_asyncio-0.16.0-py3-none-any.whl", hash = "sha256:5f2a21273c47b331ae6aa5b36087047b4899e40f03f18397c0e65fa5cca54e9b"},
 ]
 pytype = [
-    {file = "pytype-2021.11.29-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:567399c1c3d38aef805fad126360dcf303d13ac871195cc4736efa5ea4567b0c"},
-    {file = "pytype-2021.11.29-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:12c3daf5528b959d139a10a0dee97eabed24b49e1f94bc2501c169977fe659b3"},
-    {file = "pytype-2021.11.29-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3ded8d14786eb8380dc152371e47f1565f84c08e31ba8bb90f833d3bb79c2799"},
-    {file = "pytype-2021.11.29-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:0377fbd3b505e795cb87144bd29af125a98434d9456b1825e56d8bf7880c4239"},
-    {file = "pytype-2021.11.29-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:18cda4dc98f2d6e81824237bf0158b9951757409c3349d4a6c7605064f8963d2"},
-    {file = "pytype-2021.11.29-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d1e3f4a6d956c4712165a510111ea5c4aea310651b22cb69396184c89e0fcc13"},
-    {file = "pytype-2021.11.29-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:5af02f3777f98afa2dd5fd207a135afa30ce4dd460827248741f83eaa1af31e8"},
-    {file = "pytype-2021.11.29-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5b918b7f19d9329a1ab8f1cd5adeab3141cecea2631b9fe20635dccf68bfef60"},
-    {file = "pytype-2021.11.29-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e3ec88d8bdc8627f0891ed6f33766f35f57e4561cda7b3365b388eb0f358f89c"},
-    {file = "pytype-2021.11.29-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:4b4173e04f454fe5157f543bd773b0345f96a7ea33d5b6385f7e05c68979452c"},
-    {file = "pytype-2021.11.29-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:42550b60206651b4cf239b3abbddc9a7878fe59ff05c0b665401422a640c24e7"},
-    {file = "pytype-2021.11.29-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4b0003210afcdd2db240e523fa33b287b3294eef9b0e0de3413520b80363568b"},
-    {file = "pytype-2021.11.29.tar.gz", hash = "sha256:ec41b9d5c7006b601c193dd6f99346416e97a1684ff9d8dd9ad79781b62da3e6"},
+    {file = "pytype-2021.12.15-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:011decc6536b65da4a9995786adb6502abdbd6eae06a7f61669c00dee77a8c9f"},
+    {file = "pytype-2021.12.15-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c0d1e4ed88d2bd4a27abf682538121432aeceb1d1eddeb918389df1010a93093"},
+    {file = "pytype-2021.12.15-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:be2bec3a2228910e289874bfa9cb9ef78391a010051531289c59ace1dd097f49"},
+    {file = "pytype-2021.12.15-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:1118d79230a062446fda07124f293de63ce053f45d5b849b9b69416d47ef5a07"},
+    {file = "pytype-2021.12.15-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:34f73656f1719a14afbb7d503ea8b0dbed2c330302f5b7fd24bc0408a563e57d"},
+    {file = "pytype-2021.12.15-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f9e87c9c235fdf3a028f8ca5cf9111515a6aa84ab476c65d7fbd21298f909e6b"},
+    {file = "pytype-2021.12.15-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:cb4f36d40567ecdbd338e4c626ebab17917f13bc7630b75eae4f83a2e950d809"},
+    {file = "pytype-2021.12.15-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:71d50723284251c0c6f0abb65afcd28817516ccb431125fa6520e94e0948e56d"},
+    {file = "pytype-2021.12.15-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5f752a41baa23e49de297621268f34fc6f1c87cb96679903ddee98de0613563d"},
+    {file = "pytype-2021.12.15-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:964369b6fd9d72e575ad73f5b8e4e20fe556688558f46d2ad5b3d55134b04c9c"},
+    {file = "pytype-2021.12.15-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:649ed4567a09cc6863f2bad19c014977c4b9abf7c77c6373c0c918a2b63c81a4"},
+    {file = "pytype-2021.12.15-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7a0fb6a210172d4d9577ce65fe01c02fe949f6cf77fabd215440193541e36122"},
+    {file = "pytype-2021.12.15.tar.gz", hash = "sha256:3c66fd3de9395242eca7d7056f76cce964e0bc3e4fc12a424bb69642d2d29a44"},
 ]
 pyyaml = [
     {file = "PyYAML-6.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d4db7c7aef085872ef65a8fd7d6d09a14ae91f691dec3e87ee5ee0539d516f53"},
