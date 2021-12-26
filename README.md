@@ -20,12 +20,15 @@ Following is a figure from JLREQ:
 <img src="https://w3c.github.io/jlreq/images/img2_13.png"
    title="East Asian contextual spacing examples">
 
-You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
-The sample page uses fonts built with this tool.
-Also, early discussion at [Adobe CJK Type blog article]
+An early discussion at [Adobe CJK Type blog article]
 may help to understand the feature better.
 
 [Adobe CJK Type blog article]: https://ccjktype.fonts.adobe.com/2018/04/contextual-spacing.html
+
+### Demo
+
+You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
+The sample page uses fonts built with this tool.
 
 ### OpenType Font Features
 
