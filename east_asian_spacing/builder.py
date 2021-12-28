@@ -18,6 +18,7 @@ logger = logging.getLogger('build')
 
 
 class Builder(object):
+
     def __init__(self, font, config=Config.default):
         if not isinstance(font, Font):
             font = Font.load(font)

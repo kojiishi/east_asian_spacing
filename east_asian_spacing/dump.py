@@ -19,6 +19,7 @@ logger = logging.getLogger('dump')
 
 
 class TableEntry(object):
+
     def __init__(self, reader, tag, offset, size, indices):
         self.reader = reader
         self.tag = tag
@@ -95,6 +96,7 @@ class TableEntry(object):
 
 
 class Dump(object):
+
     @staticmethod
     def dump_font_list(font, out_file=sys.stdout):
         for index, ttfont in enumerate(font.ttfonts):
@@ -428,6 +430,7 @@ class Dump(object):
         return diff_paths
 
     class References(object):
+
         def __init__(self, ref_dir):
             self.ref_dir = pathlib.Path(ref_dir)
             self.matches = []

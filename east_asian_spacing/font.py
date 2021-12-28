@@ -17,6 +17,7 @@ logger = logging.getLogger('font')
 
 
 class Font(object):
+
     def __init__(self):
         self._byte_array = None
         self.font_index = None

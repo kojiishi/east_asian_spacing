@@ -5,6 +5,7 @@ import math
 
 
 class Config(object):
+
     def __init__(self):
         self.cjk_opening = {
             0x3008, 0x300A, 0x300C, 0x300E, 0x3010, 0x3014, 0x3016, 0x3018,
@@ -141,6 +142,7 @@ class Config(object):
 
 
 class CollectionConfig(Config):
+
     def __init__(self, font, languages=None, indices=None):
         assert font.is_collection
         super().__init__()

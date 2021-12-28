@@ -69,6 +69,7 @@ def _eq_attr(a, b, attr):
 
 
 class GlyphData(object):
+
     def __init__(self, glyph_id, cluster_index, advance, offset):
         self.glyph_id = glyph_id
         self.cluster_index = cluster_index
@@ -130,6 +131,7 @@ class GlyphData(object):
 
 
 class ShapeResult(object):
+
     def __init__(self, glyphs=()):
         self._glyphs = glyphs  # type: typing.Union[typing.Iterator[GlyphData], typing.Tuple[GlyphData, ...]]
 
@@ -189,6 +191,7 @@ class ShapeResult(object):
 
 
 class ShaperBase(object):
+
     def __init__(self,
                  font,
                  language=None,
@@ -240,6 +243,7 @@ class ShaperBase(object):
 
 
 class UHarfBuzzShaper(ShaperBase):
+
     async def shape(self, text):
         if not text:
             return ShapeResult()
@@ -287,6 +291,7 @@ class UHarfBuzzShaper(ShaperBase):
 
 
 class HbShapeShaper(ShaperBase):
+
     async def shape(self, text):
         if not text:
             return ShapeResult()

@@ -31,6 +31,7 @@ def _is_shaper_log_enabled():
 
 
 class GlyphSets(object):
+
     def __init__(self, left=None, right=None, middle=None, space=None):
         self.left = left if left is not None else set()
         self.right = right if right is not None else set()
@@ -169,6 +170,7 @@ class GlyphSets(object):
         logger.debug('add_glyphs %s for "%s"', self, font)
 
     class _ShapeHelper(object):
+
         def __init__(self, glyph_sets, font, log_name=None):
             self._font = font
             self._glyph_data_list = glyph_sets._glyph_data_list
@@ -344,6 +346,7 @@ class GlyphSets(object):
         return result
 
     class GlyphTypeCache(object):
+
         def __init__(self):
             self.type_by_glyph_id = dict()
 
@@ -397,6 +400,7 @@ class GlyphSets(object):
         return cache.add_to_trio(self, glyphs)
 
     class PosValues(object):
+
         def __init__(self, font: Font, trio) -> None:
             self.left = tuple(font.glyph_names(sorted(trio.left)))
             self.right = tuple(font.glyph_names(sorted(trio.right)))
@@ -561,6 +565,7 @@ class GlyphSets(object):
 
 
 class EastAsianSpacing(object):
+
     def __init__(self):
         self.horizontal = GlyphSets()
         self.vertical = GlyphSets()

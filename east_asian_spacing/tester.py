@@ -76,6 +76,7 @@ class ShapeTest(object):
 
 
 class EastAsianSpacingTester(object):
+
     def __init__(self, font, glyphs=None, vertical_glyphs=None):
         self.font = font
         self._glyphs = glyphs

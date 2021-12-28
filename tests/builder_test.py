@@ -11,6 +11,7 @@ from east_asian_spacing import Font
 
 
 def test_calc_output_path(data_dir):
+
     def call(input_path, output_path, stem_suffix=None):
         input_path = pathlib.Path(input_path)
         if output_path:
@@ -33,6 +34,7 @@ def test_calc_output_path(data_dir):
 
 
 def test_expand_paths(monkeypatch):
+
     def call(items):
         return list(str(path) for path in Builder.expand_paths(items))
 

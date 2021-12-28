@@ -8,7 +8,9 @@ from east_asian_spacing import EastAsianSpacingTester
 
 @pytest.mark.asyncio
 async def test_config(test_font_path, tmp_path):
+
     class MyCustomConfig(Config):
+
         def __init__(self):
             super().__init__()
             self.cjk_opening = {0x3008}
@@ -41,6 +43,7 @@ def test_change_quotes_closing_to_opening():
 
 
 def test_down_sample_to():
+
     def call(input, max):
         return Config._down_sample_to(input, max)
 
@@ -50,6 +53,7 @@ def test_down_sample_to():
 
 
 def test_calc_indices_and_languages():
+
     def call(num_fonts, indices, language):
         return list(
             CollectionConfig._calc_indices_and_languages(
