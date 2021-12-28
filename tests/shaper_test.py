@@ -1,9 +1,12 @@
+import itertools
+
 from east_asian_spacing.shaper import InkPartMargin
 import pytest
 
 from east_asian_spacing import Font
 from east_asian_spacing import InkPart
 from east_asian_spacing import GlyphData
+from east_asian_spacing import GlyphDataList
 from east_asian_spacing import Shaper
 from east_asian_spacing import ShapeResult
 
@@ -64,3 +67,27 @@ async def test_ink_part(test_font_path):
     assert result[1].ink_part == InkPart.LEFT
     assert result[2].ink_part == InkPart.MIDDLE
     assert result[3].ink_part == InkPart.OTHER
+
+
+@pytest.mark.asyncio
+async def test_glyph_data_set(test_font_path):
+    font = Font.load(test_font_path)
+    shaper = Shaper(font)
+    result = await shaper.shape('\uFF08\uFF09\u30FB\u56DB')
+    result.ensure_multi_iterations()
+    glyphs = GlyphDataList(result)
+    assert len(glyphs) == len(result)
+    assert list(glyphs.glyph_ids) == list(result.glyph_ids)
+
+    result2 = await shaper.shape('\u3000')
+    result2.ensure_multi_iterations()
+    glyphs2 = GlyphDataList(result2)
+
+    glyphs |= result2
+    assert len(glyphs) == len(result) + len(result2)
+    assert list(glyphs.glyph_ids) == list(
+        itertools.chain(result.glyph_ids, result2.glyph_ids))
+
+    glyphs -= glyphs2
+    assert len(glyphs) == len(result)
+    assert list(glyphs.glyph_ids) == list(result.glyph_ids)

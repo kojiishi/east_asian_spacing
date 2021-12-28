@@ -10,7 +10,12 @@ import os
 import pathlib
 import shlex
 from subprocess import CalledProcessError
-import typing
+from typing import Iterable
+from typing import Iterator
+from typing import List
+from typing import Optional
+from typing import Union
+from typing import Tuple
 
 import uharfbuzz as hb
 
@@ -103,6 +108,9 @@ class GlyphData(object):
                 values.append(f'i:{ink_part}')
         return f'{{{",".join(values)}}}'
 
+    def clear_cluster_index(self):
+        self.cluster_index = None
+
     def compute_ink_part(self, font):
         self.bounds = bounds = font.glyph_bounds(self.glyph_id)
         if bounds is None:
@@ -130,10 +138,78 @@ class GlyphData(object):
         logger.debug('ink_part: not %s %s', ink_part, glyph)
 
 
+class GlyphDataList(object):
+    """Represents a list of `GlyphData`.
+
+    This class can keep multiple different `GlyphData` for a glyph id by using
+    a `List` as its internal storage. But the interface is similar to `dict` or
+    `set`, to ease `set`-like operations such as unions or subtractions.
+    """
+
+    def __init__(self, glyphs: Optional[Iterable[GlyphData]] = None):
+        self._glyphs = []  # type: List[GlyphData]
+        if glyphs is not None:
+            self |= glyphs
+
+    def __bool__(self):
+        return len(self._glyphs) > 0
+
+    def __len__(self):
+        return len(self._glyphs)
+
+    def __iter__(self):
+        return iter(self._glyphs)
+
+    @property
+    def glyph_ids(self):
+        return (g.glyph_id for g in self._glyphs)
+
+    @property
+    def glyph_id_set(self):
+        return set(self.glyph_ids)
+
+    def __contains__(self, glyph: Union[GlyphData, int]):
+        if type(glyph) is GlyphData:
+            return glyph in self._glyphs
+        if type(glyph) is int:
+            return glyph in self.glyph_ids
+        assert False
+
+    def isdisjoint(self, other: 'GlyphDataList'):
+        return self.glyph_id_set.isdisjoint(other.glyph_id_set)
+
+    def __str__(self):
+        return str(list(self.glyph_ids))
+
+    def add(self, glyph: GlyphData):
+        self._glyphs.append(glyph)
+
+    def clear(self):
+        self._glyphs.clear()
+
+    def __isub__(self, other: 'GlyphDataList'):
+        assert type(other) is GlyphDataList
+        other_glyph_ids = other.glyph_id_set
+        self._glyphs = list(g for g in self._glyphs
+                            if g.glyph_id not in other_glyph_ids)
+        return self
+
+    def __or__(self, other: Optional[Iterable[GlyphData]]):
+        result = GlyphDataList(self)
+        result |= other
+        return result
+
+    def __ior__(self, other: Optional[Iterable[GlyphData]]):
+        if other is None:
+            return self
+        self._glyphs.extend(other)
+        return self
+
+
 class ShapeResult(object):
 
     def __init__(self, glyphs=()):
-        self._glyphs = glyphs  # type: typing.Union[typing.Iterator[GlyphData], typing.Tuple[GlyphData, ...]]
+        self._glyphs = glyphs  # type: Union[Iterator[GlyphData], Tuple[GlyphData, ...]]
 
     def __eq__(self, other):
         return self._glyphs == other._glyphs

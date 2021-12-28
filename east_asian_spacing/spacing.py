@@ -5,7 +5,9 @@ import itertools
 import logging
 import math
 import sys
+from typing import Iterable
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 from fontTools.otlLib.builder import buildValue
@@ -19,6 +21,8 @@ from fontTools.ttLib.tables import otTables
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 import east_asian_spacing.log_utils as log_utils
+from east_asian_spacing.shaper import GlyphData, GlyphDataList
+from east_asian_spacing.shaper import GlyphDataList
 from east_asian_spacing.shaper import InkPart
 from east_asian_spacing.shaper import Shaper
 
@@ -32,11 +36,15 @@ def _is_shaper_log_enabled():
 
 class GlyphSets(object):
 
-    def __init__(self, left=None, right=None, middle=None, space=None):
-        self.left = left if left is not None else set()
-        self.right = right if right is not None else set()
-        self.middle = middle if middle is not None else set()
-        self.space = space if space is not None else set()
+    def __init__(self,
+                 left: Optional[GlyphDataList] = None,
+                 right: Optional[GlyphDataList] = None,
+                 middle: Optional[GlyphDataList] = None,
+                 space: Optional[GlyphDataList] = None):
+        self.left = left if left is not None else GlyphDataList()
+        self.right = right if right is not None else GlyphDataList()
+        self.middle = middle if middle is not None else GlyphDataList()
+        self.space = space if space is not None else GlyphDataList()
 
         self._add_glyphs_count = 0
         # For checking purposes. Because this class keeps glyph IDs, using the
@@ -53,13 +61,20 @@ class GlyphSets(object):
             self._root_font = font.root_or_self
 
     @property
-    def _name_and_glyphs(self):
+    def _glyph_data_lists(self):
+        return (self.left, self.right, self.middle, self.space)
+
+    @property
+    def _name_and_glyph_data_lists(self):
         return (('left', self.left), ('right', self.right),
                 ('middle', self.middle), ('space', self.space))
 
     @property
     def glyph_ids(self):
-        return self.left | self.middle | self.right | self.space
+        glyph_ids = set()
+        for glyph_data_set in self._glyph_data_lists:
+            glyph_ids |= glyph_data_set.glyph_id_set
+        return glyph_ids
 
     def assert_glyphs_are_disjoint(self):
         assert self.left.isdisjoint(self.middle)
@@ -70,27 +85,29 @@ class GlyphSets(object):
         assert self.right.isdisjoint(self.space)
 
     def _to_str(self, glyph_ids=False):
-        name_and_glyphs = self._name_and_glyphs
-        name_and_glyphs = filter(lambda name_and_glyph: name_and_glyph[1],
-                                 name_and_glyphs)
+        name_and_glyph_data_lists = self._name_and_glyph_data_lists
+        # Filter out empty glyph sets.
+        name_and_glyph_data_lists = filter(
+            lambda name_and_glyph: name_and_glyph[1],
+            name_and_glyph_data_lists)
         if glyph_ids:
-            strs = (f'{name}={sorted(glyphs)}'
-                    for name, glyphs in name_and_glyphs)
+            strs = (f'{name}={sorted(glyphs.glyph_ids)}'
+                    for name, glyphs in name_and_glyph_data_lists)
         else:
             strs = (f'{len(glyphs)}{name[0].upper()}'
-                    for name, glyphs in name_and_glyphs)
+                    for name, glyphs in name_and_glyph_data_lists)
         return ', '.join(strs)
 
     def __str__(self):
         return self._to_str()
 
     @property
-    def _glyph_data_by_glyph_id(self):
+    def _glyph_data_list_by_glyph_id(self):
         if not self._glyph_data_list:
             return None
         result = dict()
         for glyph_data in self._glyph_data_list:
-            glyph_data.cluster_index = None
+            glyph_data.clear_cluster_index()
             glyph_data_list = result.get(glyph_data.glyph_id)
             if glyph_data_list:
                 if glyph_data not in glyph_data_list:
@@ -100,7 +117,7 @@ class GlyphSets(object):
         return result
 
     def save_glyphs(self, output, prefix='', separator='\n'):
-        glyph_data_by_glyph_id = self._glyph_data_by_glyph_id
+        glyph_data_by_glyph_id = self._glyph_data_list_by_glyph_id
 
         def str_from_glyph_id(glyph_id):
             if glyph_data_by_glyph_id:
@@ -111,11 +128,11 @@ class GlyphSets(object):
                     return f'{glyph_id} # {glyph_data_list}'
             return str(glyph_id)
 
-        for name, glyphs in self._name_and_glyphs:
+        for name, glyph_data_list in self._name_and_glyph_data_lists:
             output.write(f'# {prefix}{name}\n')
-            glyphs = sorted(glyphs)
-            glyphs = (str_from_glyph_id(glyph_id) for glyph_id in glyphs)
-            output.write(separator.join(glyphs))
+            glyph_ids = sorted(glyph_data_list.glyph_id_set)
+            glyph_strs = (str_from_glyph_id(g) for g in glyph_ids)
+            output.write(separator.join(glyph_strs))
             output.write('\n')
 
         if glyph_data_by_glyph_id:
@@ -138,13 +155,13 @@ class GlyphSets(object):
         if self._glyph_data_list is not None and other._glyph_data_list:
             self._glyph_data_list.extend(other._glyph_data_list)
 
-    def add_by_ink_part(self, glyphs, font):
+    def add_by_ink_part(self, glyphs: Iterable[GlyphData], font):
         for glyph in glyphs:
             ink_pos = glyph.get_ink_part(font)
             if ink_pos == InkPart.LEFT:
-                self.left.add(glyph.glyph_id)
+                self.left.add(glyph)
             elif ink_pos == InkPart.MIDDLE:
-                self.middle.add(glyph.glyph_id)
+                self.middle.add(glyph)
             else:
                 _log_shaper.debug('ink_part: ignored %s', glyph)
         self.assert_glyphs_are_disjoint()
@@ -204,7 +221,7 @@ class GlyphSets(object):
         result = await shaper.shape(unicodes,
                                     language=language,
                                     temporary=True)
-        return set(result.glyph_ids)
+        return GlyphDataList(result)
 
     @staticmethod
     async def ensure_fullwidth_advance(font: Font, config: Config) -> bool:
@@ -242,8 +259,8 @@ class GlyphSets(object):
             left.filter_ink_part(font, InkPart.LEFT)
             right.filter_ink_part(font, InkPart.RIGHT)
             middle.filter_ink_part(font, InkPart.MIDDLE)
-        trio = GlyphSets(set(left.glyph_ids), set(right.glyph_ids),
-                         set(middle.glyph_ids), set(space.glyph_ids))
+        trio = GlyphSets(GlyphDataList(left), GlyphDataList(right),
+                         GlyphDataList(middle), GlyphDataList(space))
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
@@ -267,8 +284,8 @@ class GlyphSets(object):
         if config.use_ink_bounds:
             ja.filter_ink_part(font, InkPart.LEFT)
             zht.filter_ink_part(font, InkPart.MIDDLE)
-        ja = set(ja.glyph_ids)
-        zht = set(zht.glyph_ids)
+        ja = GlyphDataList(ja)
+        zht = GlyphDataList(zht)
         if not config.use_ink_bounds and ja == zht:
             if not config.language: font.raise_require_language()
             if config.language == "ZHT" or config.language == "ZHH":
@@ -290,8 +307,8 @@ class GlyphSets(object):
         if config.use_ink_bounds:
             trio.add_by_ink_part(itertools.chain(ja, zhs), font)
         else:
-            ja = set(ja.glyph_ids)
-            zhs = set(zhs.glyph_ids)
+            ja = GlyphDataList(ja)
+            zhs = GlyphDataList(zhs)
             ja = trio.add_from_cache(font, ja)
             zhs = trio.add_from_cache(font, zhs)
             if not ja and not zhs:
@@ -329,11 +346,11 @@ class GlyphSets(object):
         ja, zhs = await asyncio.gather(shaper.shape(text, language="JAN"),
                                        shaper.shape(text, language="ZHS"))
         if config.use_ink_bounds:
-            ja = set()
+            ja = GlyphDataList()
             zhs.filter_ink_part(font, InkPart.LEFT)
         else:
-            ja = set(ja.glyph_ids)
-        zhs = set(zhs.glyph_ids)
+            ja = GlyphDataList(ja)
+        zhs = GlyphDataList(zhs)
         if not config.use_ink_bounds and ja == zhs:
             if not config.language: font.raise_require_language()
             if config.language == "ZHS":
@@ -350,7 +367,7 @@ class GlyphSets(object):
         def __init__(self):
             self.type_by_glyph_id = dict()
 
-        def add_glyphs(self, glyphs, value):
+        def add_glyphs(self, glyphs: Iterable[int], value):
             for glyph_id in glyphs:
                 assert self.type_by_glyph_id.get(glyph_id, value) == value
                 self.type_by_glyph_id[glyph_id] = value
@@ -372,28 +389,28 @@ class GlyphSets(object):
             return cache
 
         def add_trio(self, glyph_set_trio):
-            self.add_glyphs(glyph_set_trio.left, "L")
-            self.add_glyphs(glyph_set_trio.middle, "M")
-            self.add_glyphs(glyph_set_trio.right, "R")
+            self.add_glyphs(glyph_set_trio.left.glyph_ids, "L")
+            self.add_glyphs(glyph_set_trio.middle.glyph_ids, "M")
+            self.add_glyphs(glyph_set_trio.right.glyph_ids, "R")
 
-        def add_to_trio(self, glyph_set_trio, glyphs):
-            not_cached = set()
-            glyph_ids_by_value = {
+        def add_to_trio(self, glyph_set_trio, glyphs: Iterable[GlyphData]):
+            not_cached = GlyphDataList()
+            glyph_set_by_value = {
                 None: not_cached,
                 "L": glyph_set_trio.left,
                 "M": glyph_set_trio.middle,
                 "R": glyph_set_trio.right
             }
-            for glyph_id in glyphs:
-                value = self.type_from_glyph_id(glyph_id)
-                glyph_ids_by_value[value].add(glyph_id)
+            for glyph in glyphs:
+                value = self.type_from_glyph_id(glyph.glyph_id)
+                glyph_set_by_value[value].add(glyph)
             return not_cached
 
     def add_to_cache(self, font):
         cache = GlyphSets.GlyphTypeCache.get(font, create=True)
         cache.add_trio(self)
 
-    def add_from_cache(self, font, glyphs):
+    def add_from_cache(self, font, glyphs: Iterable[GlyphData]):
         cache = GlyphSets.GlyphTypeCache.get(font, create=False)
         if cache is None:
             return glyphs
@@ -402,10 +419,9 @@ class GlyphSets(object):
     class PosValues(object):
 
         def __init__(self, font: Font, trio) -> None:
-            self.left = tuple(font.glyph_names(sorted(trio.left)))
-            self.right = tuple(font.glyph_names(sorted(trio.right)))
-            self.middle = tuple(font.glyph_names(sorted(trio.middle)))
-            self.space = tuple(font.glyph_names(sorted(trio.space)))
+            self.left, self.right, self.middle, self.space = (
+                tuple(font.glyph_names(sorted(glyphs.glyph_id_set)))
+                for glyphs in trio._glyph_data_lists)
 
             em = font.fullwidth_advance
             # When `em` is an odd number, ceil the advance. To do this, use
