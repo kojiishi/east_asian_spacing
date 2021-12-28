@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import enum
 import io
+import itertools
 import json
 import logging
 import os
@@ -151,6 +152,11 @@ class GlyphDataList(object):
         if glyphs is not None:
             self |= glyphs
 
+    def __eq__(self, other):
+        if type(other) is GlyphDataList:
+            return self._glyphs == other._glyphs
+        return self._glyphs == other
+
     def __bool__(self):
         return len(self._glyphs) > 0
 
@@ -204,6 +210,13 @@ class GlyphDataList(object):
             return self
         self._glyphs.extend(other)
         return self
+
+    def group_by_glyph_id(self) -> Iterator[Tuple[int, GlyphData]]:
+        key_func = lambda g: g.glyph_id
+        glyphs = sorted(self._glyphs, key=key_func)
+        result = itertools.groupby(glyphs, key=key_func)
+        result = map(lambda t: (t[0], GlyphDataList(t[1])), result)
+        return result
 
 
 class ShapeResult(object):

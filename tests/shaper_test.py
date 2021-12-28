@@ -91,3 +91,13 @@ async def test_glyph_data_set(test_font_path):
     glyphs -= glyphs2
     assert len(glyphs) == len(result)
     assert list(glyphs.glyph_ids) == list(result.glyph_ids)
+
+
+def test_glyph_data_set_group_by():
+    g1 = GlyphData(1, None, 100, 0)
+    g1a = GlyphData(1, None, 200, 0)
+    g2 = GlyphData(2, None, 100, 0)
+    glyphs = GlyphDataList([g1, g2, g1a])
+    d = dict(glyphs.group_by_glyph_id())
+    assert d[1] == [g1, g1a]
+    assert d[2] == [g2]

@@ -41,6 +41,7 @@ class Builder(object):
              output=None,
              stem_suffix=None,
              glyph_out=None,
+             glyph_comment=0,
              print_path=False):
         assert self.has_spacings
         font = self.font
@@ -50,7 +51,7 @@ class Builder(object):
         font.save(output)
         paths = [output, path_before_save]
         if glyph_out:
-            glyphs_path = self.save_glyphs(glyph_out)
+            glyphs_path = self.save_glyphs(glyph_out, comment=glyph_comment)
             paths.append(glyphs_path)
         if print_path:
             print('\t'.join(str(path) for path in paths),
@@ -165,7 +166,7 @@ class Builder(object):
             united_spacing.unite(spacing)
         return united_spacing
 
-    def save_glyphs(self, output):
+    def save_glyphs(self, output, **kwargs):
         assert self.has_spacings
         font = self.font
         if isinstance(output, str):
@@ -174,12 +175,12 @@ class Builder(object):
             if output.is_dir():
                 output = output / f'{font.path.name}-glyphs'
             with output.open('w') as out_file:
-                self.save_glyphs(out_file)
+                self.save_glyphs(out_file, **kwargs)
             return output
 
         logger.debug("Saving glyphs to %s", output)
         united_spacing = self._united_spacings()
-        united_spacing.save_glyphs(output)
+        united_spacing.save_glyphs(output, **kwargs)
 
     def _testers(self):
         for spacing in self._spacings:
@@ -238,6 +239,11 @@ class Builder(object):
                             help="fullwidth advance, "
                             "or characters to compute fullwidth advance from")
         parser.add_argument("-g", "--glyph-out", help="output glyph list")
+        parser.add_argument("-G",
+                            "--glyph-comment",
+                            type=int,
+                            default=1,
+                            help="comment level for the glyph list")
         parser.add_argument("-l",
                             "--language",
                             help="language if the font is language-specific,"
@@ -297,10 +303,12 @@ class Builder(object):
                 config = config.with_fullwidth_advance(args.em)
 
             builder = Builder(font, config)
-            output = await builder.build_and_save(args.output,
-                                                  stem_suffix=args.suffix,
-                                                  glyph_out=args.glyph_out,
-                                                  print_path=args.print_path)
+            output = await builder.build_and_save(
+                args.output,
+                stem_suffix=args.suffix,
+                glyph_out=args.glyph_out,
+                glyph_comment=args.glyph_comment,
+                print_path=args.print_path)
             if not output:
                 logger.info('Skipped saving due to no changes: "%s"', input)
                 continue

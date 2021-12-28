@@ -52,7 +52,7 @@ class GlyphSets(object):
         # except they share the same glyph set.
         self._root_font = None
         # For debug/font analysis purpose, keeps all `GlyphData`.
-        self._glyph_data_list = [] if _is_shaper_log_enabled() else None
+        self._all_glyphs = GlyphDataList()
 
     def assert_font(self, font):
         if self._root_font:
@@ -103,10 +103,10 @@ class GlyphSets(object):
 
     @property
     def _glyph_data_list_by_glyph_id(self):
-        if not self._glyph_data_list:
+        if not self._all_glyphs:
             return None
         result = dict()
-        for glyph_data in self._glyph_data_list:
+        for glyph_data in self._all_glyphs:
             glyph_data.clear_cluster_index()
             glyph_data_list = result.get(glyph_data.glyph_id)
             if glyph_data_list:
@@ -116,15 +116,21 @@ class GlyphSets(object):
                 result[glyph_data.glyph_id] = [glyph_data]
         return result
 
-    def save_glyphs(self, output, prefix='', separator='\n'):
-        glyph_data_by_glyph_id = self._glyph_data_list_by_glyph_id
+    def save_glyphs(self, output, prefix='', separator='\n', comment=0):
+        glyph_data_by_glyph_id = self._glyph_data_list_by_glyph_id if comment else None
+
+        def str_from_glyph_data(glyph_data: GlyphData):
+            if comment <= 1:
+                return ' '.join(f'U+{ord(c):04X} {c}' for c in glyph_data.text)
+            return str(glyph_data)
 
         def str_from_glyph_id(glyph_id):
             if glyph_data_by_glyph_id:
                 glyph_data_list = glyph_data_by_glyph_id.get(glyph_id)
                 if glyph_data_list:
-                    glyph_data_list = ', '.join(
-                        str(glyph_data) for glyph_data in glyph_data_list)
+                    glyph_data_list = (str_from_glyph_data(g)
+                                       for g in glyph_data_list)
+                    glyph_data_list = ', '.join(glyph_data_list)
                     return f'{glyph_id} # {glyph_data_list}'
             return str(glyph_id)
 
@@ -143,7 +149,9 @@ class GlyphSets(object):
                     key=lambda key_value: key_value[0]):
                 if glyph_id not in glyph_ids:
                     for glyph_data in glyph_data_list:
-                        output.write(f'# {glyph_data}\n')
+                        output.write(
+                            f'# {glyph_data.glyph_id} {str_from_glyph_data(glyph_data)}\n'
+                        )
 
     def unite(self, other):
         if not other:
@@ -152,8 +160,7 @@ class GlyphSets(object):
         self.middle |= other.middle
         self.right |= other.right
         self.space |= other.space
-        if self._glyph_data_list is not None and other._glyph_data_list:
-            self._glyph_data_list.extend(other._glyph_data_list)
+        self._all_glyphs |= other._all_glyphs
 
     def add_by_ink_part(self, glyphs: Iterable[GlyphData], font):
         for glyph in glyphs:
@@ -188,9 +195,9 @@ class GlyphSets(object):
 
     class _ShapeHelper(object):
 
-        def __init__(self, glyph_sets, font, log_name=None):
+        def __init__(self, glyph_sets: 'GlyphSets', font, log_name=None):
             self._font = font
-            self._glyph_data_list = glyph_sets._glyph_data_list
+            self._all_glyphs = glyph_sets._all_glyphs
             self._log_name = log_name
 
         async def shape(self, unicodes, language=None, temporary=False):
@@ -206,9 +213,10 @@ class GlyphSets(object):
                             log_name=self._log_name)
             result = await shaper.shape(text)
 
-            if not temporary and self._glyph_data_list is not None:
+            result.set_text(text)
+            if not temporary and self._all_glyphs is not None:
                 result.ensure_multi_iterations()
-                self._glyph_data_list.extend(result)
+                self._all_glyphs |= result
 
             result.filter_missing_glyphs()
             # East Asian spacing applies only to fullwidth glyphs.
@@ -410,7 +418,7 @@ class GlyphSets(object):
         cache = GlyphSets.GlyphTypeCache.get(font, create=True)
         cache.add_trio(self)
 
-    def add_from_cache(self, font, glyphs: Iterable[GlyphData]):
+    def add_from_cache(self, font, glyphs: GlyphDataList) -> GlyphDataList:
         cache = GlyphSets.GlyphTypeCache.get(font, create=False)
         if cache is None:
             return glyphs
@@ -595,12 +603,13 @@ class EastAsianSpacing(object):
     def __str__(self):
         return self._to_str(False)
 
-    def save_glyphs(self, output, separator='\n'):
-        self.horizontal.save_glyphs(output, separator=separator)
+    def save_glyphs(self, output, separator='\n', **kwargs):
+        self.horizontal.save_glyphs(output, separator=separator, **kwargs)
         if self.vertical:
             self.vertical.save_glyphs(output,
                                       prefix='vertical.',
-                                      separator=separator)
+                                      separator=separator,
+                                      **kwargs)
 
     def unite(self, other):
         self.horizontal.unite(other.horizontal)
