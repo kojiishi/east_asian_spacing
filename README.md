@@ -28,7 +28,7 @@ may help to understand the feature better.
 ### Demo
 
 You can find [sample text here](http://kojiishi.github.io/chws/samples.html).
-The sample page uses fonts built with this tool.
+This sample page uses fonts built with this tool.
 
 ### OpenType Font Features
 
@@ -52,54 +52,31 @@ such as Unicode code points and glyph outlines.
 [`vchw`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_uz#tag-vchw
 [`vhal`]: https://docs.microsoft.com/en-us/typography/opentype/spec/features_uz#tag-vhal
 
-## Install
+## Adding the features to your fonts
+
+### Install
 [install]: #install
 
-There are 3 ways to install this package,
-depending on your needs.
+You can install this tool by [pip] or [pipx].
 
-### Command Line Tool
-
-If all what you need is the command line tool,
-[pipx] can install it globally
-while still isolating it in a virtual environment:
 ```sh
 pipx install east-asian-spacing
 ```
-You can also install with [pip].
+```sh
+pip install east-asian-spacing
+```
+
 Please be aware that,
 if you install with [pip] in the global environment,
 its dependencies may cause conflicts with other packages.
-```sh
-pip install east-asian-spacing
-```
+If all what you need is the command line tool,
+[pipx] can install it globally
+while still isolating it in a virtual environment.
 
-### For Your Python Programs
-
-If you want to use this tool from your Python programs,
-you can install using your package management tools
-such as [poetry], [pipenv], or [pip].
-```sh
-pip install east-asian-spacing
-```
-
-### Clone and Install
-
-If you may need to diagnose fonts or the code,
-cloning and installing using [poetry] is recommended:
-```sh
-git clone https://github.com/kojiishi/east_asian_spacing
-cd east_asian_spacing
-poetry install
-poetry shell
-```
-This method:
-* Installs the exact versions of dependencies.
-* Installs in the editable mode
-(i.e., [pip "`-e`" option] or setuptools "[development mode]").
-* Installs testing tools too.
-You can run [unit tests] to verify your installation if needed.
-
+Please also see the [package install] section
+if you want to use this package from your Python program,
+or the [clone and install] section
+if you want to diagnose fonts or the code in more details.
 
 [development mode]: https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html
 [editable mode]: https://pip.pypa.io/en/stable/cli/pip_install/#install-editable
@@ -110,34 +87,36 @@ You can run [unit tests] to verify your installation if needed.
 [pipenv]: https://github.com/pypa/pipenv
 [poetry]: https://github.com/python-poetry/poetry
 
-## Adding the features to your fonts
-
-### Command Line Usage
+### Command Line Usages
 
 The following example adds the feature to `input-font-file`
 and saves it to the `build` directory.
 ```sh
 east-asian-spacing -o build input-font-file
 ```
-The `--help` option shows the full list of options.
+
+The [testing] section has resources for
+[checking the differences] and
+testing fonts you built.
+
+For other options and usages,
+the `--help` option can show the full list of options.
 
 ### Supported Fonts
 
-The [algorithm] is language agnostic and is applicable to any CJK fonts.
+The [algorithm] is applicable to any CJK fonts.
 Following fonts are tested on each release:
 * [Noto CJK]
 * Meiryo
+* BIZ UDGothic
 
+CJK fonts at [fonts.google.com] are tested in the [chws_tool] package.
 Several other fonts were also tested during the development.
 
 When adding the features to your fonts,
 the [test HTML] is a handy tool to check the results.
 If you encounter any problems with your fonts,
 please report to [issues].
-
-The [chws_tool] package is an example project
-that extends this package to support more fonts.
-It supports CJK fonts at [fonts.google.com].
 
 Please also see the [Advanced Topics] below
 if you want to customize the default behaviors for your fonts.
@@ -161,6 +140,29 @@ east-asian-spacing --index=0,1 input-font-file.ttc
 ```
 
 ## API
+
+
+### Package Install
+[package install]: #package-install
+
+You can install this package
+using your favorite package management tools
+such as [poetry], [pipenv], or [pip].
+```sh
+pip install east-asian-spacing
+```
+```sh
+pipenv install east-asian-spacing
+```
+```sh
+poetry add east-asian-spacing
+```
+
+Please also see the [clone and install] section
+if you want to diagnose fonts or the code in more details.
+
+
+### Sample Code
 
 The following example creates a font with the features
 in the "`build`" directory if the features are applicable.
@@ -256,7 +258,7 @@ Currently, this is possible only from Python programs.
 For a simple example, please see the `test_config` function
 in [`tests/config_test.py`].
 
-The [chws_tool] project is an example of customizing this package.
+The [chws_tool] project is an actual example of customizing this package.
 
 [`Config` class]: https://github.com/kojiishi/east_asian_spacing/blob/main/east_asian_spacing/config.py
 [`tests/config_test.py`]: https://github.com/kojiishi/east_asian_spacing/blob/main/tests/config_test.py
@@ -289,7 +291,34 @@ Instructions for other platforms may be available at
 [homebrew]: https://brew.sh/
 [uharfbuzz]: https://github.com/harfbuzz/uharfbuzz
 
+
+### Clone and Install
+[clone and install]: #clone-and-install
+
+If you may need to diagnose fonts or the code,
+cloning and installing using [poetry] is recommended:
+```sh
+git clone https://github.com/kojiishi/east_asian_spacing
+cd east_asian_spacing
+poetry install
+poetry shell
+```
+This method:
+* Installs the exact versions of dependencies.
+* Installs in the editable mode
+(i.e., [pip "`-e`" option] or setuptools "[development mode]").
+* Installs testing tools too.
+You can run [unit tests] to verify your installation if needed.
+
+You can also install the cloned directory using [pip]:
+```sh
+git clone https://github.com/kojiishi/east_asian_spacing
+cd east_asian_spacing
+pip install .
+```
+
 ## Testing
+[testing]: #testing
 
 ### Test HTML
 [test HTML]: #test-html
@@ -344,6 +373,7 @@ east-asian-spacing dump -o build/dump --ttx build/*.ttc
 
 ### Diff
 [diff]: #diff
+[checking the differences]: #diff
 
 The `dump` sub-command can also create
 [dump] files of two font files and compare them.
@@ -352,14 +382,17 @@ specifically, the font files you created from the original font files.
 ```sh
 east-asian-spacing dump -o build/diff --diff source_fonts_dir build/NotoSansCJK.ttc
 ```
-The example above creates following 3 sets of files:
+The example above
+computes the differences between
+`source_fonts_dir/NotoSansCJK.ttc` and `build/NotoSansCJK.ttc`
+by creating following 3 sets of files:
 1. The table list and TTX text dump files for `build/NotoSansCJK.ttc`
    in the `build/diff/dump` directory.
 2. The table list and TTX text dump files for `source_fonts_dir/NotoSansCJK.ttc`
    in the `build/diff/src` directory.
 3. Diff files of the two sets of dump files in the `build/diff` directory.
 
-Note:
+> Note:
 The "`--diff`" option is more efficient than doing all these,
 especially for large fonts,
 because it skips creating TTX of tables when they are binary-equal.
@@ -432,7 +465,7 @@ including [shape tests],
 adding the feature to a test font,
 and comparing it with [references].
 
-If you used [poetry] to [install],
+If you followed the [clone and install] section,
 tools for unit testing are already installed.
 Before you run them first time,
 you need to download fonts for testing:
