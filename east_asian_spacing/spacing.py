@@ -101,23 +101,9 @@ class GlyphSets(object):
     def __str__(self):
         return self._to_str()
 
-    @property
-    def _glyph_data_list_by_glyph_id(self):
-        if not self._all_glyphs:
-            return None
-        result = dict()
-        for glyph_data in self._all_glyphs:
-            glyph_data.clear_cluster_index()
-            glyph_data_list = result.get(glyph_data.glyph_id)
-            if glyph_data_list:
-                if glyph_data not in glyph_data_list:
-                    glyph_data_list.append(glyph_data)
-            else:
-                result[glyph_data.glyph_id] = [glyph_data]
-        return result
-
     def save_glyphs(self, output, prefix='', separator='\n', comment=0):
-        glyph_data_by_glyph_id = self._glyph_data_list_by_glyph_id if comment else None
+        glyphs_by_glyph_id = (dict(self._all_glyphs.group_by_glyph_id())
+                              if comment else None)
 
         def str_from_glyph_data(glyph_data: GlyphData):
             if comment <= 1:
@@ -125,8 +111,8 @@ class GlyphSets(object):
             return str(glyph_data)
 
         def str_from_glyph_id(glyph_id):
-            if glyph_data_by_glyph_id:
-                glyph_data_list = glyph_data_by_glyph_id.get(glyph_id)
+            if glyphs_by_glyph_id:
+                glyph_data_list = glyphs_by_glyph_id.get(glyph_id)
                 if glyph_data_list:
                     glyph_data_list = (str_from_glyph_data(g)
                                        for g in glyph_data_list)
@@ -141,17 +127,18 @@ class GlyphSets(object):
             output.write(separator.join(glyph_strs))
             output.write('\n')
 
-        if glyph_data_by_glyph_id:
+        if glyphs_by_glyph_id:
             output.write(f'# {prefix}filtered\n')
             glyph_ids = self.glyph_ids
             for glyph_id, glyph_data_list in sorted(
-                    glyph_data_by_glyph_id.items(),
+                    glyphs_by_glyph_id.items(),
                     key=lambda key_value: key_value[0]):
-                if glyph_id not in glyph_ids:
-                    for glyph_data in glyph_data_list:
-                        output.write(
-                            f'# {glyph_data.glyph_id} {str_from_glyph_data(glyph_data)}\n'
-                        )
+                if glyph_id in glyph_ids:
+                    continue
+                for glyph_data in glyph_data_list:
+                    output.write(
+                        f'# {glyph_data.glyph_id} {str_from_glyph_data(glyph_data)}\n'
+                    )
 
     def unite(self, other):
         if not other:

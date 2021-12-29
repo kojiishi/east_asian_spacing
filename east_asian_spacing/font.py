@@ -3,8 +3,10 @@ import argparse
 import itertools
 import logging
 import pathlib
-from typing import Any, Iterable, Optional
+from typing import Any
 from typing import Generator
+from typing import Optional
+from typing import Tuple
 
 from fontTools.ttLib import newTable
 from fontTools.ttLib import TTFont
@@ -304,7 +306,7 @@ class Font(object):
             return (ttfont.getGlyphName(glyph_id) for glyph_id in glyph_ids)
         return (f'glyph{glyph_id:05}' for glyph_id in glyph_ids)
 
-    def glyph_bounds(self, glyph):
+    def glyph_bounds(self, glyph) -> Tuple[int]:
         glyph = self.glyph_name(glyph)
         ttglyphset = self.ttglyphset
         ttglyph = ttglyphset[glyph]

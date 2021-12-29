@@ -30,6 +30,14 @@ def show_dump_images():
     ShaperBase._dump_images = True
 
 
+def _uniq(items):
+    exists = set()
+    for item in items:
+        if item not in exists:
+            exists.add(item)
+            yield item
+
+
 class InkPart(enum.Enum):
     LEFT = enum.auto()
     RIGHT = enum.auto()
@@ -70,43 +78,43 @@ def _compute_ink_part(min, max, left, right):
     return InkPart.OTHER
 
 
-def _eq_attr(a, b, attr):
-    return getattr(a, attr, None) == getattr(b, attr, None)
-
-
 class GlyphData(object):
 
-    def __init__(self, glyph_id, cluster_index, advance, offset):
+    def __init__(self, glyph_id: int, cluster_index: Optional[int],
+                 advance: int, offset: int):
         self.glyph_id = glyph_id
         self.cluster_index = cluster_index
         self.advance = advance
         self.offset = offset
+        self.text = None  # type: Optional[str]
+        self.bounds = None  # type: Optional[Tuple[int]]
+        self.ink_part = None  # type: Optional[InkPart]
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'GlyphData'):
         return (self.glyph_id == other.glyph_id
                 and self.cluster_index == other.cluster_index
                 and self.advance == other.advance
-                and self.offset == other.offset
-                and _eq_attr(self, other, 'text')
-                and _eq_attr(self, other, 'bounds')
-                and _eq_attr(self, other, 'ink_part'))
+                and self.offset == other.offset and self.text == other.text
+                and self.bounds == other.bounds
+                and self.ink_part == other.ink_part)
+
+    def __hash__(self):
+        return hash((self.glyph_id, self.cluster_index, self.advance,
+                     self.offset, self.text, self.bounds, self.ink_part))
 
     def __str__(self):
         values = []
-        text = getattr(self, 'text', None)
-        if text:
-            values.append(f't:"{text}"')
+        if self.text:
+            values.append(f't:"{self.text}"')
         if self.cluster_index is not None:
             values.append(f'c:{self.cluster_index}')
         values.append(f'g:{self.glyph_id}')
         if self.glyph_id:
             values.extend((f'a:{self.advance}', f'o:{self.offset}'))
-            bounds = getattr(self, 'bounds', None)
-            if bounds:
-                values.append(f'b:{bounds}')
-            ink_part = getattr(self, 'ink_part', None)
-            if ink_part:
-                values.append(f'i:{ink_part}')
+            if self.bounds:
+                values.append(f'b:{self.bounds}')
+            if self.ink_part:
+                values.append(f'i:{self.ink_part}')
         return f'{{{",".join(values)}}}'
 
     def clear_cluster_index(self):
@@ -126,7 +134,7 @@ class GlyphData(object):
                                           self.advance)
 
     def get_ink_part(self, font):
-        ink_pos = getattr(self, 'ink_part', None)
+        ink_pos = self.ink_part
         if ink_pos is not None:
             return ink_pos
         self.compute_ink_part(font)
@@ -211,9 +219,10 @@ class GlyphDataList(object):
         self._glyphs.extend(other)
         return self
 
-    def group_by_glyph_id(self) -> Iterator[Tuple[int, GlyphData]]:
+    def group_by_glyph_id(self) -> Iterator[Tuple[int, 'GlyphDataList']]:
         key_func = lambda g: g.glyph_id
         glyphs = sorted(self._glyphs, key=key_func)
+        glyphs = _uniq(glyphs)
         result = itertools.groupby(glyphs, key=key_func)
         result = map(lambda t: (t[0], GlyphDataList(t[1])), result)
         return result

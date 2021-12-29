@@ -101,3 +101,10 @@ def test_glyph_data_set_group_by():
     d = dict(glyphs.group_by_glyph_id())
     assert d[1] == [g1, g1a]
     assert d[2] == [g2]
+
+    # The list should be unique; the same `GlyphData` are removed.
+    g2a = GlyphData(2, None, 100, 0)
+    glyphs.add(g2a)
+    d = dict(glyphs.group_by_glyph_id())
+    assert d[1] == [g1, g1a]
+    assert d[2] == [g2]
