@@ -231,6 +231,11 @@ class GlyphDataList(object):
                 non_match.add(glyph)
         self._glyphs = match
 
+    def ifilter_advance(self,
+                        advance: int,
+                        non_match: 'GlyphDataList' = None) -> None:
+        self.ifilter(lambda g: g.advance == advance, non_match)
+
     def ifilter_ink_part(self,
                          ink_part: InkPart,
                          non_match: 'GlyphDataList' = None) -> None:

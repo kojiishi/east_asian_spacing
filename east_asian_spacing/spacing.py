@@ -160,6 +160,13 @@ class GlyphSets(object):
                 _log_shaper.debug('ink_part: ignored %s', glyph)
         self.assert_glyphs_are_disjoint()
 
+    def ifilter_fullwidth(self, font: Font):
+        em = font.fullwidth_advance
+        self.left.ifilter_advance(em)
+        self.right.ifilter_advance(em)
+        self.middle.ifilter_advance(em)
+        self.space.ifilter_advance(em)
+
     async def add_glyphs(self, font, config):
         self.assert_font(font)
         config = config.for_font(font)
@@ -175,6 +182,7 @@ class GlyphSets(object):
                                        self.get_exclam_question(font, config))
         for result in results:
             self.unite(result)
+        self.ifilter_fullwidth(font)
         self.add_to_cache(font)
         self.assert_glyphs_are_disjoint()
         self._add_glyphs_count += 1
@@ -208,8 +216,6 @@ class GlyphSets(object):
                 self._all_glyphs |= result
 
             result.ifilter_missing_glyphs()
-            # East Asian spacing applies only to fullwidth glyphs.
-            result.ifilter_advance(font.fullwidth_advance)
             result.clear_cluster_indexes()
             result.compute_ink_parts(font)
             return GlyphDataList(result)
@@ -219,6 +225,7 @@ class GlyphSets(object):
         result = await shaper.shape(unicodes,
                                     language=language,
                                     temporary=True)
+        result.ifilter_advance(font.fullwidth_advance)
         return result
 
     @staticmethod
