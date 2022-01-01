@@ -11,6 +11,7 @@ import os
 import pathlib
 import shlex
 from subprocess import CalledProcessError
+from typing import Callable
 from typing import Iterable
 from typing import Iterator
 from typing import List
@@ -218,6 +219,24 @@ class GlyphDataList(object):
             return self
         self._glyphs.extend(other)
         return self
+
+    def ifilter(self,
+                predicate: Callable[[GlyphData], bool],
+                non_match: 'GlyphDataList' = None) -> None:
+        match = []
+        for glyph in self._glyphs:
+            if predicate(glyph):
+                match.append(glyph)
+            elif non_match:
+                non_match.add(glyph)
+        self._glyphs = match
+
+    def ifilter_ink_part(self,
+                         ink_part: InkPart,
+                         non_match: 'GlyphDataList' = None) -> None:
+        for g in self:
+            assert g.ink_part is not None
+        self.ifilter(lambda g: g.ink_part == ink_part, non_match)
 
 
 class ShapeResult(object):

@@ -187,7 +187,10 @@ class GlyphSets(object):
             self._all_glyphs = glyph_sets._all_glyphs
             self._log_name = log_name
 
-        async def shape(self, unicodes, language=None, temporary=False):
+        async def shape(self,
+                        unicodes,
+                        language=None,
+                        temporary=False) -> GlyphDataList:
             font = self._font
             text = ''.join(chr(c) for c in unicodes)
             # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
@@ -209,14 +212,14 @@ class GlyphSets(object):
             result.ifilter_advance(font.fullwidth_advance)
             result.clear_cluster_indexes()
             result.compute_ink_parts(font)
-            return result
+            return GlyphDataList(result)
 
-    async def _glyph_id_set(self, font, unicodes, language=None):
+    async def _shape(self, font, unicodes, language=None) -> GlyphDataList:
         shaper = GlyphSets._ShapeHelper(self, font)
         result = await shaper.shape(unicodes,
                                     language=language,
                                     temporary=True)
-        return GlyphDataList(result)
+        return result
 
     @staticmethod
     async def ensure_fullwidth_advance(font: Font, config: Config) -> bool:
@@ -254,13 +257,12 @@ class GlyphSets(object):
             left.ifilter_ink_part(InkPart.LEFT)
             right.ifilter_ink_part(InkPart.RIGHT)
             middle.ifilter_ink_part(InkPart.MIDDLE)
-        trio = GlyphSets(GlyphDataList(left), GlyphDataList(right),
-                         GlyphDataList(middle), GlyphDataList(space))
+        trio = GlyphSets(left, right, middle, space)
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
-            horizontal = await self._glyph_id_set(font.horizontal_font,
-                                                  opening | closing)
+            horizontal = await self._shape(font.horizontal_font,
+                                           opening | closing)
             trio.left -= horizontal
             trio.right -= horizontal
         trio.assert_glyphs_are_disjoint()
@@ -279,8 +281,6 @@ class GlyphSets(object):
         if config.use_ink_bounds:
             ja.ifilter_ink_part(InkPart.LEFT)
             zht.ifilter_ink_part(InkPart.MIDDLE)
-        ja = GlyphDataList(ja)
-        zht = GlyphDataList(zht)
         if not config.use_ink_bounds and ja == zht:
             if not config.language: font.raise_require_language()
             if config.language == "ZHT" or config.language == "ZHH":
@@ -302,8 +302,6 @@ class GlyphSets(object):
         if config.use_ink_bounds:
             trio.add_by_ink_part(itertools.chain(ja, zhs), font)
         else:
-            ja = GlyphDataList(ja)
-            zhs = GlyphDataList(zhs)
             ja = trio.add_from_cache(font, ja)
             zhs = trio.add_from_cache(font, zhs)
             if not ja and not zhs:
@@ -322,8 +320,9 @@ class GlyphSets(object):
                 # glyphs indicate they are rotated. In ZHT, they may be upright
                 # even when there are vertical glyphs.
                 if config.language is None or config.language == "JAN":
-                    ja_horizontal = await self._glyph_id_set(
-                        font.horizontal_font, text, language="JAN")
+                    ja_horizontal = await self._shape(font.horizontal_font,
+                                                      text,
+                                                      language="JAN")
                     ja -= ja_horizontal
                     trio.middle |= ja
                 return trio
@@ -341,11 +340,8 @@ class GlyphSets(object):
         ja, zhs = await asyncio.gather(shaper.shape(text, language="JAN"),
                                        shaper.shape(text, language="ZHS"))
         if config.use_ink_bounds:
-            ja = GlyphDataList()
+            ja.clear()
             zhs.ifilter_ink_part(InkPart.LEFT)
-        else:
-            ja = GlyphDataList(ja)
-        zhs = GlyphDataList(zhs)
         if not config.use_ink_bounds and ja == zhs:
             if not config.language: font.raise_require_language()
             if config.language == "ZHS":
