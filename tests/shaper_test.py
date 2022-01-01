@@ -74,13 +74,11 @@ async def test_glyph_data_set(test_font_path):
     font = Font.load(test_font_path)
     shaper = Shaper(font)
     result = await shaper.shape('\uFF08\uFF09\u30FB\u56DB')
-    result.ensure_multi_iterations()
     glyphs = GlyphDataList(result)
     assert len(glyphs) == len(result)
     assert list(glyphs.glyph_ids) == list(result.glyph_ids)
 
     result2 = await shaper.shape('\u3000')
-    result2.ensure_multi_iterations()
     glyphs2 = GlyphDataList(result2)
 
     glyphs |= result2

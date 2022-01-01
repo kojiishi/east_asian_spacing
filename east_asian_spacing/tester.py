@@ -40,10 +40,8 @@ class ShapeTest(object):
                         features=self.off_features)
         text = ''.join(chr(c) for c in self.input)
         self.off_glyphs = await shaper.shape(text)
-        self.off_glyphs.ensure_multi_iterations()
         shaper.features = self.features
         self.glyphs = await shaper.shape(text)
-        self.glyphs.ensure_multi_iterations()
 
     def should_apply(self, em=None, glyphs=None):
         # If any glyphs are missing, or their advances are not em,

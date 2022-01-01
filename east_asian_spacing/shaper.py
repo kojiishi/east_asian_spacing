@@ -134,17 +134,9 @@ class GlyphData(object):
                                           self.advance)
 
     def get_ink_part(self, font):
-        ink_pos = self.ink_part
-        if ink_pos is not None:
-            return ink_pos
-        self.compute_ink_part(font)
+        if self.ink_part is None:
+            self.compute_ink_part(font)
         return self.ink_part
-
-    @staticmethod
-    def _ink_part_pred(glyph, font, ink_part):
-        if glyph.get_ink_part(font) == ink_part:
-            return True
-        logger.debug('ink_part: not %s %s', ink_part, glyph)
 
 
 class GlyphDataList(object):
@@ -174,6 +166,21 @@ class GlyphDataList(object):
     def __iter__(self):
         return iter(self._glyphs)
 
+    def __contains__(self, glyph: Union[GlyphData, int]):
+        if type(glyph) is GlyphData:
+            return glyph in self._glyphs
+        if type(glyph) is int:
+            return glyph in self.glyph_ids
+        assert False
+
+    def __or__(self, other: Optional[Iterable[GlyphData]]):
+        result = GlyphDataList(self)
+        result |= other
+        return result
+
+    def __str__(self):
+        return str(list(self.glyph_ids))
+
     @property
     def glyph_ids(self):
         return (g.glyph_id for g in self._glyphs)
@@ -182,18 +189,16 @@ class GlyphDataList(object):
     def glyph_id_set(self):
         return set(self.glyph_ids)
 
-    def __contains__(self, glyph: Union[GlyphData, int]):
-        if type(glyph) is GlyphData:
-            return glyph in self._glyphs
-        if type(glyph) is int:
-            return glyph in self.glyph_ids
-        assert False
-
     def isdisjoint(self, other: 'GlyphDataList'):
         return self.glyph_id_set.isdisjoint(other.glyph_id_set)
 
-    def __str__(self):
-        return str(list(self.glyph_ids))
+    def group_by_glyph_id(self) -> Iterator[Tuple[int, 'GlyphDataList']]:
+        key_func = lambda g: g.glyph_id
+        glyphs = sorted(self._glyphs, key=key_func)
+        glyphs = _uniq(glyphs)
+        result = itertools.groupby(glyphs, key=key_func)
+        result = map(lambda t: (t[0], GlyphDataList(t[1])), result)
+        return result
 
     def add(self, glyph: GlyphData):
         self._glyphs.append(glyph)
@@ -208,30 +213,17 @@ class GlyphDataList(object):
                             if g.glyph_id not in other_glyph_ids)
         return self
 
-    def __or__(self, other: Optional[Iterable[GlyphData]]):
-        result = GlyphDataList(self)
-        result |= other
-        return result
-
     def __ior__(self, other: Optional[Iterable[GlyphData]]):
         if other is None:
             return self
         self._glyphs.extend(other)
         return self
 
-    def group_by_glyph_id(self) -> Iterator[Tuple[int, 'GlyphDataList']]:
-        key_func = lambda g: g.glyph_id
-        glyphs = sorted(self._glyphs, key=key_func)
-        glyphs = _uniq(glyphs)
-        result = itertools.groupby(glyphs, key=key_func)
-        result = map(lambda t: (t[0], GlyphDataList(t[1])), result)
-        return result
-
 
 class ShapeResult(object):
 
-    def __init__(self, glyphs=()):
-        self._glyphs = glyphs  # type: Union[Iterator[GlyphData], Tuple[GlyphData, ...]]
+    def __init__(self, glyphs: Iterable[GlyphData] = ()):
+        self._glyphs = tuple(glyphs)
 
     def __eq__(self, other):
         return self._glyphs == other._glyphs
@@ -239,37 +231,33 @@ class ShapeResult(object):
     def __len__(self):
         return len(self._glyphs)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[GlyphData]:
         return self._glyphs.__iter__()
 
     def __getitem__(self, item):
         return self._glyphs[item]
 
-    def filter(self, predicate):
-        self._glyphs = filter(predicate, self._glyphs)
+    def ifilter(self, predicate):
+        self._glyphs = tuple(filter(predicate, self._glyphs))
 
-    def filter_advance(self, advance: int) -> None:
-        self.filter(lambda g: g.advance == advance)
+    def ifilter_advance(self, advance: int) -> None:
+        self.ifilter(lambda g: g.advance == advance)
 
-    def filter_missing_glyphs(self):
+    def ifilter_missing_glyphs(self):
         # Filter out ".notdef" glyphs. Glyph 0 must be assigned to a .notdef glyph.
         # https://docs.microsoft.com/en-us/typography/opentype/spec/recom#glyph-0-the-notdef-glyph
-        self.filter(lambda g: g.glyph_id)
+        self.ifilter(lambda g: g.glyph_id)
 
-    def filter_ink_part(self, font, ink_part):
-        self.filter(lambda g: GlyphData._ink_part_pred(g, font, ink_part))
-
-    def ensure_multi_iterations(self):
-        """Ensure this can iterate multiple times
-        by capturing the internal generator as a tuple."""
-        self._glyphs = tuple(self._glyphs)
+    def ifilter_ink_part(self, ink_part):
+        for g in self:
+            assert g.ink_part is not None
+        self.ifilter(lambda g: g.ink_part == ink_part)
 
     @property
     def glyph_ids(self):
         return (g.glyph_id for g in self._glyphs)
 
     def set_text(self, text):
-        self.ensure_multi_iterations()
         if len(self._glyphs) == 0:
             return
         last = self._glyphs[0]
@@ -278,13 +266,15 @@ class ShapeResult(object):
             last = glyph
         last.text = text[last.cluster_index:]
 
+    def clear_cluster_indexes(self):
+        for g in self:
+            g.clear_cluster_index()
+
     def compute_ink_parts(self, font):
-        self.ensure_multi_iterations()
         for g in self._glyphs:
             g.compute_ink_part(font)
 
     def __str__(self):
-        self.ensure_multi_iterations()  # Make sure it is still iterable.
         return f'[{",".join(str(g) for g in self._glyphs)}]'
 
 
@@ -320,7 +310,7 @@ class ShaperBase(object):
         """Computes the advance of a "fullwidth" glyph heuristically
         by measuring a few representative glyphs."""
         result = await self.shape(text)
-        result.filter_missing_glyphs()
+        result.ifilter_missing_glyphs()
         advances = set(g.advance for g in result)
         logger.debug('fullwidth_advance=%s, upem=%d for "%s"', advances,
                      self.font.units_per_em, self.font)

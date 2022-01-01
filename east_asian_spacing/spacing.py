@@ -202,13 +202,13 @@ class GlyphSets(object):
 
             result.set_text(text)
             if not temporary and self._all_glyphs is not None:
-                result.ensure_multi_iterations()
                 self._all_glyphs |= result
 
-            result.filter_missing_glyphs()
+            result.ifilter_missing_glyphs()
             # East Asian spacing applies only to fullwidth glyphs.
-            result.filter_advance(font.fullwidth_advance)
-
+            result.ifilter_advance(font.fullwidth_advance)
+            result.clear_cluster_indexes()
+            result.compute_ink_parts(font)
             return result
 
     async def _glyph_id_set(self, font, unicodes, language=None):
@@ -251,9 +251,9 @@ class GlyphSets(object):
             shaper.shape(config.cjk_middle),
             shaper.shape(config.fullwidth_space))
         if config.use_ink_bounds:
-            left.filter_ink_part(font, InkPart.LEFT)
-            right.filter_ink_part(font, InkPart.RIGHT)
-            middle.filter_ink_part(font, InkPart.MIDDLE)
+            left.ifilter_ink_part(InkPart.LEFT)
+            right.ifilter_ink_part(InkPart.RIGHT)
+            middle.ifilter_ink_part(InkPart.MIDDLE)
         trio = GlyphSets(GlyphDataList(left), GlyphDataList(right),
                          GlyphDataList(middle), GlyphDataList(space))
         if font.is_vertical:
@@ -277,8 +277,8 @@ class GlyphSets(object):
         ja, zht = await asyncio.gather(shaper.shape(text, language="JAN"),
                                        shaper.shape(text, language="ZHT"))
         if config.use_ink_bounds:
-            ja.filter_ink_part(font, InkPart.LEFT)
-            zht.filter_ink_part(font, InkPart.MIDDLE)
+            ja.ifilter_ink_part(InkPart.LEFT)
+            zht.ifilter_ink_part(InkPart.MIDDLE)
         ja = GlyphDataList(ja)
         zht = GlyphDataList(zht)
         if not config.use_ink_bounds and ja == zht:
@@ -342,7 +342,7 @@ class GlyphSets(object):
                                        shaper.shape(text, language="ZHS"))
         if config.use_ink_bounds:
             ja = GlyphDataList()
-            zhs.filter_ink_part(font, InkPart.LEFT)
+            zhs.ifilter_ink_part(InkPart.LEFT)
         else:
             ja = GlyphDataList(ja)
         zhs = GlyphDataList(zhs)
