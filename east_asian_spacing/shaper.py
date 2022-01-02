@@ -18,6 +18,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 from typing import Tuple
+from typing import Set
 
 import uharfbuzz as hb
 
@@ -187,7 +188,7 @@ class GlyphDataList(object):
         return (g.glyph_id for g in self._glyphs)
 
     @property
-    def glyph_id_set(self):
+    def glyph_id_set(self) -> Set[int]:
         return set(self.glyph_ids)
 
     def isdisjoint(self, other: 'GlyphDataList'):

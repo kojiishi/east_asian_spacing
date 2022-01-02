@@ -182,14 +182,11 @@ class Builder(object):
         united_spacing = self._united_spacings()
         united_spacing.save_glyphs(output, **kwargs)
 
-    def _testers(self):
+    def _testers(self, config: Config):
         for spacing in self._spacings:
             assert len(spacing.changed_fonts) > 0
             for font in spacing.changed_fonts:
-                tester = EastAsianSpacingTester(
-                    font,
-                    glyphs=spacing.horizontal.glyph_id_set,
-                    vertical_glyphs=spacing.vertical.glyph_id_set)
+                tester = EastAsianSpacingTester(font, config, spacing=spacing)
                 yield tester
 
     async def test(self, config=None, smoke=None):
@@ -200,8 +197,8 @@ class Builder(object):
         elif smoke:
             config.for_smoke_testing()
         assert self.has_spacings
-        testers = self._testers()
-        coros = (tester.test(config) for tester in testers)
+        testers = self._testers(config)
+        coros = (tester.test() for tester in testers)
         await EastAsianSpacingTester.run_coros(coros, parallel=True)
 
     @classmethod

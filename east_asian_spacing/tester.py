@@ -4,10 +4,16 @@ import asyncio
 import itertools
 import logging
 import math
+from typing import Iterable
+from typing import Optional
+from typing import Tuple
+from typing import Set
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 from east_asian_spacing.shaper import Shaper
+from east_asian_spacing.spacing import EastAsianSpacing
+from east_asian_spacing.spacing import GlyphSets
 
 logger = logging.getLogger('test')
 
@@ -17,13 +23,14 @@ class ShapeTest(object):
     _vertical_features = (('vchw', 'fwid', 'vert'), ('fwid', 'vert'))
 
     @staticmethod
-    def create_list(font, inputs):
+    def create_list(font: Font, inputs: Iterable[Tuple[int, int]]):
         features = (ShapeTest._vertical_features
                     if font.is_vertical else ShapeTest._features)
         tests = tuple(ShapeTest(font, input, *features) for input in inputs)
         return tests
 
-    def __init__(self, font, input, features, off_features):
+    def __init__(self, font: Font, input: Tuple[int, int], features,
+                 off_features):
         self.font = font
         self.input = input
         self.features = features
@@ -43,15 +50,24 @@ class ShapeTest(object):
         shaper.features = self.features
         self.glyphs = await shaper.shape(text)
 
-    def should_apply(self, em=None, glyphs=None):
+    def should_apply(self,
+                     index: int,
+                     glyph_id_sets: Optional[Tuple[Set[int]]],
+                     em=None):
         # If any glyphs are missing, or their advances are not em,
         # the feature should not apply.
         if em is None:
             em = self.font.fullwidth_advance
-        if any(g.glyph_id == 0 or g.advance != em for g in self.off_glyphs):
+        # Should not apply if any glyphs are missing.
+        if any(g.glyph_id == 0 for g in self.off_glyphs):
             return False
-        if glyphs is not None:
-            if not all(g.glyph_id in glyphs for g in self.off_glyphs):
+        # Should not apply if the advance of the target glyph is not 1em.
+        if self.off_glyphs[index].advance != em:
+            return False
+        if glyph_id_sets:
+            if self.off_glyphs[0].glyph_id not in glyph_id_sets[0]:
+                return False
+            if self.off_glyphs[1].glyph_id not in glyph_id_sets[1]:
                 return False
         return True
 
@@ -75,27 +91,33 @@ class ShapeTest(object):
 
 class EastAsianSpacingTester(object):
 
-    def __init__(self, font, glyphs=None, vertical_glyphs=None):
+    def __init__(self,
+                 font: Font,
+                 config: Config,
+                 spacing: Optional[EastAsianSpacing] = None):
         self.font = font
-        self._glyphs = glyphs
-        self._vertical_glyphs = vertical_glyphs
+        self._config = config.for_font(font)
+        self._spacing = spacing
 
-    def _glyphs_for(self, font):
-        if font.is_vertical:
-            return self._vertical_glyphs or self._glyphs
-        return self._glyphs
+    @property
+    def _glyph_sets(self) -> Optional[GlyphSets]:
+        if self._spacing:
+            if self.font.is_vertical:
+                return self._spacing.vertical
+            return self._spacing.horizontal
+        return None
 
-    async def test(self, config, fonts=None):
+    async def test(self, fonts=None):
         fonts = fonts if fonts else (self.font, )
         fonts = itertools.chain(*(f.self_and_derived_fonts() for f in fonts))
         fonts = filter(lambda font: not font.is_collection, fonts)
         testers = tuple(
-            EastAsianSpacingTester(font, glyphs=self._glyphs_for(font))
+            EastAsianSpacingTester(font, self._config, spacing=self._spacing)
             for font in fonts)
         assert all(t.font == self.font
                    or t.font.root_or_self == self.font.root_or_self
                    for t in testers)
-        coros = (tester._test(config) for tester in testers)
+        coros = (tester._test() for tester in testers)
         # Run tests without using `asyncio.gather`
         # to avoid too many open files when using subprocesses.
         results = await EastAsianSpacingTester.run_coros(coros, parallel=False)
@@ -118,21 +140,31 @@ class EastAsianSpacingTester(object):
                 '\n  '.join(summaries))
         logger.info('All %d fonts paased.', len(testers))
 
-    async def _test(self, config):
+    async def _test(self):
         coros = []
-        font = self.font
-        config = config.for_font(font)
+        config = self._config
         if not config:
             return tuple()
 
+        font = self.font
         opening = config.cjk_opening
         closing = config.cjk_closing
+        glyph_sets = self._glyph_sets
+        cl_op_tests = ShapeTest.create_list(
+            font, itertools.product(closing, opening))
         coros.append(
-            self.assert_trim(config, itertools.product(closing, opening), 0,
-                             False))
+            self.assert_trim(
+                cl_op_tests, 0, False,
+                (glyph_sets.left.glyph_id_set,
+                 glyph_sets.right.glyph_id_set) if glyph_sets else None))
+
+        op_op_tests = ShapeTest.create_list(
+            font, itertools.product(opening, opening))
         coros.append(
-            self.assert_trim(config, itertools.product(opening, opening), 1,
-                             True))
+            self.assert_trim(
+                op_op_tests, 1, True,
+                (glyph_sets.right.glyph_id_set,
+                 glyph_sets.right.glyph_id_set) if glyph_sets else None))
 
         # Run tests without using `asyncio.gather`
         # to avoid too many open files when using subprocesses.
@@ -141,9 +173,11 @@ class EastAsianSpacingTester(object):
         tests = tuple(itertools.chain(*tests))
         return tests
 
-    async def assert_trim(self, config, inputs, index, assert_offset):
+    async def assert_trim(self, tests: Iterable[ShapeTest], index: int,
+                          assert_offset: bool,
+                          glyph_id_sets: Optional[Tuple[Set[int]]]):
         font = self.font
-        tests = ShapeTest.create_list(font, inputs)
+        config = self._config
         coros = (test.shape(language=config.language) for test in tests)
         await EastAsianSpacingTester.run_coros(coros)
 
@@ -152,11 +186,13 @@ class EastAsianSpacingTester(object):
         offset = em - half_em
         tested = []
         for test in tests:
-            if not test.should_apply(em=em, glyphs=self._glyphs):
+            if not test.should_apply(index, glyph_id_sets, em=em):
                 if test.glyphs != test.off_glyphs:
                     test.fail('Unexpected differences')
                     tested.append(test)
                 continue
+            assert test.glyphs
+            assert test.off_glyphs
             if test.glyphs[index].advance != half_em:
                 test.fail(f'{index}.advance != {half_em}')
             if (assert_offset and test.glyphs[index].offset -
@@ -193,7 +229,7 @@ class EastAsianSpacingTester(object):
         if args.index >= 0:
             font = font.fonts_in_collection[args.index]
         config = Config.default
-        await EastAsianSpacingTester(font).test(config)
+        await EastAsianSpacingTester(font, config).test()
         logging.info('All tests pass')
 
 

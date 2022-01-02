@@ -27,7 +27,7 @@ async def test_config(test_font_path, tmp_path):
     fail_config = config.clone()
     fail_config.cjk_opening = {0x300A}
     with pytest.raises(AssertionError):
-        await EastAsianSpacingTester(builder.font).test(fail_config)
+        await EastAsianSpacingTester(builder.font, fail_config).test()
 
 
 def test_change_quotes_closing_to_opening():
