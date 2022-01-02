@@ -167,6 +167,11 @@ class GlyphSets(object):
         self.middle.ifilter_advance(em)
         self.space.ifilter_advance(em)
 
+    def ifilter_ink_part(self):
+        self.left.ifilter_ink_part(InkPart.LEFT)
+        self.right.ifilter_ink_part(InkPart.RIGHT)
+        self.middle.ifilter_ink_part(InkPart.MIDDLE)
+
     async def add_glyphs(self, font, config):
         self.assert_font(font)
         config = config.for_font(font)
@@ -260,10 +265,6 @@ class GlyphSets(object):
             shaper.shape(closing), shaper.shape(opening),
             shaper.shape(config.cjk_middle),
             shaper.shape(config.fullwidth_space))
-        if config.use_ink_bounds:
-            left.ifilter_ink_part(InkPart.LEFT)
-            right.ifilter_ink_part(InkPart.RIGHT)
-            middle.ifilter_ink_part(InkPart.MIDDLE)
         trio = GlyphSets(left, right, middle, space)
         if font.is_vertical:
             # Left/right in vertical should apply only if they have `vert` glyphs.
@@ -273,6 +274,8 @@ class GlyphSets(object):
             trio.left -= horizontal
             trio.right -= horizontal
         trio.assert_glyphs_are_disjoint()
+        if config.use_ink_bounds:
+            trio.ifilter_ink_part()
         return trio
 
     async def get_period_comma(self, font, config):
@@ -285,17 +288,15 @@ class GlyphSets(object):
         shaper = GlyphSets._ShapeHelper(self, font, log_name='period_comma')
         ja, zht = await asyncio.gather(shaper.shape(text, language="JAN"),
                                        shaper.shape(text, language="ZHT"))
-        if config.use_ink_bounds:
-            ja.ifilter_ink_part(InkPart.LEFT)
-            zht.ifilter_ink_part(InkPart.MIDDLE)
         if not config.use_ink_bounds and ja == zht:
             if not config.language: font.raise_require_language()
             if config.language == "ZHT" or config.language == "ZHH":
                 ja.clear()
             else:
                 zht.clear()
-        assert ja.isdisjoint(zht)
         trio = GlyphSets(ja, None, zht)
+        if config.use_ink_bounds:
+            trio.ifilter_ink_part()
         trio.assert_glyphs_are_disjoint()
         return trio
 
