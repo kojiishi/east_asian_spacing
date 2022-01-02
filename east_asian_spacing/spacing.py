@@ -9,6 +9,7 @@ from typing import Iterable
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Set
 
 from fontTools.otlLib.builder import buildValue
 from fontTools.otlLib.builder import ChainContextPosBuilder
@@ -70,7 +71,7 @@ class GlyphSets(object):
                 ('middle', self.middle), ('space', self.space))
 
     @property
-    def glyph_ids(self):
+    def glyph_id_set(self) -> Set[int]:
         glyph_ids = set()
         for glyph_data_set in self._glyph_data_lists:
             glyph_ids |= glyph_data_set.glyph_id_set
@@ -129,7 +130,7 @@ class GlyphSets(object):
 
         if glyphs_by_glyph_id:
             output.write(f'# {prefix}filtered\n')
-            glyph_ids = self.glyph_ids
+            glyph_ids = self.glyph_id_set
             for glyph_id, glyph_data_list in sorted(
                     glyphs_by_glyph_id.items(),
                     key=lambda key_value: key_value[0]):

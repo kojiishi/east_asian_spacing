@@ -188,8 +188,8 @@ class Builder(object):
             for font in spacing.changed_fonts:
                 tester = EastAsianSpacingTester(
                     font,
-                    glyphs=spacing.horizontal.glyph_ids,
-                    vertical_glyphs=spacing.vertical.glyph_ids)
+                    glyphs=spacing.horizontal.glyph_id_set,
+                    vertical_glyphs=spacing.vertical.glyph_id_set)
                 yield tester
 
     async def test(self, config=None, smoke=None):
