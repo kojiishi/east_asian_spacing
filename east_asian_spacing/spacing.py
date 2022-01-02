@@ -47,6 +47,11 @@ class GlyphSets(object):
         self.middle = middle if middle is not None else GlyphDataList()
         self.space = space if space is not None else GlyphDataList()
 
+        # Not-applicable left and right. They are not kerned, but they can
+        # appear in the context.
+        self.na_left = GlyphDataList()
+        self.na_right = GlyphDataList()
+
         self._add_glyphs_count = 0
         # For checking purposes. Because this class keeps glyph IDs, using the
         # same instance for different fonts may lead to unexpected behaviors,
@@ -84,6 +89,8 @@ class GlyphSets(object):
         assert self.middle.isdisjoint(self.right)
         assert self.middle.isdisjoint(self.space)
         assert self.right.isdisjoint(self.space)
+        assert self.left.isdisjoint(self.na_left)
+        assert self.right.isdisjoint(self.na_right)
 
     def _to_str(self, glyph_ids=False):
         name_and_glyph_data_lists = self._name_and_glyph_data_lists
@@ -148,6 +155,8 @@ class GlyphSets(object):
         self.middle |= other.middle
         self.right |= other.right
         self.space |= other.space
+        self.na_left |= other.na_left
+        self.na_right |= other.na_right
         self._all_glyphs |= other._all_glyphs
 
     def add_by_ink_part(self, glyphs: Iterable[GlyphData], font):
@@ -163,15 +172,10 @@ class GlyphSets(object):
 
     def ifilter_fullwidth(self, font: Font):
         em = font.fullwidth_advance
-        self.left.ifilter_advance(em)
-        self.right.ifilter_advance(em)
+        self.left.ifilter_advance(em, self.na_left)
+        self.right.ifilter_advance(em, self.na_right)
         self.middle.ifilter_advance(em)
         self.space.ifilter_advance(em)
-
-    def ifilter_ink_part(self):
-        self.left.ifilter_ink_part(InkPart.LEFT)
-        self.right.ifilter_ink_part(InkPart.RIGHT)
-        self.middle.ifilter_ink_part(InkPart.MIDDLE)
 
     async def add_glyphs(self, font, config):
         self.assert_font(font)
@@ -196,7 +200,7 @@ class GlyphSets(object):
 
     class _ShapeHelper(object):
 
-        def __init__(self, glyph_sets: 'GlyphSets', font, log_name=None):
+        def __init__(self, glyph_sets: 'GlyphSets', font: Font, log_name=None):
             self._font = font
             self._all_glyphs = glyph_sets._all_glyphs
             self._log_name = log_name
@@ -204,12 +208,15 @@ class GlyphSets(object):
         async def shape(self,
                         unicodes,
                         language=None,
+                        fullwidth=True,
                         temporary=False) -> GlyphDataList:
             font = self._font
             text = ''.join(chr(c) for c in unicodes)
             # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
+            features = []
             # Enable "fwid" feature to get fullwidth glyphs.
-            features = ['fwid', 'vert'] if font.is_vertical else ['fwid']
+            if fullwidth: features.append('fwid')
+            if font.is_vertical: features.append('vert')
             shaper = Shaper(font,
                             language=language,
                             script='hani',
@@ -259,11 +266,11 @@ class GlyphSets(object):
         return False
 
     async def get_opening_closing(self, font, config):
-        opening = config.cjk_opening | config.quotes_opening
-        closing = config.cjk_closing | config.quotes_closing
+        cjk_opening = config.cjk_opening | config.quotes_opening
+        cjk_closing = config.cjk_closing | config.quotes_closing
         shaper = GlyphSets._ShapeHelper(self, font, log_name='opening_closing')
         left, right, middle, space = await asyncio.gather(
-            shaper.shape(closing), shaper.shape(opening),
+            shaper.shape(cjk_closing), shaper.shape(cjk_opening),
             shaper.shape(config.cjk_middle),
             shaper.shape(config.fullwidth_space))
         trio = GlyphSets(left, right, middle, space)
@@ -271,12 +278,20 @@ class GlyphSets(object):
             # Left/right in vertical should apply only if they have `vert` glyphs.
             # YuGothic/UDGothic doesn't have 'vert' glyphs for U+2018/201C/301A/301B.
             horizontal = await self._shape(font.horizontal_font,
-                                           opening | closing)
+                                           cjk_opening | cjk_closing)
             trio.left -= horizontal
             trio.right -= horizontal
+        else:
+            assert not trio.na_left
+            assert not trio.na_right
+            trio.na_left, trio.na_right = await asyncio.gather(
+                shaper.shape(config.narrow_closing, fullwidth=False),
+                shaper.shape(config.narrow_opening, fullwidth=False))
         trio.assert_glyphs_are_disjoint()
         if config.use_ink_bounds:
-            trio.ifilter_ink_part()
+            trio.left.ifilter_ink_part(InkPart.LEFT, self.na_left)
+            trio.right.ifilter_ink_part(InkPart.RIGHT, self.na_right)
+            trio.middle.ifilter_ink_part(InkPart.MIDDLE)
         return trio
 
     async def get_period_comma(self, font, config):
@@ -297,7 +312,9 @@ class GlyphSets(object):
                 zht.clear()
         trio = GlyphSets(ja, None, zht)
         if config.use_ink_bounds:
-            trio.ifilter_ink_part()
+            trio.left.ifilter_ink_part(InkPart.LEFT)
+            trio.right.ifilter_ink_part(InkPart.RIGHT)
+            trio.middle.ifilter_ink_part(InkPart.MIDDLE)
         trio.assert_glyphs_are_disjoint()
         return trio
 
@@ -418,10 +435,13 @@ class GlyphSets(object):
 
     class PosValues(object):
 
-        def __init__(self, font: Font, trio) -> None:
-            self.left, self.right, self.middle, self.space = (
+        def __init__(self, font: Font, glyph_sets: 'GlyphSets') -> None:
+            glyph_sets.assert_glyphs_are_disjoint()
+            self.left, self.right, self.middle, self.space, self.na_left, self.na_right = (
                 tuple(font.glyph_names(sorted(glyphs.glyph_id_set)))
-                for glyphs in trio._glyph_data_lists)
+                for glyphs in (glyph_sets.left, glyph_sets.right,
+                               glyph_sets.middle, glyph_sets.space,
+                               glyph_sets.na_left, glyph_sets.na_right))
 
             em = font.fullwidth_advance
             # When `em` is an odd number, ceil the advance. To do this, use
@@ -545,7 +565,7 @@ class GlyphSets(object):
         return lookup
 
     def _build_chws_lookup(self, font: Font, lookups: List[otTables.Lookup],
-                           pos) -> List[int]:
+                           pos: 'GlyphSets.PosValues') -> List[int]:
         self.assert_font(font)
         lookup_indices = []
 
@@ -554,7 +574,7 @@ class GlyphSets(object):
         pair_pos_builder = PairPosBuilder(ttfont, None)
         pair_pos_builder.addClassPair(
             None, pos.left, pos.left_value,
-            pos.left + pos.right + pos.middle + pos.space, None)
+            pos.left + pos.right + pos.middle + pos.space + pos.na_left, None)
         lookup = pair_pos_builder.build()
         assert lookup
         lookup_indices.append(len(lookups))
@@ -569,8 +589,9 @@ class GlyphSets(object):
 
         chain_context_pos_builder = ChainContextPosBuilder(ttfont, None)
         chain_context_pos_builder.rules.append(
-            ChainContextualRule([pos.right + pos.middle + pos.space],
-                                [pos.right], [], [[single_pos_lookup]]))
+            ChainContextualRule(
+                [pos.right + pos.middle + pos.space + pos.na_right],
+                [pos.right], [], [[single_pos_lookup]]))
         lookup = chain_context_pos_builder.build()
         assert lookup
         lookup_indices.append(len(lookups))

@@ -2,7 +2,7 @@
  Font 0: "BIZ UDGothic" "Regular" PS="BIZ-UDGothic"
  Font 1: "BIZ UDPGothic" "Regular" PS="BIZ-UDPGothic"
  Tag  Size      
-+GPOS        648 [0]
++GPOS        672 [0]
  GSUB     43,556 [0]
  GSUB     45,586 [1]
  OS/2         96 [0]
@@ -14,7 +14,7 @@
 -Data: 5,027,902
 -Gap: 650
 -Tables: 24
-+Total: 5,029,202
-+Data: 5,028,550
++Total: 5,029,226
++Data: 5,028,574
 +Gap: 652
 +Tables: 25

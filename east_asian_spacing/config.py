@@ -23,6 +23,12 @@ class Config(object):
         self.cjk_colon_semicolon = {0xFF1A, 0xFF1B}
         self.cjk_exclam_question = {0xFF01, 0xFF1F}
 
+        # Narrow/Halfwidth forms do not have internal spacings,
+        # but they can appear in the context.
+        # E.g., full-closing should kern if followed by a narrow-closing.
+        self.narrow_opening = {0x28, 0x5B, 0xFF62}
+        self.narrow_closing = {0x29, 0x5D, 0xFF63}
+
         # Skip adding the features to fonts with monospace ASCII.
         self.skip_monospace_ascii = False
         # Determines the applicability by computing ink bounds.

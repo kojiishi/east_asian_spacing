@@ -23,7 +23,7 @@ async def test_build_and_diff(test_font_path, refs_dir, tmp_path):
     out_path = await builder.build_and_save(tmp_path)
     assert out_path
 
-    await builder.test()
+    await builder.test(smoke=False)
 
     # Compute diffs. There should be two, table and GPOS.
     diff_paths = await Dump.diff_font(out_path, test_font_path, tmp_path)

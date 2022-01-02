@@ -1,6 +1,6 @@
 @@
 +<?xml version="1.0" encoding="UTF-8"?>
-+<ttFont ttLibVersion="4.26">
++<ttFont ttLibVersion="4.28">
 +
 +  <GPOS>
 +    <Version value="0x00010000"/>
@@ -147,6 +147,8 @@
 +          <ClassDef1>
 +          </ClassDef1>
 +          <ClassDef2>
++            <ClassDef glyph="bracketright" class="1"/>
++            <ClassDef glyph="parenright" class="1"/>
 +            <ClassDef glyph="quotedblleft" class="1"/>
 +            <ClassDef glyph="quotedblright" class="1"/>
 +            <ClassDef glyph="quoteleft" class="1"/>
@@ -185,6 +187,7 @@
 +            <ClassDef glyph="uniFF5D" class="1"/>
 +            <ClassDef glyph="uniFF5F" class="1"/>
 +            <ClassDef glyph="uniFF60" class="1"/>
++            <ClassDef glyph="uniFF63" class="1"/>
 +          </ClassDef2>
 +          <!-- Class1Count=1 -->
 +          <!-- Class2Count=2 -->
@@ -231,6 +234,8 @@
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
 +          <BacktrackCoverage index="0">
++            <Glyph value="parenleft"/>
++            <Glyph value="bracketleft"/>
 +            <Glyph value="uni3000"/>
 +            <Glyph value="uni30FB"/>
 +            <Glyph value="uniFF1A"/>
@@ -250,6 +255,7 @@
 +            <Glyph value="uni3018"/>
 +            <Glyph value="uni3016"/>
 +            <Glyph value="uni301D"/>
++            <Glyph value="uniFF62"/>
 +          </BacktrackCoverage>
 +          <!-- InputGlyphCount=1 -->
 +          <InputCoverage index="0">

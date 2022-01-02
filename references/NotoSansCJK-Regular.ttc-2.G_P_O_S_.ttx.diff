@@ -710,6 +710,8 @@
 +          <ClassDef1>
 +          </ClassDef1>
 +          <ClassDef2>
++            <ClassDef glyph="cid00010" class="1"/>
++            <ClassDef glyph="cid00062" class="1"/>
 +            <ClassDef glyph="cid01396" class="1"/>
 +            <ClassDef glyph="cid01397" class="1"/>
 +            <ClassDef glyph="cid01398" class="1"/>
@@ -747,6 +749,7 @@
 +            <ClassDef glyph="cid59139" class="1"/>
 +            <ClassDef glyph="cid59140" class="1"/>
 +            <ClassDef glyph="cid59141" class="1"/>
++            <ClassDef glyph="cid59144" class="1"/>
 +            <ClassDef glyph="cid63145" class="1"/>
 +            <ClassDef glyph="cid63146" class="1"/>
 +            <ClassDef glyph="cid63147" class="1"/>
@@ -806,6 +809,8 @@
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
 +          <BacktrackCoverage index="0">
++            <Glyph value="cid00009"/>
++            <Glyph value="cid00060"/>
 +            <Glyph value="cid01396"/>
 +            <Glyph value="cid01404"/>
 +            <Glyph value="cid01406"/>
@@ -824,6 +829,7 @@
 +            <Glyph value="cid59105"/>
 +            <Glyph value="cid59137"/>
 +            <Glyph value="cid59140"/>
++            <Glyph value="cid59143"/>
 +            <Glyph value="cid63145"/>
 +            <Glyph value="cid63146"/>
 +            <Glyph value="cid63148"/>
