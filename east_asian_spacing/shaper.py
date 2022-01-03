@@ -309,7 +309,7 @@ class ShaperBase(object):
                  font,
                  language=None,
                  script=None,
-                 features=None,
+                 features: Optional[Iterable[str]] = None,
                  log_name=None):
         assert isinstance(font.path, pathlib.Path)
         self.font = font

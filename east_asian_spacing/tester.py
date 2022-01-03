@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
+import copy
 import itertools
 import logging
 import math
@@ -19,20 +20,23 @@ logger = logging.getLogger('test')
 
 
 class ShapeTest(object):
-    _features = (('chws', 'fwid'), ('fwid', ))
-    _vertical_features = (('vchw', 'fwid', 'vert'), ('fwid', 'vert'))
 
     @staticmethod
-    def create_list(font: Font, inputs: Iterable[Tuple[int, int]]):
-        features = (ShapeTest._vertical_features
-                    if font.is_vertical else ShapeTest._features)
-        tests = tuple(ShapeTest(font, input, *features) for input in inputs)
+    def create_list(font: Font, inputs: Iterable[Tuple[int, int]], index: int):
+        off_features = ['fwid']
+        if font.is_vertical: off_features.append('vert')
+        features = copy.copy(off_features)
+        features.append('vchw' if font.is_vertical else 'chws')
+        tests = tuple(
+            ShapeTest(font, input, index, features, off_features)
+            for input in inputs)
         return tests
 
-    def __init__(self, font: Font, input: Tuple[int, int], features,
-                 off_features):
+    def __init__(self, font: Font, input: Tuple[int, int], index: int,
+                 features, off_features):
         self.font = font
         self.input = input
+        self.index = index
         self.features = features
         self.off_features = off_features
         self.fail_reasons = []
@@ -50,10 +54,7 @@ class ShapeTest(object):
         shaper.features = self.features
         self.glyphs = await shaper.shape(text)
 
-    def should_apply(self,
-                     index: int,
-                     glyph_id_sets: Optional[Tuple[Set[int]]],
-                     em=None):
+    def should_apply(self, glyph_id_sets: Optional[Tuple[Set[int]]], em=None):
         # If any glyphs are missing, or their advances are not em,
         # the feature should not apply.
         if em is None:
@@ -62,7 +63,7 @@ class ShapeTest(object):
         if any(g.glyph_id == 0 for g in self.off_glyphs):
             return False
         # Should not apply if the advance of the target glyph is not 1em.
-        if self.off_glyphs[index].advance != em:
+        if self.off_glyphs[self.index].advance != em:
             return False
         if glyph_id_sets:
             if self.off_glyphs[0].glyph_id not in glyph_id_sets[0]:
@@ -151,18 +152,18 @@ class EastAsianSpacingTester(object):
         closing = config.cjk_closing
         glyph_sets = self._glyph_sets
         cl_op_tests = ShapeTest.create_list(
-            font, itertools.product(closing, opening))
+            font, itertools.product(closing, opening), 0)
         coros.append(
             self.assert_trim(
-                cl_op_tests, 0, False,
+                cl_op_tests, False,
                 (glyph_sets.left.glyph_id_set,
                  glyph_sets.right.glyph_id_set) if glyph_sets else None))
 
         op_op_tests = ShapeTest.create_list(
-            font, itertools.product(opening, opening))
+            font, itertools.product(opening, opening), 1)
         coros.append(
             self.assert_trim(
-                op_op_tests, 1, True,
+                op_op_tests, True,
                 (glyph_sets.right.glyph_id_set,
                  glyph_sets.right.glyph_id_set) if glyph_sets else None))
 
@@ -173,7 +174,7 @@ class EastAsianSpacingTester(object):
         tests = tuple(itertools.chain(*tests))
         return tests
 
-    async def assert_trim(self, tests: Iterable[ShapeTest], index: int,
+    async def assert_trim(self, tests: Iterable[ShapeTest],
                           assert_offset: bool,
                           glyph_id_sets: Optional[Tuple[Set[int]]]):
         font = self.font
@@ -186,7 +187,8 @@ class EastAsianSpacingTester(object):
         offset = em - half_em
         tested = []
         for test in tests:
-            if not test.should_apply(index, glyph_id_sets, em=em):
+            index = test.index
+            if not test.should_apply(glyph_id_sets, em=em):
                 if test.glyphs != test.off_glyphs:
                     test.fail('Unexpected differences')
                     tested.append(test)
