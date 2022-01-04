@@ -163,7 +163,8 @@ class EastAsianSpacingTester(object):
         coros.append(
             self.assert_trim(
                 op_op_tests, True,
-                (glyph_sets.right.glyph_id_set,
+                (glyph_sets.right.glyph_id_set
+                 | glyph_sets.na_right.glyph_id_set,
                  glyph_sets.right.glyph_id_set) if glyph_sets else None))
 
         # Run tests without using `asyncio.gather`
