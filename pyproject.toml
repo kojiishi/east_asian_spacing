@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "east_asian_spacing"
-version = "1.4.1"
+version = "1.4.2-alpha.0"
 description = "East Asian Contextual Spacing Build Tools"
 authors = ["Koji Ishii <kojii@chromium.org>"]
 readme = "README.md"
