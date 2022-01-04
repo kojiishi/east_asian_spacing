@@ -66,10 +66,9 @@ class ShapeTest(object):
         if self.off_glyphs[self.index].advance != em:
             return False
         if glyph_id_sets:
-            if self.off_glyphs[0].glyph_id not in glyph_id_sets[0]:
-                return False
-            if self.off_glyphs[1].glyph_id not in glyph_id_sets[1]:
-                return False
+            for i, glyph_id_set in enumerate(glyph_id_sets):
+                if self.off_glyphs[i].glyph_id not in glyph_id_set:
+                    return False
         return True
 
     @property
@@ -82,7 +81,7 @@ class ShapeTest(object):
     def __str__(self):
         text = ' '.join(f'U+{ch:04X}' for ch in self.input)
         if len(self.fail_reasons) == 0:
-            return f'  {text}: PASSS'
+            return f'  {text}: PASS'
         if self.glyphs == self.off_glyphs:
             glyphs_str = str(self.glyphs)
         else:
