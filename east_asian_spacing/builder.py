@@ -7,12 +7,15 @@ import pathlib
 import sys
 import time
 from typing import Optional
+from typing import TextIO
+from typing import Union
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
-from east_asian_spacing.log_utils import init_logging
 from east_asian_spacing.spacing import EastAsianSpacing
 from east_asian_spacing.tester import EastAsianSpacingTester
+from east_asian_spacing.utils import calc_output_path
+from east_asian_spacing.utils import init_logging
 
 logger = logging.getLogger('build')
 
@@ -38,15 +41,19 @@ class Builder(object):
         return self.save(output, **kwargs)
 
     def save(self,
-             output=None,
-             stem_suffix=None,
-             glyph_out=None,
-             glyph_comment=0,
-             print_path=False):
+             output: Optional[pathlib.Path] = None,
+             stem_suffix: Optional[str] = None,
+             glyph_out: Optional[Union[pathlib.Path, str, TextIO]] = None,
+             glyph_comment: int = 0,
+             print_path: bool = False) -> pathlib.Path:
         assert self.has_spacings
         font = self.font
         path_before_save = font.path
-        output = self.calc_output_path(path_before_save, output, stem_suffix)
+        output = calc_output_path(path_before_save,
+                                  output,
+                                  stem_suffix=stem_suffix,
+                                  is_file=output
+                                  and Font.is_font_extension(output.suffix))
         logger.info('Saving to "%s"', output)
         font.save(output)
         paths = [output, path_before_save]
@@ -57,19 +64,6 @@ class Builder(object):
             print('\t'.join(str(path) for path in paths),
                   flush=True)  # Flush, for better parallelism when piping.
         return output
-
-    @staticmethod
-    def calc_output_path(input_path, output_path, stem_suffix=None):
-        if output_path:
-            if isinstance(output_path, str):
-                output_path = pathlib.Path(output_path)
-            output_path = output_path / input_path.name
-        else:
-            output_path = input_path
-        if not stem_suffix:
-            return output_path
-        return (output_path.parent /
-                f'{output_path.stem}{stem_suffix}{output_path.suffix}')
 
     async def _config_for_font(self, font: Font) -> Optional[Config]:
         config = self.config.for_font(font)
@@ -166,7 +160,7 @@ class Builder(object):
             united_spacing.unite(spacing)
         return united_spacing
 
-    def save_glyphs(self, output, **kwargs):
+    def save_glyphs(self, output: Union[pathlib.Path, str, TextIO], **kwargs):
         assert self.has_spacings
         font = self.font
         if isinstance(output, str):
@@ -281,8 +275,6 @@ class Builder(object):
             else:
                 args.glyph_out = pathlib.Path(args.glyph_out)
                 args.glyph_out.mkdir(exist_ok=True, parents=True)
-        if args.output:
-            args.output.mkdir(exist_ok=True, parents=True)
         for input in Builder.expand_paths(args.inputs):
             font = Font.load(input)
             if font.is_collection:

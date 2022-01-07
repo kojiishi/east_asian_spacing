@@ -1,5 +1,4 @@
 import io
-import os
 import pathlib
 import pytest
 import shutil
@@ -8,29 +7,6 @@ import tempfile
 from east_asian_spacing import Builder
 from east_asian_spacing import EastAsianSpacing
 from east_asian_spacing import Font
-
-
-def test_calc_output_path(data_dir):
-
-    def call(input_path, output_path, stem_suffix=None):
-        input_path = pathlib.Path(input_path)
-        if output_path:
-            output_path = pathlib.Path(output_path)
-        result = Builder.calc_output_path(input_path, output_path, stem_suffix)
-        return str(result)
-
-    assert call('c.otf', None) == 'c.otf'
-    assert call('a/b/c.otf', None) == os.path.join('a', 'b', 'c.otf')
-
-    assert call('c.otf', None, '-chws') == 'c-chws.otf'
-    assert call('a/b/c.otf', None,
-                '-chws') == os.path.join('a', 'b', 'c-chws.otf')
-
-    assert call('c.otf', 'build') == os.path.join('build', 'c.otf')
-    assert call('a/b/c.otf', 'build') == os.path.join('build', 'c.otf')
-
-    assert call('a/b/c.otf', 'build',
-                '-xyz') == os.path.join('build', 'c-xyz.otf')
 
 
 def test_expand_paths(monkeypatch):

@@ -21,11 +21,11 @@ from fontTools.ttLib.tables import otTables
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
-import east_asian_spacing.log_utils as log_utils
 from east_asian_spacing.shaper import GlyphData, GlyphDataList
 from east_asian_spacing.shaper import GlyphDataList
 from east_asian_spacing.shaper import InkPart
 from east_asian_spacing.shaper import Shaper
+from east_asian_spacing.utils import init_logging
 
 logger = logging.getLogger('spacing')
 _log_shaper = logging.getLogger('shaper')
@@ -676,7 +676,7 @@ class EastAsianSpacing(object):
                             action="count",
                             default=0)
         args = parser.parse_args()
-        log_utils.init_logging(args.verbose)
+        init_logging(args.verbose)
 
         font = Font.load(args.path)
         if font.is_collection:

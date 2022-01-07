@@ -1,4 +1,7 @@
 import logging
+import pathlib
+from typing import Optional
+from typing import Union
 
 _log_shaper_logs = False
 
@@ -50,3 +53,29 @@ def init_logging(verbose: int, main=None, debug=None):
 
     global _log_shaper_logs
     _log_shaper_logs = True
+
+
+def calc_output_path(input_path: pathlib.Path,
+                     output_path: Optional[Union[pathlib.Path, str]],
+                     stem_suffix: Optional[str] = None,
+                     is_file: bool = False) -> pathlib.Path:
+    if output_path:
+        if not isinstance(output_path, pathlib.Path):
+            output_path = pathlib.Path(output_path)
+        if output_path.is_dir():
+            output_path = output_path / input_path.name
+        elif output_path.is_file() or is_file:
+            # `output` is an existing file or a new file.
+            pass
+        else:
+            # `output` is a new directory.
+            output_path.mkdir(parents=True, exist_ok=True)
+            output_path = output_path / input_path.name
+    else:
+        output_path = input_path
+
+    if stem_suffix:
+        name = f'{output_path.stem}{stem_suffix}{output_path.suffix}'
+        output_path = output_path.parent / name
+
+    return output_path

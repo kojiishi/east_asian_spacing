@@ -23,7 +23,7 @@ from typing import Set
 import uharfbuzz as hb
 
 from east_asian_spacing.font import Font
-import east_asian_spacing.log_utils as log_utils
+import east_asian_spacing.utils as utils
 
 logger = logging.getLogger('shaper')
 
@@ -381,7 +381,7 @@ class UHarfBuzzShaper(ShaperBase):
                      self.language, self.script, features)
         # logger.debug('lang=%s, script=%s, features=%s', buffer.language,
         #              buffer.script, features)
-        if log_utils._log_shaper_logs:
+        if utils._log_shaper_logs:
             buffer.set_message_func(
                 lambda message: logger.debug('uharfbuzz: %s', message))
         # buffer.cluster_level = hb.BufferClusterLevel.DEFAULT
@@ -411,7 +411,7 @@ class HbShapeShaper(ShaperBase):
         hb_shape = HbShapeShaper._hb_shape_path or 'hb-shape'
         args = [hb_shape, '--output-format=json', '--no-glyph-names']
         self.append_hb_args(text, args)
-        if log_utils._log_shaper_logs:
+        if utils._log_shaper_logs:
             args.append('--trace')
         logger.debug('subprocess.run: %s', shlex.join(args))
         proc = await asyncio.create_subprocess_exec(
@@ -421,7 +421,7 @@ class HbShapeShaper(ShaperBase):
             raise CalledProcessError(proc.returncode, hb_shape, stdout, stderr)
         with io.StringIO(stdout.decode('utf-8')) as file:
             for line in file:
-                if log_utils._log_shaper_logs:
+                if utils._log_shaper_logs:
                     logger.debug('hb-shape: %s', line.rstrip())
                 if line.startswith('['):
                     glyphs = json.loads(line)
@@ -508,7 +508,7 @@ async def main():
                         default=0)
     args = parser.parse_args()
     show_dump_images()
-    log_utils.init_logging(args.verbose)
+    utils.init_logging(args.verbose)
     _init_shaper()  # Re-initialize to show logging.
     font = Font.load(args.font_path)
     if font.is_collection:

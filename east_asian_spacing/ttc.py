@@ -5,7 +5,7 @@ import pathlib
 
 from fontTools.ttLib.ttCollection import TTCollection
 
-from east_asian_spacing.log_utils import init_logging
+from east_asian_spacing.utils import init_logging
 
 logger = logging.getLogger('ttc')
 
