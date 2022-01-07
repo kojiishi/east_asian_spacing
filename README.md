@@ -178,6 +178,144 @@ async def main_async():
         print("Skipped")
 ```
 
+## Testing
+[testing]: #testing
+
+### Test HTML
+[test HTML]: #test-html
+
+A [test HTML page] is available
+to check the behavior of fonts on browsers.
+
+It can test fonts you built locally.
+1. Save the page to your local drive.
+   The HTML is a single file, saving the HTML file should work.
+2. Add your font files to the "`fonts`" list
+   at the beginning of the `<script>` block.
+3. Open it in your browser and choose your font.
+
+Note, when you want to test a TTC (TrueType Collection)
+but your browser can load only the first font in the TTC,
+the following command extracts all OpenType fonts (.otf or .ttf)
+from an OpenType Collection font file (.ttc or .otc).
+```sh
+east-asian-spacing ttc build/NotoSansCJK-Regular.ttc
+```
+
+[test HTML page]: https://kojiishi.github.io/chws/test.html
+
+### Dump
+[dump]: #dump
+
+The `dump` sub-command can create various types of text dump files.
+
+The most simple usage is to show a list of tables.
+This is similar to the "`-l`" option of [TTX],
+except for TrueType Collections (TTC),
+this tool can show tables of all fonts in the TTC,
+along with which tables are shared with which fonts.
+```sh
+east-asian-spacing dump build/NotoSansCJK-Regular.ttc
+```
+
+The "`-o`" option creates table list files in the specified directory:
+```sh
+east-asian-spacing dump -o build/dump build/*.ttc
+```
+The "`--ttx`" option creates [TTX] text dumps of all tables
+in addition to the table list files.
+This is similar to the "`-s`" option of [TTX],
+except that it can dump all tables in TrueType Collections (TTC).
+```sh
+east-asian-spacing dump -o build/dump --ttx build/*.ttc
+```
+
+[TTX]: https://fonttools.readthedocs.io/en/latest/ttx.html
+
+### Diff
+[diff]: #diff
+[checking the differences]: #diff
+
+The `dump` sub-command can also create
+[dump] files of two font files and compare them.
+This helps visualizing differences in two fonts,
+specifically, the font files you created from the original font files.
+```sh
+east-asian-spacing dump -o build/diff --diff source_fonts_dir build/NotoSansCJK.ttc
+```
+The example above
+computes the differences between
+`source_fonts_dir/NotoSansCJK.ttc` and `build/NotoSansCJK.ttc`
+by creating following 3 sets of files:
+1. The table list and TTX text dump files for `build/NotoSansCJK.ttc`
+   in the `build/diff/dump` directory.
+2. The table list and TTX text dump files for `source_fonts_dir/NotoSansCJK.ttc`
+   in the `build/diff/src` directory.
+3. Diff files of the two sets of dump files in the `build/diff` directory.
+
+> Note:
+The "`--diff`" option is more efficient than doing all these,
+especially for large fonts,
+because it skips creating TTX of tables when they are binary-equal.
+
+The `-o` option is optional. When it is omitted,
+the sub-command outputs the diff to `stdout`.
+```sh
+east-asian-spacing dump --diff source_fonts_dir build/NotoSansCJK.ttc | less
+```
+
+To create diff files for all fonts you built,
+you can pipe the output as below:
+```sh
+east-asian-spacing -p *.otf | east-asian-spacing dump -o build/diff -
+```
+The "`-p`" option prints the input and output font paths to `stdout`
+in the tab-separated-values format.
+The `dump` sub-command with the "`-`" argument reads this list from `stdin`,
+and creates their text dump and diff files in the `build/diff` directory.
+The "`--diff`" option is not necessary in this case,
+because the source font paths are provided from the pipe.
+
+### References
+[references]: #references
+
+Once you reviewed the [diff] files created above,
+or tested fonts you build,
+you can copy the diff files into the `references` directory.
+Then when you want to build them again,
+such as when the fonts are updated or when the build environment is changed,
+you can compare the diff files with the reference files
+to know how new fonts are different from previous builds.
+
+With the "`-r`" option, the `dump` sub-command
+creates [diff] files between two font files,
+and compare the diff files
+with once-reviewed diff files in the `references` directory.
+
+The typical usage of this option is as below:
+```sh
+east-asian-spacing -p -g=build/glyphs *.otf |
+    east-asian-spacing dump -o=build/diff -r=references -
+```
+Please see the [Diff] section for the "`-p`" option and piping.
+
+The `build*.sh` [scripts] include this option.
+
+### Shape Test
+[shape tests]: #shape-test
+
+The shape testing shapes test strings
+and checks whether the contextual spacing is applied or not.
+
+The `--test` option sets the level of the shape testing.
+```sh
+east-asian-spacing --test 2 -v -o build input-font-file
+```
+The level 0 disables the shape testing.
+The level 1 runs a smoke test using a small set of samples.
+The level 2 runs the shape testing using a large set of test strings.
+The default value is 1.
+
 ## Advanced Topics
 [Advanced Topics]: #advanced-topics
 
@@ -270,7 +408,7 @@ by using a Cython bindings [uharfbuzz].
 
 If you want to use a specific build of the [HarfBuzz],
 this tool can invoke the external [hb-shape] command line tool instead
-by settting the `SHAPER` environment variable.
+by setting the `SHAPER` environment variable.
 ```sh
 export SHAPER=hb-shape
 ```
@@ -303,164 +441,26 @@ cd east_asian_spacing
 poetry install
 poetry shell
 ```
-This method:
+This method has following advantages:
 * Installs the exact versions of dependencies.
 * Installs in the editable mode
-(i.e., [pip "`-e`" option] or setuptools "[development mode]").
+(i.e., [pip "`-e`" option] or `setuptools` "[development mode]").
 * Installs testing tools too.
 You can run [unit tests] to verify your installation if needed.
+* Creates the virtual environment automatically.
 
-You can also install the cloned directory using [pip]:
+You can also install the cloned directory using [pip] if you prefer:
 ```sh
 git clone https://github.com/kojiishi/east_asian_spacing
 cd east_asian_spacing
 pip install .
 ```
 
-## Testing
-[testing]: #testing
-
-### Test HTML
-[test HTML]: #test-html
-
-A [test HTML page] is available
-to check the behavior of fonts on browsers.
-
-It can test fonts you built locally.
-1. Save the page to your local drive.
-   The HTML is a single file, saving the HTML file should work.
-2. Add your font files to the "`fonts`" list
-   at the beginning of the `<script>` block.
-3. Open it in your browser and choose your font.
-
-Note, when you want to test a TTC (TrueType Collection)
-but your browser can load only the first font in the TTC,
-the following command extracts all OpenType fonts (.otf or .ttf)
-from an OpenType Collection font file (.ttc or .otc).
-```sh
-east-asian-spacing ttc build/NotoSansCJK-Regular.ttc
-```
-
-[test HTML page]: https://kojiishi.github.io/chws/test.html
-
-### Dump
-[dump]: #dump
-
-The `dump` sub-command can create various types of text dump files.
-
-The most simple usage is to show a list of tables.
-This is similar to the "`-l`" option of [TTX],
-except for TrueType Collections (TTC),
-this tool can show tables of all fonts in the TTC,
-along with which tables are shared with which fonts.
-```sh
-east-asian-spacing dump build/NotoSansCJK-Regular.ttc
-```
-
-The "`-o`" option creates table list files in the specified directory:
-```sh
-east-asian-spacing dump -o build/dump build/*.ttc
-```
-The "`--ttx`" option creates [TTX] text dumps of all tables
-in addition to the table list files.
-This is similar to the "`-s`" option of [TTX],
-except that it can dump all tables in TrueType Collections (TTC).
-```sh
-east-asian-spacing dump -o build/dump --ttx build/*.ttc
-```
-
-[TTX]: https://fonttools.readthedocs.io/en/latest/ttx.html
-
-### Diff
-[diff]: #diff
-[checking the differences]: #diff
-
-The `dump` sub-command can also create
-[dump] files of two font files and compare them.
-This helps visualizing differences in two fonts,
-specifically, the font files you created from the original font files.
-```sh
-east-asian-spacing dump -o build/diff --diff source_fonts_dir build/NotoSansCJK.ttc
-```
-The example above
-computes the differences between
-`source_fonts_dir/NotoSansCJK.ttc` and `build/NotoSansCJK.ttc`
-by creating following 3 sets of files:
-1. The table list and TTX text dump files for `build/NotoSansCJK.ttc`
-   in the `build/diff/dump` directory.
-2. The table list and TTX text dump files for `source_fonts_dir/NotoSansCJK.ttc`
-   in the `build/diff/src` directory.
-3. Diff files of the two sets of dump files in the `build/diff` directory.
-
-> Note:
-The "`--diff`" option is more efficient than doing all these,
-especially for large fonts,
-because it skips creating TTX of tables when they are binary-equal.
-
-The `-o` option is optional. When it is omitted,
-the sub-command ouputs the diff to `stdout`.
-```sh
-east-asian-spacing dump --diff source_fonts_dir build/NotoSansCJK.ttc | less
-```
-
-To create diff files for all fonts you bulit,
-you can pipe the output as below:
-```sh
-east-asian-spacing -p *.otf | east-asian-spacing dump -o build/diff -
-```
-The "`-p`" option prints the input and output font paths to `stdout`
-in the tab-separated-values format.
-The `dump` sub-command with the "`-`" argument reads this list from `stdin`,
-and creates their text dump and diff files in the `build/diff` directory.
-The "`--diff`" option is not necessary in this case,
-because the source font paths are provided from the pipe.
-
-### References
-[references]: #references
-
-Once you reviewed the [diff] files created above,
-or tested fonts you build,
-you can copy the diff files into the `references` directory.
-Then when you want to build them again,
-such as when the fonts are updated or when the build environment is changed,
-you can compare the diff files with the reference files
-to know how new fonts are different from previous builds.
-
-With the "`-r`" option, the `dump` sub-command
-creates [diff] files between two font files,
-and compare the diff files
-with once-reviewed diff files in the `references` directory.
-
-The typical usage of this option is as below:
-```sh
-east-asian-spacing -p -g=build/glyphs *.otf |
-    east-asian-spacing dump -o=build/diff -r=references -
-```
-Please see the [Diff] section for the "`-p`" option and piping.
-
-The `build*.sh` [scripts] include this option.
-
-### Shape Test
-[shape tests]: #shape-test
-
-The shape testing shapes test strings
-and checks whether the contextual spacing is applied or not.
-
-The `--test` option sets the level of the shape testing.
-```sh
-east-asian-spacing --test 2 -v -o build input-font-file
-```
-The level 0 disables the shape testing.
-The level 1 runs a smoke test using a small set of samples.
-The level 2 runs the shape testing using a large set of test strings.
-
-The default value is 1.
-
 ### Unit Tests
 [unit tests]: #unit-tests
 
-This repositry contains unit tests using [pytest].
-The unit tests include basic functionalities
+This repository contains unit tests using [pytest].
+The unit tests cover the basic functionalities
 including [shape tests],
 adding the feature to a test font,
 and comparing it with [references].
@@ -486,9 +486,9 @@ tox
 [tox]: https://tox.readthedocs.io/en/latest/index.html
 
 ### Scripts
-[scripts]: (#scripts)
+[scripts]: #scripts
 
-Some small shell scripts are available in the `scripts` directory.
+The `scripts` directory has some small shell scripts.
 
 `build*.sh` scripts are useful to build fonts,
 compute [diff] from source fonts,
