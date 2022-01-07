@@ -1,4 +1,3 @@
-import os
 import pathlib
 
 from east_asian_spacing import calc_output_path
@@ -11,20 +10,20 @@ def test_calc_output_path():
         if output_path:
             output_path = pathlib.Path(output_path)
         result = calc_output_path(input_path, output_path, stem_suffix)
-        return str(result)
+        return result
 
-    assert call('c.otf', None) == 'c.otf'
-    assert call('a/b/c.otf', None) == os.path.join('a', 'b', 'c.otf')
+    a = pathlib.Path('a')
+    assert call('c.otf', None) == pathlib.Path('c.otf')
+    assert call('a/b/c.otf', None) == a / 'b' / 'c.otf'
 
-    assert call('c.otf', None, '-chws') == 'c-chws.otf'
-    assert call('a/b/c.otf', None,
-                '-chws') == os.path.join('a', 'b', 'c-chws.otf')
+    assert call('c.otf', None, '-chws') == pathlib.Path('c-chws.otf')
+    assert call('a/b/c.otf', None, '-chws') == a / 'b' / 'c-chws.otf'
 
-    assert call('c.otf', 'build') == os.path.join('build', 'c.otf')
-    assert call('a/b/c.otf', 'build') == os.path.join('build', 'c.otf')
+    build = pathlib.Path('build')
+    assert call('c.otf', 'build') == build / 'c.otf'
+    assert call('a/b/c.otf', 'build') == build / 'c.otf'
 
-    assert call('a/b/c.otf', 'build',
-                '-xyz') == os.path.join('build', 'c-xyz.otf')
+    assert call('a/b/c.otf', 'build', '-xyz') == build / 'c-xyz.otf'
 
 
 def test_calc_output_path_dir(tmp_path: pathlib.Path):
