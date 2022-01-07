@@ -54,6 +54,10 @@ class ShapeTest(object):
         shaper.features = self.features
         self.glyphs = await shaper.shape(text)
 
+    @property
+    def should_have_offset(self) -> bool:
+        return self.index != 0
+
     def should_apply(self, glyph_id_sets: Optional[Tuple[Set[int]]], em=None):
         # If any glyphs are missing, or their advances are not em,
         # the feature should not apply.
@@ -154,7 +158,7 @@ class EastAsianSpacingTester(object):
             font, itertools.product(closing, opening), 0)
         coros.append(
             self.assert_trim(
-                cl_op_tests, False,
+                cl_op_tests,
                 (glyph_sets.left.glyph_id_set,
                  glyph_sets.right.glyph_id_set) if glyph_sets else None))
 
@@ -162,7 +166,7 @@ class EastAsianSpacingTester(object):
             font, itertools.product(opening, opening), 1)
         coros.append(
             self.assert_trim(
-                op_op_tests, True,
+                op_op_tests,
                 (glyph_sets.right.glyph_id_set
                  | glyph_sets.na_right.glyph_id_set,
                  glyph_sets.right.glyph_id_set) if glyph_sets else None))
@@ -175,7 +179,6 @@ class EastAsianSpacingTester(object):
         return tests
 
     async def assert_trim(self, tests: Iterable[ShapeTest],
-                          assert_offset: bool,
                           glyph_id_sets: Optional[Tuple[Set[int]]]):
         font = self.font
         config = self._config
@@ -197,7 +200,7 @@ class EastAsianSpacingTester(object):
             assert test.off_glyphs
             if test.glyphs[index].advance != half_em:
                 test.fail(f'{index}.advance != {half_em}')
-            if (assert_offset and test.glyphs[index].offset -
+            if (test.should_have_offset and test.glyphs[index].offset -
                     test.off_glyphs[index].offset != -offset):
                 test.fail(f'{index}.offset != {offset}')
             tested.append(test)
