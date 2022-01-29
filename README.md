@@ -73,7 +73,7 @@ If all what you need is the command line tool,
 [pipx] can install it globally
 while still isolating it in a virtual environment.
 
-Please also see the [package install] section
+Please also see the [install package] section
 if you want to use this package from your Python program,
 or the [clone and install] section
 if you want to diagnose fonts or the code in more details.
@@ -142,8 +142,8 @@ east-asian-spacing --index=0,1 input-font-file.ttc
 ## API
 
 
-### Package Install
-[package install]: #package-install
+### Install Package
+[install package]: #install-package
 
 You can install this package
 using your favorite package management tools
