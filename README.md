@@ -124,7 +124,7 @@ if you want to customize the default behaviors for your fonts.
 [chws_tool]: https://github.com/googlefonts/chws_tool
 [fonts.google.com]: https://fonts.google.com
 [issues]: https://github.com/kojiishi/east_asian_spacing/issues
-[Noto CJK]: https://www.google.com/get/noto/help/cjk/
+[Noto CJK]: https://github.com/googlefonts/noto-cjk
 
 ### TrueType Collection (TTC)
 
