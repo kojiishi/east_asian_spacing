@@ -10,7 +10,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 dev = ["cloudpickle", "coverage[toml] (>=5.0.2)", "furo", "hypothesis", "mypy", "pre-commit", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six", "sphinx", "sphinx-notfound-page", "zope.interface"]
 docs = ["furo", "sphinx", "sphinx-notfound-page", "zope.interface"]
 tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six", "zope.interface"]
-tests_no_zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six"]
+tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "six"]
 
 [[package]]
 name = "brotli"
@@ -411,7 +411,7 @@ typing-extensions = ">=3.7.4"
 
 [[package]]
 name = "uharfbuzz"
-version = "0.30.0"
+version = "0.32.0"
 description = "Streamlined Cython bindings for the harfbuzz shaping engine"
 category = "main"
 optional = false
@@ -798,7 +798,6 @@ six = [
 ]
 tabulate = [
     {file = "tabulate-0.8.10-py3-none-any.whl", hash = "sha256:0ba055423dbaa164b9e456abe7920c5e8ed33fcc16f6d1b2f2d152c8e1e8b4fc"},
-    {file = "tabulate-0.8.10-py3.8.egg", hash = "sha256:436f1c768b424654fce8597290d2764def1eea6a77cfa5c33be00b1bc0f4f63d"},
     {file = "tabulate-0.8.10.tar.gz", hash = "sha256:6c57f3f3dd7ac2782770155f3adb2db0b1a269637e42f27599925e64b114f519"},
 ]
 toml = [
@@ -849,42 +848,48 @@ typing-inspect = [
     {file = "typing_inspect-0.7.1.tar.gz", hash = "sha256:047d4097d9b17f46531bf6f014356111a1b6fb821a24fe7ac909853ca2a782aa"},
 ]
 uharfbuzz = [
-    {file = "uharfbuzz-0.30.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:2f985934ecb80f0caaf778086d32a01a218c0054713bffea6bdcf6e19484f81c"},
-    {file = "uharfbuzz-0.30.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:5ff3bd8d225f063a59f68e051f8c46d5f7b909fe24e6851d0b925772a2c6d255"},
-    {file = "uharfbuzz-0.30.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:87c087532167d8626c73fde97215e0a8af56aeb80b1f3030fd4e9f5fc0d13ebd"},
-    {file = "uharfbuzz-0.30.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3ec7a317bc554a140da8c556eaa6f5c31acc777158838e33161ef8c1f29e8fc2"},
-    {file = "uharfbuzz-0.30.0-cp310-cp310-win32.whl", hash = "sha256:a7b710911445ae33729ef53f59b120953a895126c2bcd76b1afb934c86b8706b"},
-    {file = "uharfbuzz-0.30.0-cp310-cp310-win_amd64.whl", hash = "sha256:482932f1a6087a64b6fee3d3c326aa3d2cd5f7de1ae5dace19773d8d0c81ce1b"},
-    {file = "uharfbuzz-0.30.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:4f59da7e48d3adba6a9cd22ee03aedcab89a1500f35b4ba630a9ab1427422ef8"},
-    {file = "uharfbuzz-0.30.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:400aba7a3dd94ee97abd8c75c49e7b4de6b7430a55782f447ede350cd180b157"},
-    {file = "uharfbuzz-0.30.0-cp36-cp36m-win32.whl", hash = "sha256:d617e655f7f47f57582be7e689d8f6e9c08b5cca35384a40b1e9ee589279d372"},
-    {file = "uharfbuzz-0.30.0-cp36-cp36m-win_amd64.whl", hash = "sha256:b735b0502cc4073abe1ce4c05ff0a2caee716f7f2c0deec11328c3fea53ac9f1"},
-    {file = "uharfbuzz-0.30.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:0de2280e69fb56516456abb20aa78039e88526e56044fa563602d4480137f443"},
-    {file = "uharfbuzz-0.30.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:974bbee476c11d53ba78467d939d73fdeb733a36d5be54773809d7633e8cc86f"},
-    {file = "uharfbuzz-0.30.0-cp37-cp37m-win32.whl", hash = "sha256:84c1be3cf0abc9417cbb8b09935014d9d1f4abb2dbcd284084b7a7dd447a804b"},
-    {file = "uharfbuzz-0.30.0-cp37-cp37m-win_amd64.whl", hash = "sha256:ffcec4847e9fd65dbc635dda0675c483d5427d01210f3e865cfa2eb1fef3150e"},
-    {file = "uharfbuzz-0.30.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:8b0998375651c693fce0c3a2cfbf6ecfd45b15e9849d30ba540702518e13c563"},
-    {file = "uharfbuzz-0.30.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:f1e4a1ec1ba4f1854296178dcb22a1a32d1da1e0b246976a6694e407111b3f8c"},
-    {file = "uharfbuzz-0.30.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:f35f985c170a257a24803d02ece18da013a55e3415170d0bbc23bf0d942d68d3"},
-    {file = "uharfbuzz-0.30.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5ee2ef707b2564ebda49ddf486592927bcff8b5a9a2d872dd4e91d4fd06f6c08"},
-    {file = "uharfbuzz-0.30.0-cp38-cp38-win32.whl", hash = "sha256:892755460b77d05f0609e4754e21ba3488f99d3d8fc44f9ecaca6a0fa4ca45f0"},
-    {file = "uharfbuzz-0.30.0-cp38-cp38-win_amd64.whl", hash = "sha256:0c8e37789140c201ef746b23764893c6aa9a4a74069abc89f13fa2b6cb3e8ddb"},
-    {file = "uharfbuzz-0.30.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:4239de7fefe43122df1bdc139c1b5e3e39253ac5ef0996926ea7a3457768f3c2"},
-    {file = "uharfbuzz-0.30.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:864f834c397f29506dcd57083d319e93cf0ad5136d5f28ada3d0b87299c884b9"},
-    {file = "uharfbuzz-0.30.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:3ad2ff5d697aead7e11215499be505dc87d542bd1fa561dabe7a89172e8968c7"},
-    {file = "uharfbuzz-0.30.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3ae6cab7b629c43ded7c63f075d0306c2e996274cd8ad1e3f18306aba56fefed"},
-    {file = "uharfbuzz-0.30.0-cp39-cp39-win32.whl", hash = "sha256:581b40289fae30ebd4678e4bb0af76f42d4f5c41a6a3e7fd0b92a1207607e24a"},
-    {file = "uharfbuzz-0.30.0-cp39-cp39-win_amd64.whl", hash = "sha256:e684893741c8e62739296019c6802655b3b19bb70aa078b9f085b353f1efc8be"},
-    {file = "uharfbuzz-0.30.0-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:ad6fecdb9a2eef6bc7666e7f300e18f7f577868a6becef1dd82b0f15cfbdc96b"},
-    {file = "uharfbuzz-0.30.0-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0a6297b233aa124a20b885b72f28e493a130a076fc6d0665a940f6f209fccda9"},
-    {file = "uharfbuzz-0.30.0-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:1222c91900c93fc646bcece947599fdcd2716199305d25e129cf23cb8c28ce2f"},
-    {file = "uharfbuzz-0.30.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:cdc2a7d760295ec59c77363690aa6a3c1d7b1f16a3b6f62f5735f82edbf5a5cd"},
-    {file = "uharfbuzz-0.30.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:624995f9e03c7636248777d0bb1894cac332391905376525071d1a39f323b11f"},
-    {file = "uharfbuzz-0.30.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:79e93e613228b007a99f48dfa0aa7e11d2ebd194433bdcf098176eda374935aa"},
-    {file = "uharfbuzz-0.30.0-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:2922c87df3c96cad2a44219a1d5ef4806f3d809a5e306f5297b64b9e1f66782b"},
-    {file = "uharfbuzz-0.30.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e7fe830f42abb023a5c66a4ec88af98ec598cb6ef59bd601e11ab2b69fc2e9da"},
-    {file = "uharfbuzz-0.30.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:4e83ce9526c9dd54a512426178f4420f64daa53bb6396abd3eab02198987a70f"},
-    {file = "uharfbuzz-0.30.0.zip", hash = "sha256:a2e28cced389d8ddc235234d78e8a0535e2a0b6d452dab5dbc20843b6ef08219"},
+    {file = "uharfbuzz-0.32.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:151603a44e1d6441777ccef28698d9285919882c0daf9d942868fdb7a9682a65"},
+    {file = "uharfbuzz-0.32.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:3ff0376cc775276777ce9e788f5ca7c78a3ef46041613e184a88629d4c15bae6"},
+    {file = "uharfbuzz-0.32.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:86cc96e4186fa3e80b91e7ef76094605e8b5c2bcfecaf4fff94453c6eb0ef82e"},
+    {file = "uharfbuzz-0.32.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e9648daf8717bd150affc338f6937b167b94bec1264175ea62199d8a710e7b4a"},
+    {file = "uharfbuzz-0.32.0-cp310-cp310-win32.whl", hash = "sha256:24efef8f6b039d7834d6b8d0828b4ce89bc9be57abd2d5ea2027997cbbb93eff"},
+    {file = "uharfbuzz-0.32.0-cp310-cp310-win_amd64.whl", hash = "sha256:52de9122f3961dc65f6fc9374b07b8ea3ea9c79b618d8c8b006f8f1f9fdf1e02"},
+    {file = "uharfbuzz-0.32.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:242051369f8cf61df385e7b3b497e653bdf7698cea7ae39f75f4465cd7dc8ac2"},
+    {file = "uharfbuzz-0.32.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:95f1b9e78b0b51f02b75d3dde3bd0bec5cffac96b60f27eb30505c92f7b54c91"},
+    {file = "uharfbuzz-0.32.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:facfb1cad8779b9fbf16a19f1675d175b6936570009fc16909634a3d83870bca"},
+    {file = "uharfbuzz-0.32.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5bac3198b5c543650dccb9b3d92db8f3e124683b966c095b16f6fac93564341f"},
+    {file = "uharfbuzz-0.32.0-cp311-cp311-win32.whl", hash = "sha256:790827fe825b69e5b89e17323f25a3f5223b428168099ca6203caf9fafaf8bcb"},
+    {file = "uharfbuzz-0.32.0-cp311-cp311-win_amd64.whl", hash = "sha256:b81ead7fa91b66b43a7caa57e70943539028ca781ee3d267665b592fc68851a9"},
+    {file = "uharfbuzz-0.32.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:258ef5ffc57de465c2433648923afaf5589ca39cf0df2c6c65c52f353bc35f07"},
+    {file = "uharfbuzz-0.32.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:726faa21f51b18f3fb9d9f6b488d8d49a6016b4cbb7733c01dff6da437181e40"},
+    {file = "uharfbuzz-0.32.0-cp36-cp36m-win32.whl", hash = "sha256:5694e2aed81fc5f541a2ebc3aa53b967cc48898520556bcad7fbcd352d21d5da"},
+    {file = "uharfbuzz-0.32.0-cp36-cp36m-win_amd64.whl", hash = "sha256:fbaba7b4834573f689012e7bf002948cf71da03ef4adff0f638bde7f6397c775"},
+    {file = "uharfbuzz-0.32.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:17373daf08faf0044770f74dc06cd1f589e7306f6b737b15dacf1a5f997cb730"},
+    {file = "uharfbuzz-0.32.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8f61e4cf32e3e5c75086a67638053053036a2e7172fc61ddff0f66ec9ca242b2"},
+    {file = "uharfbuzz-0.32.0-cp37-cp37m-win32.whl", hash = "sha256:772c8b48b82a7eeb93e722badf9dd09921e1d65ff52f8224d51130fcb86aa1d6"},
+    {file = "uharfbuzz-0.32.0-cp37-cp37m-win_amd64.whl", hash = "sha256:c14360e3347b1b34efa98a0dba5fed0863b71f222b2b14e221c76503f78a6ce1"},
+    {file = "uharfbuzz-0.32.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:66836f87e47ba2ca34b7691016c7bf8fa3c44448382da90e2684412d53daf4d5"},
+    {file = "uharfbuzz-0.32.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:b794bdc63ef805f26246a9694d4936162101d4be89ed156f1c08060c42a88006"},
+    {file = "uharfbuzz-0.32.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:372d3cdda722875b8c97b42e6987160c3328fddf8d439b94742d5e5555207df7"},
+    {file = "uharfbuzz-0.32.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:04cdc453977759569c8adf1a6d2fde02e95caaf7a8ce9c41054aabf5a88446b9"},
+    {file = "uharfbuzz-0.32.0-cp38-cp38-win32.whl", hash = "sha256:18357ca239614d771d59978eb36612a2b1e33e514511c11eee0acf763afeb2b0"},
+    {file = "uharfbuzz-0.32.0-cp38-cp38-win_amd64.whl", hash = "sha256:659076f5fe844857b69699484c25499fb640d11f8ca635d1dfd7774f1c4e5fa5"},
+    {file = "uharfbuzz-0.32.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:32139f2d5df48230a3a39c6ffc3e0654ddd7b78dd6175e48b3bddef38a6001d1"},
+    {file = "uharfbuzz-0.32.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:bab7313490fb1cee2e60d2388e7bf60aae750aaa4a443e242937da3b2fd8066b"},
+    {file = "uharfbuzz-0.32.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:2c7f140b9e7cf30081a5b617c752790b6ff0c4b016bac7784a51ff574a7166ee"},
+    {file = "uharfbuzz-0.32.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:55baec4f951dae377099f4a91e10a18f65fd80012cf723e7cbd85c088ef94d35"},
+    {file = "uharfbuzz-0.32.0-cp39-cp39-win32.whl", hash = "sha256:143e3f9050cb2d16926a10d161fc0beb276a00b7acb570ab165f6e9ead5806d3"},
+    {file = "uharfbuzz-0.32.0-cp39-cp39-win_amd64.whl", hash = "sha256:59ac2f51354e604963f26dbe22e337544562b90ea78a9850361b124b04337ef0"},
+    {file = "uharfbuzz-0.32.0-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:6a4e01d8df0f3b1a5f0dacd6fdaacd5ab7957c3637fc1b40ceb369093161c92e"},
+    {file = "uharfbuzz-0.32.0-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a8a3499e766b925b79d26adab17a5e9ead11ace1eaa9830df11cf68061b42b60"},
+    {file = "uharfbuzz-0.32.0-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:fbecf72e22b3f6f8c498f87356c90a7de5eea9670f297caa5565be1d84945bb2"},
+    {file = "uharfbuzz-0.32.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:faf80398c8aff75a95a24f2e2633f0bc1bf29b49a2056017ee1dee443fd5caa0"},
+    {file = "uharfbuzz-0.32.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a17ee362791ad3d8cf18509845b2501d5cb766279c54798704f5eedf7c3f19b3"},
+    {file = "uharfbuzz-0.32.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:32c5decfd36225c1726b9a32ff126b75616134d29d900addeb3de6a53605870b"},
+    {file = "uharfbuzz-0.32.0-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:f12f451fc46b993e5313698296607923f08b6f198ce4a493293b3d6be7dd22e6"},
+    {file = "uharfbuzz-0.32.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e83068ac19d321d08fb5780929d00d5310eb0bacc980ed3fed8ef6dfcc75199b"},
+    {file = "uharfbuzz-0.32.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:2652a046d31c842434d9155f621353fd604b89ca5a98a8189ac678f7351cbc76"},
+    {file = "uharfbuzz-0.32.0.zip", hash = "sha256:209ac2abe706b6129e160dd4a18aeae813c09e10e43c116e67a76fb025cb8cbc"},
 ]
 virtualenv = [
     {file = "virtualenv-20.13.0-py2.py3-none-any.whl", hash = "sha256:339f16c4a86b44240ba7223d0f93a7887c3ca04b5f9c8129da7958447d079b09"},
