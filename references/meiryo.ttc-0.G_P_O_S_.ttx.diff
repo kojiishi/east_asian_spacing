@@ -3,13 +3,15 @@
            <DefaultLangSys>
              <ReqFeatureIndex value="65535"/>
 -            <!-- FeatureCount=2 -->
+-            <FeatureIndex index="0" value="1"/>
+-            <FeatureIndex index="1" value="7"/>
 +            <!-- FeatureCount=6 -->
-             <FeatureIndex index="0" value="1"/>
-             <FeatureIndex index="1" value="7"/>
-+            <FeatureIndex index="2" value="12"/>
-+            <FeatureIndex index="3" value="13"/>
-+            <FeatureIndex index="4" value="14"/>
-+            <FeatureIndex index="5" value="15"/>
++            <FeatureIndex index="0" value="3"/>
++            <FeatureIndex index="1" value="9"/>
++            <FeatureIndex index="2" value="1"/>
++            <FeatureIndex index="3" value="0"/>
++            <FeatureIndex index="4" value="15"/>
++            <FeatureIndex index="5" value="14"/>
            </DefaultLangSys>
            <!-- LangSysCount=0 -->
          </Script>
@@ -18,13 +20,15 @@
            <DefaultLangSys>
              <ReqFeatureIndex value="65535"/>
 -            <!-- FeatureCount=2 -->
+-            <FeatureIndex index="0" value="2"/>
+-            <FeatureIndex index="1" value="8"/>
 +            <!-- FeatureCount=6 -->
-             <FeatureIndex index="0" value="2"/>
-             <FeatureIndex index="1" value="8"/>
-+            <FeatureIndex index="2" value="12"/>
-+            <FeatureIndex index="3" value="13"/>
-+            <FeatureIndex index="4" value="14"/>
-+            <FeatureIndex index="5" value="15"/>
++            <FeatureIndex index="0" value="4"/>
++            <FeatureIndex index="1" value="10"/>
++            <FeatureIndex index="2" value="1"/>
++            <FeatureIndex index="3" value="0"/>
++            <FeatureIndex index="4" value="15"/>
++            <FeatureIndex index="5" value="14"/>
            </DefaultLangSys>
            <!-- LangSysCount=0 -->
          </Script>
@@ -33,13 +37,15 @@
            <DefaultLangSys>
              <ReqFeatureIndex value="65535"/>
 -            <!-- FeatureCount=2 -->
+-            <FeatureIndex index="0" value="0"/>
+-            <FeatureIndex index="1" value="6"/>
 +            <!-- FeatureCount=6 -->
-             <FeatureIndex index="0" value="0"/>
-             <FeatureIndex index="1" value="6"/>
-+            <FeatureIndex index="2" value="12"/>
-+            <FeatureIndex index="3" value="13"/>
-+            <FeatureIndex index="4" value="14"/>
-+            <FeatureIndex index="5" value="15"/>
++            <FeatureIndex index="0" value="2"/>
++            <FeatureIndex index="1" value="8"/>
++            <FeatureIndex index="2" value="1"/>
++            <FeatureIndex index="3" value="0"/>
++            <FeatureIndex index="4" value="15"/>
++            <FeatureIndex index="5" value="14"/>
            </DefaultLangSys>
            <!-- LangSysCount=0 -->
          </Script>
@@ -48,13 +54,15 @@
            <DefaultLangSys>
              <ReqFeatureIndex value="65535"/>
 -            <!-- FeatureCount=2 -->
+-            <FeatureIndex index="0" value="3"/>
+-            <FeatureIndex index="1" value="9"/>
 +            <!-- FeatureCount=6 -->
-             <FeatureIndex index="0" value="3"/>
-             <FeatureIndex index="1" value="9"/>
-+            <FeatureIndex index="2" value="12"/>
-+            <FeatureIndex index="3" value="13"/>
-+            <FeatureIndex index="4" value="14"/>
-+            <FeatureIndex index="5" value="15"/>
++            <FeatureIndex index="0" value="5"/>
++            <FeatureIndex index="1" value="11"/>
++            <FeatureIndex index="2" value="1"/>
++            <FeatureIndex index="3" value="0"/>
++            <FeatureIndex index="4" value="15"/>
++            <FeatureIndex index="5" value="14"/>
            </DefaultLangSys>
            <!-- LangSysCount=1 -->
            <LangSysRecord index="0">
@@ -62,13 +70,15 @@
              <LangSys>
                <ReqFeatureIndex value="65535"/>
 -              <!-- FeatureCount=2 -->
+-              <FeatureIndex index="0" value="4"/>
+-              <FeatureIndex index="1" value="10"/>
 +              <!-- FeatureCount=6 -->
-               <FeatureIndex index="0" value="4"/>
-               <FeatureIndex index="1" value="10"/>
-+              <FeatureIndex index="2" value="12"/>
-+              <FeatureIndex index="3" value="13"/>
-+              <FeatureIndex index="4" value="14"/>
-+              <FeatureIndex index="5" value="15"/>
++              <FeatureIndex index="0" value="6"/>
++              <FeatureIndex index="1" value="12"/>
++              <FeatureIndex index="2" value="1"/>
++              <FeatureIndex index="3" value="0"/>
++              <FeatureIndex index="4" value="15"/>
++              <FeatureIndex index="5" value="14"/>
              </LangSys>
            </LangSysRecord>
          </Script>
@@ -77,13 +87,15 @@
            <DefaultLangSys>
              <ReqFeatureIndex value="65535"/>
 -            <!-- FeatureCount=2 -->
+-            <FeatureIndex index="0" value="5"/>
+-            <FeatureIndex index="1" value="11"/>
 +            <!-- FeatureCount=6 -->
-             <FeatureIndex index="0" value="5"/>
-             <FeatureIndex index="1" value="11"/>
-+            <FeatureIndex index="2" value="12"/>
-+            <FeatureIndex index="3" value="13"/>
-+            <FeatureIndex index="4" value="14"/>
-+            <FeatureIndex index="5" value="15"/>
++            <FeatureIndex index="0" value="7"/>
++            <FeatureIndex index="1" value="13"/>
++            <FeatureIndex index="2" value="1"/>
++            <FeatureIndex index="3" value="0"/>
++            <FeatureIndex index="4" value="15"/>
++            <FeatureIndex index="5" value="14"/>
            </DefaultLangSys>
            <!-- LangSysCount=0 -->
          </Script>
@@ -93,40 +105,109 @@
 -      <!-- FeatureCount=12 -->
 +      <!-- FeatureCount=16 -->
        <FeatureRecord index="0">
-         <FeatureTag value="kern"/>
+-        <FeatureTag value="kern"/>
++        <FeatureTag value="chws"/>
          <Feature>
+-          <!-- LookupCount=1 -->
+-          <LookupListIndex index="0" value="0"/>
++          <!-- LookupCount=2 -->
++          <LookupListIndex index="0" value="8"/>
++          <LookupListIndex index="1" value="10"/>
+         </Feature>
+       </FeatureRecord>
+       <FeatureRecord index="1">
+-        <FeatureTag value="kern"/>
++        <FeatureTag value="halt"/>
+         <Feature>
+           <!-- LookupCount=1 -->
+-          <LookupListIndex index="0" value="0"/>
++          <LookupListIndex index="0" value="7"/>
+         </Feature>
+       </FeatureRecord>
+       <FeatureRecord index="2">
+@@
+         </Feature>
+       </FeatureRecord>
+       <FeatureRecord index="6">
++        <FeatureTag value="kern"/>
++        <Feature>
++          <!-- LookupCount=1 -->
++          <LookupListIndex index="0" value="0"/>
++        </Feature>
++      </FeatureRecord>
++      <FeatureRecord index="7">
++        <FeatureTag value="kern"/>
++        <Feature>
++          <!-- LookupCount=1 -->
++          <LookupListIndex index="0" value="0"/>
++        </Feature>
++      </FeatureRecord>
++      <FeatureRecord index="8">
+         <FeatureTag value="mark"/>
+         <Feature>
+           <!-- LookupCount=4 -->
 @@
            <LookupListIndex index="3" value="4"/>
          </Feature>
        </FeatureRecord>
+-      <FeatureRecord index="7">
++      <FeatureRecord index="9">
+         <FeatureTag value="mark"/>
+         <Feature>
+           <!-- LookupCount=4 -->
+@@
+           <LookupListIndex index="3" value="4"/>
+         </Feature>
+       </FeatureRecord>
+-      <FeatureRecord index="8">
++      <FeatureRecord index="10">
+         <FeatureTag value="mark"/>
+         <Feature>
+           <!-- LookupCount=4 -->
+@@
+           <LookupListIndex index="3" value="4"/>
+         </Feature>
+       </FeatureRecord>
+-      <FeatureRecord index="9">
++      <FeatureRecord index="11">
+         <FeatureTag value="mark"/>
+         <Feature>
+           <!-- LookupCount=4 -->
+@@
+           <LookupListIndex index="3" value="4"/>
+         </Feature>
+       </FeatureRecord>
+-      <FeatureRecord index="10">
 +      <FeatureRecord index="12">
-+        <FeatureTag value="halt"/>
-+        <Feature>
-+          <!-- LookupCount=1 -->
-+          <LookupListIndex index="0" value="7"/>
-+        </Feature>
-+      </FeatureRecord>
+         <FeatureTag value="mark"/>
+         <Feature>
+           <!-- LookupCount=4 -->
+@@
+           <LookupListIndex index="3" value="4"/>
+         </Feature>
+       </FeatureRecord>
+-      <FeatureRecord index="11">
 +      <FeatureRecord index="13">
-+        <FeatureTag value="chws"/>
-+        <Feature>
-+          <!-- LookupCount=2 -->
-+          <LookupListIndex index="0" value="8"/>
-+          <LookupListIndex index="1" value="10"/>
-+        </Feature>
-+      </FeatureRecord>
+         <FeatureTag value="mark"/>
+         <Feature>
+           <!-- LookupCount=4 -->
+@@
+           <LookupListIndex index="3" value="4"/>
+         </Feature>
+       </FeatureRecord>
 +      <FeatureRecord index="14">
-+        <FeatureTag value="vhal"/>
-+        <Feature>
-+          <!-- LookupCount=1 -->
-+          <LookupListIndex index="0" value="11"/>
-+        </Feature>
-+      </FeatureRecord>
-+      <FeatureRecord index="15">
 +        <FeatureTag value="vchw"/>
 +        <Feature>
 +          <!-- LookupCount=2 -->
 +          <LookupListIndex index="0" value="12"/>
 +          <LookupListIndex index="1" value="14"/>
++        </Feature>
++      </FeatureRecord>
++      <FeatureRecord index="15">
++        <FeatureTag value="vhal"/>
++        <Feature>
++          <!-- LookupCount=1 -->
++          <LookupListIndex index="0" value="11"/>
 +        </Feature>
 +      </FeatureRecord>
      </FeatureList>
