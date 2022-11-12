@@ -13,6 +13,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.ttCollection import TTCollection
 from fontTools.pens.boundsPen import BoundsPen
+import fontTools.varLib.featureVars
 import uharfbuzz as hb
 
 logger = logging.getLogger('font')
@@ -400,6 +401,10 @@ class Font(object):
         script_record.ScriptTag = "DFLT"
         script_record.Script = script
         return script_record
+
+    @staticmethod
+    def _sort_features_ottable(ottable: otTables.GPOS):
+        fontTools.varLib.featureVars.sortFeatureList(ottable)
 
     _ot_extensions = set(ext.casefold() for ext in ('.otf', '.ttf'))
     _ttc_extensions = set(ext.casefold() for ext in ('.otc', '.ttc'))

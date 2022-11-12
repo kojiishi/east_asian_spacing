@@ -541,6 +541,8 @@ class GlyphSets(object):
                     lang_sys.LangSysTag)
                 lang_sys.LangSys.FeatureIndex.append(feature_index)
 
+        Font._sort_features_ottable(table)
+
     def _build_halt_lookup(self, font: Font, lookups: List[otTables.Lookup],
                            pos) -> int:
         lookup = self._build_single_pos_lookup(
