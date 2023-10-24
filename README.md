@@ -20,10 +20,11 @@ Following is a figure from JLREQ:
 <img src="https://w3c.github.io/jlreq/images/img2_13.png"
    title="East Asian contextual spacing examples">
 
-An early discussion at [Adobe CJK Type blog article]
+An early discussion at [Adobe CJK Type blog article] and [Part II]
 may help to understand the feature better.
 
 [Adobe CJK Type blog article]: https://ccjktype.fonts.adobe.com/2018/04/contextual-spacing.html
+[Part II]: https://ccjktype.fonts.adobe.com/2019/04/contextual-spacing-gpos-features-redux.html
 
 ### Demo
 
