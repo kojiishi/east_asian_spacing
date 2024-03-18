@@ -152,9 +152,9 @@ class Dump(object):
               file=out_file)
 
     @staticmethod
-    def dump_features(font, face_index, tag, out_file=sys.stdout):
-        ttfont = font.ttfonts[face_index]
-        tttable = ttfont.get(tag)
+    def features_from_tttable(tttable):
+        if tttable is None:
+            return
         table = tttable.table
         if not table or not table.FeatureList:
             return
@@ -172,14 +172,20 @@ class Dump(object):
                  for lang_sys_record in script_record.Script.LangSysRecord))
             for lang_tag, lang_sys in lang_sys_records:
                 feature_indices = getattr(lang_sys, "FeatureIndex", None)
-                if feature_indices:
-                    feature_tags = ",".join(feature_records[i].FeatureTag
-                                            for i in feature_indices)
-                    print(f"  {script_tag} {lang_tag} {feature_tags}",
-                          file=out_file)
-                else:
-                    print(f"  {script_tag} {lang_tag} (no features)",
-                          file=out_file)
+                if not feature_indices:
+                    yield (script_tag, lang_tag, ())
+                yield (script_tag, lang_tag, (feature_records[i].FeatureTag
+                                              for i in feature_indices))
+
+    @staticmethod
+    def dump_features(font, face_index, tag, out_file=sys.stdout):
+        ttfont = font.ttfonts[face_index]
+        tttable = ttfont.get(tag)
+        for script_tag, lang_tag, feature_tags in Dump.features_from_tttable(
+                tttable):
+            features = ",".join(
+                feature_tags) if feature_tags else "(no features)"
+            print(f"  {script_tag} {lang_tag} {features}", file=out_file)
 
     @staticmethod
     async def dump_ttx(font, ttx_path, entries):
