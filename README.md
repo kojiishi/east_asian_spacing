@@ -499,9 +499,3 @@ Followings are example usages.
 ./scripts/build.sh input-font-file.otf -v
 ./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
 ```
-
-## Releasing
-
-Create a new release at [Releases](https://github.com/kojiishi/east_asian_spacing/releases).
-
-The [`publish.yml` action](https://github.com/kojiishi/east_asian_spacing/blob/main/.github/workflows/publish.yml) then publish the release to PyPI.
