@@ -345,6 +345,32 @@ class Font(object):
                                 ("" if t[1] is None else t[1]))))
 
     @staticmethod
+    def features_from_tttable(tttable):
+        if tttable is None:
+            return
+        table = tttable.table
+        if not table or not table.FeatureList:
+            return
+        feature_records = table.FeatureList.FeatureRecord
+        script_records = table.ScriptList.ScriptRecord
+        for script_record in script_records:
+            script_tag = script_record.ScriptTag
+            lang_sys_records = []
+            if script_record.Script.DefaultLangSys:
+                lang_sys_records.append(
+                    ("dflt", script_record.Script.DefaultLangSys))
+            lang_sys_records = itertools.chain(
+                lang_sys_records,
+                ((lang_sys_record.LangSysTag, lang_sys_record.LangSys)
+                 for lang_sys_record in script_record.Script.LangSysRecord))
+            for lang_tag, lang_sys in lang_sys_records:
+                feature_indices = getattr(lang_sys, "FeatureIndex", None)
+                if not feature_indices:
+                    yield (script_tag, lang_tag, ())
+                yield (script_tag, lang_tag, (feature_records[i].FeatureTag
+                                              for i in feature_indices))
+
+    @staticmethod
     def _has_ottable_feature(ottable, feature_tag):
         if not ottable or not ottable.FeatureList:
             return False

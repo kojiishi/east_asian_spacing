@@ -152,36 +152,10 @@ class Dump(object):
               file=out_file)
 
     @staticmethod
-    def features_from_tttable(tttable):
-        if tttable is None:
-            return
-        table = tttable.table
-        if not table or not table.FeatureList:
-            return
-        feature_records = table.FeatureList.FeatureRecord
-        script_records = table.ScriptList.ScriptRecord
-        for script_record in script_records:
-            script_tag = script_record.ScriptTag
-            lang_sys_records = []
-            if script_record.Script.DefaultLangSys:
-                lang_sys_records.append(
-                    ("dflt", script_record.Script.DefaultLangSys))
-            lang_sys_records = itertools.chain(
-                lang_sys_records,
-                ((lang_sys_record.LangSysTag, lang_sys_record.LangSys)
-                 for lang_sys_record in script_record.Script.LangSysRecord))
-            for lang_tag, lang_sys in lang_sys_records:
-                feature_indices = getattr(lang_sys, "FeatureIndex", None)
-                if not feature_indices:
-                    yield (script_tag, lang_tag, ())
-                yield (script_tag, lang_tag, (feature_records[i].FeatureTag
-                                              for i in feature_indices))
-
-    @staticmethod
     def dump_features(font, face_index, tag, out_file=sys.stdout):
         ttfont = font.ttfonts[face_index]
         tttable = ttfont.get(tag)
-        for script_tag, lang_tag, feature_tags in Dump.features_from_tttable(
+        for script_tag, lang_tag, feature_tags in Font.features_from_tttable(
                 tttable):
             features = ",".join(
                 feature_tags) if feature_tags else "(no features)"
