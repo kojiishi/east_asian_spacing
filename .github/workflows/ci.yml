@@ -21,27 +21,21 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      # https://docs.astral.sh/uv/guides/integration/github/
+      - name: Install uv and set up Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install poetry
-
       - name: Install Dependencies
         run: |
-          python -m poetry install --no-interaction
-          python ./tests/download_fonts.py
+          uv sync
 
-      - name: Update Dependencies
-        # 3.7 requires updating dependencies to install `importlib_metadata`
-        # for `pytype` with the lock file for 3.8+.
-        if: matrix.python-version == 3.7
-        run: python -m poetry update
+      - name: Download fonts for testing
+        run: |
+          uv run python3 ./tests/download_fonts.py
 
       - name: Run Tests
-        run: python -m poetry run pytest -v tests/
+        run: |
+          uv run pytest -v tests/
   
