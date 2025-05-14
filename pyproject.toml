@@ -1,6 +1,6 @@
 [project]
 name = "east_asian_spacing"
-version = "1.4.3-alpha.0"
+version = "1.4.3"
 description = "East Asian Contextual Spacing Build Tools"
 authors = [{name = "Koji Ishii", email="kojii@chromium.org"}]
 readme = "README.md"
