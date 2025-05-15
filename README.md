@@ -58,21 +58,24 @@ such as Unicode code points and glyph outlines.
 ### Install
 [install]: #install
 
-You can install this tool by [pip] or [pipx].
+You can install this tool by [pipx] or [uv].
 
-```sh
+```shell-session
 pipx install east-asian-spacing
 ```
-```sh
-pip install east-asian-spacing
+```shell-session
+uv tool install east-asian-spacing
 ```
 
-Please be aware that,
+Using [pip] is also supported, but please be aware that,
 if you install with [pip] in the global environment,
 its dependencies may cause conflicts with other packages.
 If all what you need is the command line tool,
-[pipx] can install it globally
+[pipx] or [uv] can install it globally
 while still isolating it in a virtual environment.
+```shell-session
+pip install east-asian-spacing
+```
 
 Please also see the [install package] section
 if you want to use this package from your Python program,
@@ -87,12 +90,13 @@ if you want to diagnose fonts or the code in more details.
 [pipx]: https://pipxproject.github.io/pipx/
 [pipenv]: https://github.com/pypa/pipenv
 [poetry]: https://github.com/python-poetry/poetry
+[uv]: https://docs.astral.sh/uv/
 
 ### Command Line Usages
 
 The following example adds the feature to `input-font-file`
 and saves it to the `build` directory.
-```sh
+```shell-session
 east-asian-spacing -o build input-font-file
 ```
 
@@ -136,7 +140,7 @@ If you want to add the feature to only some of fonts in the TTC,
 you can specify a comma-separated list of font indices.
 The following example adds the feature to the font index 0 and 1,
 but not to other fonts in the TTC.
-```sh
+```shell-session
 east-asian-spacing --index=0,1 input-font-file.ttc
 ```
 
@@ -148,15 +152,18 @@ east-asian-spacing --index=0,1 input-font-file.ttc
 
 You can install this package
 using your favorite package management tools
-such as [poetry], [pipenv], or [pip].
-```sh
+such as [uv], [poetry], [pipenv], or [pip].
+```shell-session
 pip install east-asian-spacing
 ```
-```sh
+```shell-session
 pipenv install east-asian-spacing
 ```
-```sh
+```shell-session
 poetry add east-asian-spacing
+```
+```shell-session
+uv add east-asian-spacing
 ```
 
 Please also see the [clone and install] section
@@ -199,7 +206,7 @@ Note, when you want to test a TTC (TrueType Collection)
 but your browser can load only the first font in the TTC,
 the following command extracts all OpenType fonts (.otf or .ttf)
 from an OpenType Collection font file (.ttc or .otc).
-```sh
+```shell-session
 east-asian-spacing ttc build/NotoSansCJK-Regular.ttc
 ```
 
@@ -215,19 +222,19 @@ This is similar to the "`-l`" option of [TTX],
 except for TrueType Collections (TTC),
 this tool can show tables of all fonts in the TTC,
 along with which tables are shared with which fonts.
-```sh
+```shell-session
 east-asian-spacing dump build/NotoSansCJK-Regular.ttc
 ```
 
 The "`-o`" option creates table list files in the specified directory:
-```sh
+```shell-session
 east-asian-spacing dump -o build/dump build/*.ttc
 ```
 The "`--ttx`" option creates [TTX] text dumps of all tables
 in addition to the table list files.
 This is similar to the "`-s`" option of [TTX],
 except that it can dump all tables in TrueType Collections (TTC).
-```sh
+```shell-session
 east-asian-spacing dump -o build/dump --ttx build/*.ttc
 ```
 
@@ -241,7 +248,7 @@ The `dump` sub-command can also create
 [dump] files of two font files and compare them.
 This helps visualizing differences in two fonts,
 specifically, the font files you created from the original font files.
-```sh
+```shell-session
 east-asian-spacing dump -o build/diff --diff source_fonts_dir build/NotoSansCJK.ttc
 ```
 The example above
@@ -261,13 +268,13 @@ because it skips creating TTX of tables when they are binary-equal.
 
 The `-o` option is optional. When it is omitted,
 the sub-command outputs the diff to `stdout`.
-```sh
+```shell-session
 east-asian-spacing dump --diff source_fonts_dir build/NotoSansCJK.ttc | less
 ```
 
 To create diff files for all fonts you built,
 you can pipe the output as below:
-```sh
+```shell-session
 east-asian-spacing -p *.otf | east-asian-spacing dump -o build/diff -
 ```
 The "`-p`" option prints the input and output font paths to `stdout`
@@ -294,7 +301,7 @@ and compare the diff files
 with once-reviewed diff files in the `references` directory.
 
 The typical usage of this option is as below:
-```sh
+```shell-session
 east-asian-spacing -p -g=build/glyphs *.otf |
     east-asian-spacing dump -o=build/diff -r=references -
 ```
@@ -309,7 +316,7 @@ The shape testing shapes test strings
 and checks whether the contextual spacing is applied or not.
 
 The `--test` option sets the level of the shape testing.
-```sh
+```shell-session
 east-asian-spacing --test 2 -v -o build input-font-file
 ```
 The level 0 disables the shape testing.
@@ -360,7 +367,7 @@ instead of using glyph outlines.
 The following example
 disables the automatic determination by glyph outlines,
 and specifies that the font is a Japanese font.
-```sh
+```shell-session
 east-asian-spacing --language=JAN input-font-file
 ```
 
@@ -372,7 +379,7 @@ The following example specifies
 Korean for the font index 1,
 Simplified Chinese for the font index 2,
 and automatic for all other fonts.
-```sh
+```shell-session
 east-asian-spacing --language=,KOR,ZHS input-font-file.ttc
 ```
 
@@ -381,7 +388,7 @@ The following example applies
 `JAN` to the index 2,
 and `ZHS` to the index 3.
 Other fonts in the TTC are not changed.
-```sh
+```shell-session
 east-asian-spacing --index=2,3 --language=JAN,ZHS input-font-file.ttc
 ```
 
@@ -410,16 +417,16 @@ by using a Cython bindings [uharfbuzz].
 If you want to use a specific build of the [HarfBuzz],
 this tool can invoke the external [hb-shape] command line tool instead
 by setting the `SHAPER` environment variable.
-```sh
+```shell-session
 export SHAPER=hb-shape
 ```
 
 To install [hb-shape] for Linux:
-```sh
+```shell-session
 sudo apt get libharfbuzz-bin
 ```
 To install [hb-shape] for Mac with [homebrew]:
-```sh
+```shell-session
 brew install harfbuzz
 ```
 Instructions for other platforms may be available at
@@ -435,12 +442,13 @@ Instructions for other platforms may be available at
 [clone and install]: #clone-and-install
 
 If you may need to diagnose fonts or the code,
-cloning and installing using [poetry] is recommended:
-```sh
+cloning and installing using [uv] is recommended:
+```shell-session
 git clone https://github.com/kojiishi/east_asian_spacing
 cd east_asian_spacing
-poetry install
-poetry shell
+uv sync
+uv tool install -e .
+. .venv/bin/activate
 ```
 This method has following advantages:
 * Installs the exact versions of dependencies.
@@ -451,7 +459,7 @@ You can run [unit tests] to verify your installation if needed.
 * Creates the virtual environment automatically.
 
 You can also install the cloned directory using [pip] if you prefer:
-```sh
+```shell-session
 git clone https://github.com/kojiishi/east_asian_spacing
 cd east_asian_spacing
 pip install .
@@ -470,16 +478,16 @@ If you followed the [clone and install] section,
 tools for unit testing are already installed.
 Before you run them first time,
 you need to download fonts for testing:
-```sh
+```shell-session
 ./tests/download_fonts.py
 ```
 
 You can then run the tests by:
-```sh
+```shell-session
 pytest
 ```
 or run them with multiple versions of Python using [tox]:
-```sh
+```shell-session
 tox
 ```
 
@@ -495,7 +503,7 @@ The `scripts` directory has some small shell scripts.
 compute [diff] from source fonts,
 and compare the diff files with [references].
 Followings are example usages.
-```sh
+```shell-session
 ./scripts/build.sh input-font-file.otf -v
 ./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
 ```
