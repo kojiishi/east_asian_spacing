@@ -265,7 +265,6 @@ wheels = [
 
 [[package]]
 name = "east-asian-spacing"
-version = "1.4.3"
 source = { editable = "." }
 dependencies = [
     { name = "fonttools", version = "4.57.0", source = { registry = "https://pypi.org/simple" }, extra = ["woff"], marker = "python_full_version < '3.9'" },
