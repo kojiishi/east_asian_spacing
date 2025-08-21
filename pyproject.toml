@@ -40,5 +40,10 @@ testpaths = "tests"
 [tool.setuptools_scm]
 version_file = "src/east_asian_spacing/_version.py"
 
+[tool.uv]
+# https://docs.astral.sh/uv/reference/settings/#cache-keys
+# https://github.com/astral-sh/uv/issues/6964#issuecomment-2339340947
+cache-keys = [{ git = { commit = true } }, { file = "pyproject.toml" }]
+
 [tool.yapf]
 based_on_style = "pep8"
