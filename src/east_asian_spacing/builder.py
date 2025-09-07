@@ -10,7 +10,6 @@ from typing import Optional
 from typing import TextIO
 from typing import Union
 
-from east_asian_spacing import __version__
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 from east_asian_spacing.spacing import EastAsianSpacing
@@ -265,10 +264,6 @@ class Builder(object):
                             help="increase output verbosity",
                             action="count",
                             default=0)
-        parser.add_argument("-V",
-                            "--version",
-                            action="version",
-                            version="%(prog)s " + __version__)
         args = parser.parse_args()
         init_logging(args.verbose, main=logger, debug=args.debug)
         if args.em is not None:

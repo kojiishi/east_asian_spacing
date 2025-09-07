@@ -1,7 +1,6 @@
 [project]
 name = "east_asian_spacing"
-# version = "1.4.3"
-dynamic = ["version"]
+version = "1.4.4"
 description = "East Asian Contextual Spacing Build Tools"
 authors = [{name = "Koji Ishii", email="kojii@chromium.org"}]
 readme = "README.md"
@@ -28,7 +27,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools >= 77.0.3", "setuptools-scm>=8"]
+requires = ["setuptools >= 77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
@@ -36,9 +35,6 @@ east-asian-spacing = 'east_asian_spacing.__main__:main'
 
 [tool.pytest.ini_options]
 testpaths = "tests"
-
-[tool.setuptools_scm]
-version_file = "src/east_asian_spacing/_version.py"
 
 [tool.uv]
 # https://docs.astral.sh/uv/concepts/cache/#dynamic-metadata

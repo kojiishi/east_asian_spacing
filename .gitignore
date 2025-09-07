@@ -1,7 +1,3 @@
-# setuptools-scm
-# https://pypi.org/project/setuptools-scm/
-src/east_asian_spacing/_version.py
-
 # Source fonts directory
 fonts
 
