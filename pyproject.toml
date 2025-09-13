@@ -33,11 +33,5 @@ east-asian-spacing = 'east_asian_spacing.__main__:main'
 [tool.pytest.ini_options]
 testpaths = "tests"
 
-[tool.uv]
-# https://docs.astral.sh/uv/concepts/cache/#dynamic-metadata
-# https://docs.astral.sh/uv/reference/settings/#cache-keys
-# https://github.com/astral-sh/uv/issues/6964#issuecomment-2339340947
-cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
-
 [tool.yapf]
 based_on_style = "pep8"
