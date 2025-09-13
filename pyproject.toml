@@ -27,8 +27,8 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools >= 77.0.3"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project.scripts]
 east-asian-spacing = 'east_asian_spacing.__main__:main'
