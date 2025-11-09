@@ -1,11 +1,11 @@
 [project]
 name = "east_asian_spacing"
-version = "1.4.4"
+version = "1.4.5"
 description = "East Asian Contextual Spacing Build Tools"
 authors = [{name = "Koji Ishii", email="kojii@chromium.org"}]
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "fonttools[woff]>=4.57.0",
     "uharfbuzz>=0.50.2",
