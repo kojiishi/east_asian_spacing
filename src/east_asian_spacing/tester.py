@@ -153,7 +153,7 @@ class EastAsianSpacingTester(object):
         opening = config.cjk_opening
         closing = config.cjk_closing
         glyph_sets = self._glyph_sets
-        languages = config.languages
+        languages = config.languages or {"JAN", "ZHS", "ZHT", "ZHH"}
 
         coros = []
         for language in languages:

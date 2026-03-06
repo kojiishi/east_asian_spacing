@@ -171,10 +171,9 @@ class CollectionConfig(Config):
         languages = self._languages_by_index.get(font.font_index, 0)
         if languages == 0:
             return None
-        config = super().for_font(font)
         if languages and not config.languages:
             return config.for_languages(languages)
-        return config
+        return super().for_font(font)
 
     @staticmethod
     def _calc_indices_and_languages(num_fonts, indices, list_of_languages):
