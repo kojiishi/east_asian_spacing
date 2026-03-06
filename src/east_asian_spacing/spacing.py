@@ -3,7 +3,6 @@ import argparse
 import asyncio
 import itertools
 import logging
-import math
 import sys
 from typing import Iterable
 from typing import List
@@ -352,9 +351,9 @@ class GlyphSets(object):
             # When `em` is an odd number, ceil the advance. To do this, use
             # floor to compute the adjustment of the advance and the offset.
             # e.g., "ZCOOL QingKe HuangYou".
-            half_em = math.floor(em / 2)
+            half_em = em // 2
             assert half_em > 0
-            quad_em = math.floor(half_em / 2)
+            quad_em = half_em // 2
             if font.is_vertical:
                 self.left_value = buildValue({"YAdvance": -half_em})
                 self.right_value = buildValue({

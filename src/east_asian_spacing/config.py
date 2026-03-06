@@ -17,7 +17,7 @@ class Config(object):
         }
         self.quotes_opening = {0x2018, 0x201C}
         self.quotes_closing = {0x2019, 0x201D}
-        self.cjk_middle = {0x30FB}
+        self.cjk_middle = {0xB7, 0x30FB}
         self.fullwidth_space = {0x3000}
         self.cjk_period_comma = {0x3001, 0x3002, 0xFF0C, 0xFF0E}
         self.cjk_colon_semicolon = {0xFF1A, 0xFF1B}

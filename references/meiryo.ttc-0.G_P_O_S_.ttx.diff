@@ -518,6 +518,7 @@
 +        </SinglePos>
 +        <SinglePos index="2" Format="1">
 +          <Coverage>
++            <Glyph value="glyph00439"/>
 +            <Glyph value="uni30FB"/>
 +            <Glyph value="glyph09616"/>
 +            <Glyph value="glyph09622"/>
@@ -558,6 +559,7 @@
 +            <ClassDef glyph="bracketright" class="1"/>
 +            <ClassDef glyph="glyph00332" class="1"/>
 +            <ClassDef glyph="glyph00384" class="1"/>
++            <ClassDef glyph="glyph00439" class="1"/>
 +            <ClassDef glyph="glyph09251" class="1"/>
 +            <ClassDef glyph="glyph09252" class="1"/>
 +            <ClassDef glyph="glyph09304" class="1"/>
@@ -647,6 +649,7 @@
 +            <Glyph value="bracketleft"/>
 +            <Glyph value="glyph00331"/>
 +            <Glyph value="glyph00382"/>
++            <Glyph value="glyph00439"/>
 +            <Glyph value="uniFF62"/>
 +            <Glyph value="uni2003"/>
 +            <Glyph value="uni30FB"/>

@@ -35,7 +35,7 @@
 243 # U+3016 〖
 1226 # U+301D 〝
 # middle
-102 # U+30FB ・
+102 # U+00B7 ·, U+30FB ・
 103 # U+FF1A ：
 104 # U+FF1B ；
 # space
@@ -87,7 +87,7 @@
 12232 # U+3016 〖
 12519 # U+301D 〝
 # vertical.middle
-102 # U+30FB ・
+102 # U+00B7 ·, U+30FB ・
 12028 # U+FF1A ：
 # vertical.space
 97 # U+3000 　

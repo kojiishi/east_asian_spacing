@@ -54,7 +54,6 @@ class Builder(object):
                                   stem_suffix=stem_suffix,
                                   is_file=output
                                   and Font.is_font_extension(output.suffix))
-        logger.info('Saving to "%s"', output)
         font.save(output)
         paths = [output, path_before_save]
         if glyph_out:
