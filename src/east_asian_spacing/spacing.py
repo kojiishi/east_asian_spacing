@@ -20,7 +20,7 @@ from fontTools.ttLib.tables import otTables
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
-from east_asian_spacing.shaper import GlyphData, GlyphDataSet
+from east_asian_spacing.shaper import GlyphData
 from east_asian_spacing.shaper import GlyphDataSet
 from east_asian_spacing.shaper import InkPart
 from east_asian_spacing.shaper import Shaper
@@ -157,19 +157,6 @@ class GlyphSets(object):
         self.na_left |= other.na_left
         self.na_right |= other.na_right
         self._filtered |= other._filtered
-
-    def add_by_ink_part(self, glyphs: Iterable[GlyphData], font):
-        for glyph in glyphs:
-            ink_pos = glyph.get_ink_part(font)
-            if ink_pos == InkPart.LEFT:
-                self.left.add(glyph)
-            elif ink_pos == InkPart.MIDDLE:
-                self.middle.add(glyph)
-            elif ink_pos == InkPart.RIGHT:
-                self.right.add(glyph)
-            else:
-                _log_shaper.debug('ink_part: ignored %s', glyph)
-        assert self.glyphs_are_disjoint()
 
     def ifilter_ink_bounds(self, font: Font):
         self.left.ifilter_ink_part(InkPart.LEFT, self.na_left)
