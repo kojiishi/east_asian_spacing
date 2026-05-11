@@ -1,6 +1,6 @@
 @@
 +<?xml version="1.0" encoding="UTF-8"?>
-+<ttFont ttLibVersion="4.38">
++<ttFont ttLibVersion="4.61">
 +
 +  <GPOS>
 +    <Version value="0x00010000"/>
@@ -175,12 +175,14 @@
 +            <ClassDef glyph="uni301D" class="1"/>
 +            <ClassDef glyph="uni301F" class="1"/>
 +            <ClassDef glyph="uni30FB" class="1"/>
++            <ClassDef glyph="uniFF01" class="1"/>
 +            <ClassDef glyph="uniFF08" class="1"/>
 +            <ClassDef glyph="uniFF09" class="1"/>
 +            <ClassDef glyph="uniFF0C" class="1"/>
 +            <ClassDef glyph="uniFF0E" class="1"/>
 +            <ClassDef glyph="uniFF1A" class="1"/>
 +            <ClassDef glyph="uniFF1B" class="1"/>
++            <ClassDef glyph="uniFF1F" class="1"/>
 +            <ClassDef glyph="uniFF3B" class="1"/>
 +            <ClassDef glyph="uniFF3D" class="1"/>
 +            <ClassDef glyph="uniFF5B" class="1"/>
@@ -370,6 +372,7 @@
 +          <ClassDef1>
 +          </ClassDef1>
 +          <ClassDef2>
++            <ClassDef glyph="bracketright" class="1"/>
 +            <ClassDef glyph="glyph11951" class="1"/>
 +            <ClassDef glyph="glyph11952" class="1"/>
 +            <ClassDef glyph="glyph11962" class="1"/>
@@ -403,8 +406,10 @@
 +            <ClassDef glyph="glyph12233" class="1"/>
 +            <ClassDef glyph="glyph12519" class="1"/>
 +            <ClassDef glyph="glyph12520" class="1"/>
++            <ClassDef glyph="parenright" class="1"/>
 +            <ClassDef glyph="uni3000" class="1"/>
 +            <ClassDef glyph="uni30FB" class="1"/>
++            <ClassDef glyph="uniFF63" class="1"/>
 +          </ClassDef2>
 +          <!-- Class1Count=1 -->
 +          <!-- Class2Count=2 -->
@@ -450,6 +455,8 @@
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
 +          <BacktrackCoverage index="0">
++            <Glyph value="parenleft"/>
++            <Glyph value="bracketleft"/>
 +            <Glyph value="uni3000"/>
 +            <Glyph value="uni30FB"/>
 +            <Glyph value="glyph11962"/>
@@ -466,6 +473,7 @@
 +            <Glyph value="glyph12031"/>
 +            <Glyph value="glyph12033"/>
 +            <Glyph value="glyph12232"/>
++            <Glyph value="uniFF62"/>
 +            <Glyph value="glyph12519"/>
 +          </BacktrackCoverage>
 +          <!-- InputGlyphCount=1 -->

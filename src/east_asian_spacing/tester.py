@@ -142,10 +142,9 @@ class EastAsianSpacingTester(object):
             raise AssertionError(
                 f'{len(summaries)}/{len(testers)} fonts failed.\n  ' +
                 '\n  '.join(summaries))
-        logger.info('All %d fonts paased.', len(testers))
+        logger.info('All %d fonts passed.', len(testers))
 
     async def _test(self):
-        coros = []
         config = self._config
         if not config:
             return tuple()
@@ -154,35 +153,44 @@ class EastAsianSpacingTester(object):
         opening = config.cjk_opening
         closing = config.cjk_closing
         glyph_sets = self._glyph_sets
-        cl_op_tests = ShapeTest.create_list(
-            font, itertools.product(closing, opening), 0)
-        coros.append(
-            self.assert_trim(
-                cl_op_tests,
-                (glyph_sets.left.glyph_id_set,
-                 glyph_sets.right.glyph_id_set) if glyph_sets else None))
+        languages = config.languages or {"JAN", "ZHS", "ZHT", "ZHH"}
 
-        op_op_tests = ShapeTest.create_list(
-            font, itertools.product(opening, opening), 1)
-        coros.append(
-            self.assert_trim(
-                op_op_tests,
-                (glyph_sets.right.glyph_id_set
-                 | glyph_sets.na_right.glyph_id_set,
-                 glyph_sets.right.glyph_id_set) if glyph_sets else None))
+        coros = []
+        for language in languages:
+            cl_op_tests = ShapeTest.create_list(
+                font, itertools.product(closing, opening), 0)
+            coros.append(
+                self.assert_trim(
+                    cl_op_tests,
+                    (glyph_sets.left.glyph_id_set,
+                     glyph_sets.right.glyph_id_set) if glyph_sets else None,
+                    language,
+                ))
+
+            op_op_tests = ShapeTest.create_list(
+                font, itertools.product(opening, opening), 1)
+            coros.append(
+                self.assert_trim(
+                    op_op_tests,
+                    (glyph_sets.right.glyph_id_set
+                     | glyph_sets.na_right.glyph_id_set,
+                     glyph_sets.right.glyph_id_set) if glyph_sets else None,
+                    language,
+                ))
 
         # Run tests without using `asyncio.gather`
         # to avoid too many open files when using subprocesses.
         tests = await EastAsianSpacingTester.run_coros(coros, parallel=False)
-        # Expand to a list of `ShapeTest`.
+        # Expand to a tuple of `ShapeTest`.
         tests = tuple(itertools.chain(*tests))
         return tests
 
-    async def assert_trim(self, tests: Iterable[ShapeTest],
-                          glyph_id_sets: Optional[Tuple[Set[int]]]):
+    async def assert_trim(self,
+                          tests: Iterable[ShapeTest],
+                          glyph_id_sets: Optional[Tuple[Set[int]]],
+                          language: Optional[str] = None):
         font = self.font
-        config = self._config
-        coros = (test.shape(language=config.language) for test in tests)
+        coros = (test.shape(language=language) for test in tests)
         await EastAsianSpacingTester.run_coros(coros)
 
         em = font.fullwidth_advance
@@ -199,10 +207,10 @@ class EastAsianSpacingTester(object):
             assert test.glyphs
             assert test.off_glyphs
             if test.glyphs[index].advance != half_em:
-                test.fail(f'{index}.advance != {half_em}')
+                test.fail(f'[{language}] {index}.advance != {half_em}')
             if (test.should_have_offset and test.glyphs[index].offset -
                     test.off_glyphs[index].offset != -offset):
-                test.fail(f'{index}.offset != {offset}')
+                test.fail(f'[{language}] {index}.offset != {offset}')
             tested.append(test)
         return tested
 

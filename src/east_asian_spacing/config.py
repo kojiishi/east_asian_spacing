@@ -17,7 +17,7 @@ class Config(object):
         }
         self.quotes_opening = {0x2018, 0x201C}
         self.quotes_closing = {0x2019, 0x201D}
-        self.cjk_middle = {0x30FB}
+        self.cjk_middle = {0xB7, 0x30FB}
         self.fullwidth_space = {0x3000}
         self.cjk_period_comma = {0x3001, 0x3002, 0xFF0C, 0xFF0E}
         self.cjk_colon_semicolon = {0xFF1A, 0xFF1B}
@@ -33,9 +33,10 @@ class Config(object):
         self.skip_monospace_ascii = False
         # Determines the applicability by computing ink bounds.
         self.use_ink_bounds = True
-        # Specify which language behavior the font is.
-        # Valid only when `use_ink_bounds` is `False`.
-        self.language = None
+        # Specify which language behaviors the font has.
+        # Set to `None` to determine by LangSys.
+        # This is needed if `use_int_bounds` is set to False.
+        self.languages = None
         # Characters to compute the "fullwidth" advance from.
         # Set to `None` to use units_per_em.
         self.fullwidth_advance = '四水城「」（）'
@@ -76,10 +77,14 @@ class Config(object):
         # Prefer Typographic Family name (16) if the font has it.
         # Otherwise fallback to Font Family name (1).
         # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+        # It set the languages to the font's default if it is not set yet.
         name = font.debug_name(16, 1)
-        if name:
-            return self.for_font_name(name, font.is_vertical)
-        return self
+        result = self.for_font_name(name, font.is_vertical)
+        if not result:
+            return None
+        if not result.languages:
+            result = result.with_languages(font.languages)
+        return result
 
     def for_font_name(self, name, is_vertical):
         # Noto has ASCII-mono vaiations. It is intended for code and grid-like
@@ -95,19 +100,23 @@ class Config(object):
         clone.cjk_closing = self._down_sample_to(clone.cjk_closing, 3)
         return clone
 
-    def for_language(self, language):
-        "Alias of `with_language`."
-        return self.with_language(language)
+    def for_languages(self, languages):
+        "Alias of `with_languages`."
+        return self.with_languages(languages)
 
-    def with_language(self, language):
-        """Returns a copy with the specified language.
-
-        This also sets `use_ink_bounds` to `False` if `language` is not None."""
-        if language == self.language:
+    def with_languages(self, languages):
+        """Returns a copy with the specified languages."""
+        if isinstance(languages, str):
+            languages = {
+                stripped
+                for language in languages.split(",")
+                if (stripped := language.strip())
+            }
+        assert not languages or languages <= {"JAN", "ZHS", "ZHT", "ZHH"}
+        if languages == self.languages:
             return self
         clone = self.clone()
-        clone.language = language
-        clone.use_ink_bounds = not language
+        clone.languages = languages
         return clone
 
     def with_skip_monospace_ascii(self, skip_monospace_ascii):
@@ -149,37 +158,40 @@ class Config(object):
 
 class CollectionConfig(Config):
 
-    def __init__(self, font, languages=None, indices=None):
+    def __init__(self, font, list_of_languages=None, indices=None):
         assert font.is_collection
         super().__init__()
+        # For a font collection, use the default language is ok.
         indices_and_languages = self._calc_indices_and_languages(
-            len(font.fonts_in_collection), indices, languages)
-        self._language_by_index = dict(indices_and_languages)
+            len(font.fonts_in_collection), indices, list_of_languages)
+        self._languages_by_index = dict(indices_and_languages)
 
     def for_font(self, font):
         assert font.font_index is not None
-        language = self._language_by_index.get(font.font_index, 0)
-        if language == 0:
+        languages = self._languages_by_index.get(font.font_index, 0)
+        if languages == 0:
             return None
-        config = super().for_font(font)
-        if language and not config.language:
-            return config.for_language(language)
-        return config
+        if languages and not config.languages:
+            return config.for_languages(languages)
+        return super().for_font(font)
 
     @staticmethod
-    def _calc_indices_and_languages(num_fonts, indices, languages):
+    def _calc_indices_and_languages(num_fonts, indices, list_of_languages):
         assert num_fonts >= 2
         if indices is None:
             indices = range(num_fonts)
         elif isinstance(indices, str):
             indices = (int(i) for i in indices.split(","))
-        if languages:
-            if isinstance(languages, str):
-                languages = languages.split(',')
-            if len(languages) == 1:
+        if list_of_languages:
+            if isinstance(list_of_languages, str):
+                list_of_languages = [
+                    languages or None
+                    for languages in list_of_languages.split(';')
+                ]
+            if len(list_of_languages) == 1:
                 return itertools.zip_longest(indices, (),
-                                             fillvalue=languages[0])
-            return itertools.zip_longest(indices, languages)
+                                             fillvalue=list_of_languages[0])
+            return itertools.zip_longest(indices, list_of_languages)
         return itertools.zip_longest(indices, ())
 
 

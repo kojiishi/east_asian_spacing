@@ -1462,18 +1462,18 @@
 +            <Glyph value="cid01430"/>
 +            <Glyph value="cid01433"/>
 +            <Glyph value="cid01434"/>
-+            <Glyph value="cid58982"/>
-+            <Glyph value="cid58985"/>
-+            <Glyph value="cid58987"/>
-+            <Glyph value="cid59034"/>
-+            <Glyph value="cid59066"/>
-+            <Glyph value="cid59068"/>
-+            <Glyph value="cid63053"/>
-+            <Glyph value="cid63056"/>
++            <Glyph value="cid58983"/>
++            <Glyph value="cid58986"/>
++            <Glyph value="cid58988"/>
++            <Glyph value="cid59035"/>
++            <Glyph value="cid59067"/>
++            <Glyph value="cid59069"/>
++            <Glyph value="cid63054"/>
 +            <Glyph value="cid63057"/>
 +            <Glyph value="cid63058"/>
-+            <Glyph value="cid63185"/>
-+            <Glyph value="cid63187"/>
++            <Glyph value="cid63059"/>
++            <Glyph value="cid63186"/>
++            <Glyph value="cid63188"/>
 +          </Coverage>
 +          <ValueFormat1 value="4"/>
 +          <ValueFormat2 value="0"/>
@@ -1507,20 +1507,21 @@
 +            <ClassDef glyph="cid01433" class="1"/>
 +            <ClassDef glyph="cid01434" class="1"/>
 +            <ClassDef glyph="cid01651" class="1"/>
-+            <ClassDef glyph="cid58981" class="1"/>
 +            <ClassDef glyph="cid58982" class="1"/>
-+            <ClassDef glyph="cid58985" class="1"/>
-+            <ClassDef glyph="cid58987" class="1"/>
-+            <ClassDef glyph="cid58999" class="1"/>
++            <ClassDef glyph="cid58983" class="1"/>
++            <ClassDef glyph="cid58986" class="1"/>
++            <ClassDef glyph="cid58988" class="1"/>
 +            <ClassDef glyph="cid59000" class="1"/>
-+            <ClassDef glyph="cid59032" class="1"/>
-+            <ClassDef glyph="cid59034" class="1"/>
-+            <ClassDef glyph="cid59064" class="1"/>
-+            <ClassDef glyph="cid59066" class="1"/>
++            <ClassDef glyph="cid59001" class="1"/>
++            <ClassDef glyph="cid59033" class="1"/>
++            <ClassDef glyph="cid59035" class="1"/>
++            <ClassDef glyph="cid59065" class="1"/>
 +            <ClassDef glyph="cid59067" class="1"/>
 +            <ClassDef glyph="cid59068" class="1"/>
-+            <ClassDef glyph="cid59071" class="1"/>
-+            <ClassDef glyph="cid63051" class="1"/>
++            <ClassDef glyph="cid59069" class="1"/>
++            <ClassDef glyph="cid59072" class="1"/>
++            <ClassDef glyph="cid63037" class="1"/>
++            <ClassDef glyph="cid63040" class="1"/>
 +            <ClassDef glyph="cid63052" class="1"/>
 +            <ClassDef glyph="cid63053" class="1"/>
 +            <ClassDef glyph="cid63054" class="1"/>
@@ -1528,10 +1529,11 @@
 +            <ClassDef glyph="cid63056" class="1"/>
 +            <ClassDef glyph="cid63057" class="1"/>
 +            <ClassDef glyph="cid63058" class="1"/>
-+            <ClassDef glyph="cid63184" class="1"/>
++            <ClassDef glyph="cid63059" class="1"/>
 +            <ClassDef glyph="cid63185" class="1"/>
 +            <ClassDef glyph="cid63186" class="1"/>
 +            <ClassDef glyph="cid63187" class="1"/>
++            <ClassDef glyph="cid63188" class="1"/>
 +          </ClassDef2>
 +          <!-- Class1Count=1 -->
 +          <!-- Class2Count=2 -->
@@ -1561,12 +1563,12 @@
 +            <Glyph value="cid01427"/>
 +            <Glyph value="cid01429"/>
 +            <Glyph value="cid01432"/>
-+            <Glyph value="cid58981"/>
-+            <Glyph value="cid59032"/>
-+            <Glyph value="cid59064"/>
-+            <Glyph value="cid59067"/>
-+            <Glyph value="cid63184"/>
-+            <Glyph value="cid63186"/>
++            <Glyph value="cid58982"/>
++            <Glyph value="cid59033"/>
++            <Glyph value="cid59065"/>
++            <Glyph value="cid59068"/>
++            <Glyph value="cid63185"/>
++            <Glyph value="cid63187"/>
 +          </Coverage>
 +          <ValueFormat value="5"/>
 +          <Value XPlacement="-500" XAdvance="-500"/>
@@ -1593,19 +1595,21 @@
 +            <Glyph value="cid01429"/>
 +            <Glyph value="cid01432"/>
 +            <Glyph value="cid01651"/>
-+            <Glyph value="cid58981"/>
-+            <Glyph value="cid58999"/>
++            <Glyph value="cid58982"/>
 +            <Glyph value="cid59000"/>
-+            <Glyph value="cid59032"/>
-+            <Glyph value="cid59064"/>
-+            <Glyph value="cid59067"/>
-+            <Glyph value="cid59070"/>
-+            <Glyph value="cid63051"/>
++            <Glyph value="cid59001"/>
++            <Glyph value="cid59033"/>
++            <Glyph value="cid59065"/>
++            <Glyph value="cid59068"/>
++            <Glyph value="cid59071"/>
++            <Glyph value="cid63036"/>
++            <Glyph value="cid63039"/>
 +            <Glyph value="cid63052"/>
-+            <Glyph value="cid63054"/>
++            <Glyph value="cid63053"/>
 +            <Glyph value="cid63055"/>
-+            <Glyph value="cid63184"/>
-+            <Glyph value="cid63186"/>
++            <Glyph value="cid63056"/>
++            <Glyph value="cid63185"/>
++            <Glyph value="cid63187"/>
 +          </BacktrackCoverage>
 +          <!-- InputGlyphCount=1 -->
 +          <InputCoverage index="0">
@@ -1619,12 +1623,12 @@
 +            <Glyph value="cid01427"/>
 +            <Glyph value="cid01429"/>
 +            <Glyph value="cid01432"/>
-+            <Glyph value="cid58981"/>
-+            <Glyph value="cid59032"/>
-+            <Glyph value="cid59064"/>
-+            <Glyph value="cid59067"/>
-+            <Glyph value="cid63184"/>
-+            <Glyph value="cid63186"/>
++            <Glyph value="cid58982"/>
++            <Glyph value="cid59033"/>
++            <Glyph value="cid59065"/>
++            <Glyph value="cid59068"/>
++            <Glyph value="cid63185"/>
++            <Glyph value="cid63187"/>
 +          </InputCoverage>
 +          <!-- LookAheadGlyphCount=0 -->
 +          <!-- PosCount=1 -->
@@ -1640,39 +1644,40 @@
 +        <!-- SubTableCount=1 -->
 +        <PairPos index="0" Format="2">
 +          <Coverage>
-+            <Glyph value="cid58906"/>
 +            <Glyph value="cid58907"/>
 +            <Glyph value="cid58908"/>
-+            <Glyph value="cid58914"/>
-+            <Glyph value="cid58922"/>
-+            <Glyph value="cid58924"/>
-+            <Glyph value="cid58926"/>
-+            <Glyph value="cid58928"/>
-+            <Glyph value="cid58930"/>
-+            <Glyph value="cid58932"/>
-+            <Glyph value="cid58934"/>
-+            <Glyph value="cid58936"/>
-+            <Glyph value="cid58940"/>
-+            <Glyph value="cid65047"/>
-+            <Glyph value="cid65049"/>
-+            <Glyph value="cid65056"/>
-+            <Glyph value="cid65058"/>
-+            <Glyph value="cid65358"/>
-+            <Glyph value="cid65363"/>
++            <Glyph value="cid58909"/>
++            <Glyph value="cid58915"/>
++            <Glyph value="cid58923"/>
++            <Glyph value="cid58925"/>
++            <Glyph value="cid58927"/>
++            <Glyph value="cid58929"/>
++            <Glyph value="cid58931"/>
++            <Glyph value="cid58933"/>
++            <Glyph value="cid58935"/>
++            <Glyph value="cid58937"/>
++            <Glyph value="cid58941"/>
++            <Glyph value="cid65048"/>
++            <Glyph value="cid65050"/>
++            <Glyph value="cid65057"/>
++            <Glyph value="cid65059"/>
++            <Glyph value="cid65359"/>
++            <Glyph value="cid65364"/>
 +          </Coverage>
 +          <ValueFormat1 value="8"/>
 +          <ValueFormat2 value="0"/>
 +          <ClassDef1>
 +          </ClassDef1>
 +          <ClassDef2>
++            <ClassDef glyph="cid00010" class="1"/>
++            <ClassDef glyph="cid00062" class="1"/>
 +            <ClassDef glyph="cid01403" class="1"/>
 +            <ClassDef glyph="cid01651" class="1"/>
-+            <ClassDef glyph="cid58906" class="1"/>
 +            <ClassDef glyph="cid58907" class="1"/>
 +            <ClassDef glyph="cid58908" class="1"/>
-+            <ClassDef glyph="cid58913" class="1"/>
++            <ClassDef glyph="cid58909" class="1"/>
 +            <ClassDef glyph="cid58914" class="1"/>
-+            <ClassDef glyph="cid58921" class="1"/>
++            <ClassDef glyph="cid58915" class="1"/>
 +            <ClassDef glyph="cid58922" class="1"/>
 +            <ClassDef glyph="cid58923" class="1"/>
 +            <ClassDef glyph="cid58924" class="1"/>
@@ -1688,24 +1693,26 @@
 +            <ClassDef glyph="cid58934" class="1"/>
 +            <ClassDef glyph="cid58935" class="1"/>
 +            <ClassDef glyph="cid58936" class="1"/>
-+            <ClassDef glyph="cid58939" class="1"/>
++            <ClassDef glyph="cid58937" class="1"/>
 +            <ClassDef glyph="cid58940" class="1"/>
-+            <ClassDef glyph="cid63051" class="1"/>
++            <ClassDef glyph="cid58941" class="1"/>
++            <ClassDef glyph="cid59072" class="1"/>
 +            <ClassDef glyph="cid63052" class="1"/>
-+            <ClassDef glyph="cid63054" class="1"/>
++            <ClassDef glyph="cid63053" class="1"/>
 +            <ClassDef glyph="cid63055" class="1"/>
-+            <ClassDef glyph="cid65046" class="1"/>
++            <ClassDef glyph="cid63056" class="1"/>
 +            <ClassDef glyph="cid65047" class="1"/>
 +            <ClassDef glyph="cid65048" class="1"/>
 +            <ClassDef glyph="cid65049" class="1"/>
-+            <ClassDef glyph="cid65055" class="1"/>
++            <ClassDef glyph="cid65050" class="1"/>
 +            <ClassDef glyph="cid65056" class="1"/>
 +            <ClassDef glyph="cid65057" class="1"/>
 +            <ClassDef glyph="cid65058" class="1"/>
-+            <ClassDef glyph="cid65358" class="1"/>
++            <ClassDef glyph="cid65059" class="1"/>
 +            <ClassDef glyph="cid65359" class="1"/>
-+            <ClassDef glyph="cid65362" class="1"/>
++            <ClassDef glyph="cid65360" class="1"/>
 +            <ClassDef glyph="cid65363" class="1"/>
++            <ClassDef glyph="cid65364" class="1"/>
 +          </ClassDef2>
 +          <!-- Class1Count=1 -->
 +          <!-- Class2Count=2 -->
@@ -1725,21 +1732,21 @@
 +        <!-- SubTableCount=1 -->
 +        <SinglePos index="0" Format="1">
 +          <Coverage>
-+            <Glyph value="cid58913"/>
-+            <Glyph value="cid58921"/>
-+            <Glyph value="cid58923"/>
-+            <Glyph value="cid58925"/>
-+            <Glyph value="cid58927"/>
-+            <Glyph value="cid58929"/>
-+            <Glyph value="cid58931"/>
-+            <Glyph value="cid58933"/>
-+            <Glyph value="cid58935"/>
-+            <Glyph value="cid58939"/>
-+            <Glyph value="cid65046"/>
-+            <Glyph value="cid65048"/>
-+            <Glyph value="cid65055"/>
-+            <Glyph value="cid65057"/>
-+            <Glyph value="cid65362"/>
++            <Glyph value="cid58914"/>
++            <Glyph value="cid58922"/>
++            <Glyph value="cid58924"/>
++            <Glyph value="cid58926"/>
++            <Glyph value="cid58928"/>
++            <Glyph value="cid58930"/>
++            <Glyph value="cid58932"/>
++            <Glyph value="cid58934"/>
++            <Glyph value="cid58936"/>
++            <Glyph value="cid58940"/>
++            <Glyph value="cid65047"/>
++            <Glyph value="cid65049"/>
++            <Glyph value="cid65056"/>
++            <Glyph value="cid65058"/>
++            <Glyph value="cid65363"/>
 +          </Coverage>
 +          <ValueFormat value="10"/>
 +          <Value YPlacement="500" YAdvance="-500"/>
@@ -1752,46 +1759,49 @@
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
 +          <BacktrackCoverage index="0">
++            <Glyph value="cid00009"/>
++            <Glyph value="cid00060"/>
 +            <Glyph value="cid01403"/>
 +            <Glyph value="cid01651"/>
-+            <Glyph value="cid58913"/>
-+            <Glyph value="cid58921"/>
-+            <Glyph value="cid58923"/>
-+            <Glyph value="cid58925"/>
-+            <Glyph value="cid58927"/>
-+            <Glyph value="cid58929"/>
-+            <Glyph value="cid58931"/>
-+            <Glyph value="cid58933"/>
-+            <Glyph value="cid58935"/>
-+            <Glyph value="cid58939"/>
-+            <Glyph value="cid63051"/>
++            <Glyph value="cid58914"/>
++            <Glyph value="cid58922"/>
++            <Glyph value="cid58924"/>
++            <Glyph value="cid58926"/>
++            <Glyph value="cid58928"/>
++            <Glyph value="cid58930"/>
++            <Glyph value="cid58932"/>
++            <Glyph value="cid58934"/>
++            <Glyph value="cid58936"/>
++            <Glyph value="cid58940"/>
++            <Glyph value="cid59071"/>
 +            <Glyph value="cid63052"/>
-+            <Glyph value="cid63054"/>
++            <Glyph value="cid63053"/>
 +            <Glyph value="cid63055"/>
-+            <Glyph value="cid65046"/>
-+            <Glyph value="cid65048"/>
-+            <Glyph value="cid65055"/>
-+            <Glyph value="cid65057"/>
-+            <Glyph value="cid65359"/>
-+            <Glyph value="cid65362"/>
++            <Glyph value="cid63056"/>
++            <Glyph value="cid65047"/>
++            <Glyph value="cid65049"/>
++            <Glyph value="cid65056"/>
++            <Glyph value="cid65058"/>
++            <Glyph value="cid65360"/>
++            <Glyph value="cid65363"/>
 +          </BacktrackCoverage>
 +          <!-- InputGlyphCount=1 -->
 +          <InputCoverage index="0">
-+            <Glyph value="cid58913"/>
-+            <Glyph value="cid58921"/>
-+            <Glyph value="cid58923"/>
-+            <Glyph value="cid58925"/>
-+            <Glyph value="cid58927"/>
-+            <Glyph value="cid58929"/>
-+            <Glyph value="cid58931"/>
-+            <Glyph value="cid58933"/>
-+            <Glyph value="cid58935"/>
-+            <Glyph value="cid58939"/>
-+            <Glyph value="cid65046"/>
-+            <Glyph value="cid65048"/>
-+            <Glyph value="cid65055"/>
-+            <Glyph value="cid65057"/>
-+            <Glyph value="cid65362"/>
++            <Glyph value="cid58914"/>
++            <Glyph value="cid58922"/>
++            <Glyph value="cid58924"/>
++            <Glyph value="cid58926"/>
++            <Glyph value="cid58928"/>
++            <Glyph value="cid58930"/>
++            <Glyph value="cid58932"/>
++            <Glyph value="cid58934"/>
++            <Glyph value="cid58936"/>
++            <Glyph value="cid58940"/>
++            <Glyph value="cid65047"/>
++            <Glyph value="cid65049"/>
++            <Glyph value="cid65056"/>
++            <Glyph value="cid65058"/>
++            <Glyph value="cid65363"/>
 +          </InputCoverage>
 +          <!-- LookAheadGlyphCount=0 -->
 +          <!-- PosCount=1 -->

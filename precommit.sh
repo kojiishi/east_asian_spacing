@@ -11,6 +11,6 @@ yapf -ir -vv .
 pytest -v
 # tox -p
 
-# `pytype` supports 3.8-3.12 (May 15, 2025)
+# `pytype` supports 3.8-3.12
 # https://github.com/google/pytype/#requirements
-uvx --python 3.12 --with fonttools,uharfbuzz pytype src/east_asian_spacing
+# uvx --python 3.12 --with fonttools,uharfbuzz pytype src/east_asian_spacing

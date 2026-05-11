@@ -1585,6 +1585,7 @@
 +          <ClassDef1>
 +          </ClassDef1>
 +          <ClassDef2>
++            <ClassDef glyph="bracketright" class="1"/>
 +            <ClassDef glyph="glyph63145" class="1"/>
 +            <ClassDef glyph="glyph63146" class="1"/>
 +            <ClassDef glyph="glyph63148" class="1"/>
@@ -1601,6 +1602,7 @@
 +            <ClassDef glyph="glyph65454" class="1"/>
 +            <ClassDef glyph="glyph65457" class="1"/>
 +            <ClassDef glyph="glyph65458" class="1"/>
++            <ClassDef glyph="parenright" class="1"/>
 +            <ClassDef glyph="uni2003" class="1"/>
 +            <ClassDef glyph="uni2027" class="1"/>
 +            <ClassDef glyph="uniFE10" class="1"/>
@@ -1626,6 +1628,7 @@
 +            <ClassDef glyph="uniFE44" class="1"/>
 +            <ClassDef glyph="uniFE47" class="1"/>
 +            <ClassDef glyph="uniFE48" class="1"/>
++            <ClassDef glyph="uniFF63" class="1"/>
 +          </ClassDef2>
 +          <!-- Class1Count=1 -->
 +          <!-- Class2Count=2 -->
@@ -1672,6 +1675,8 @@
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
 +          <BacktrackCoverage index="0">
++            <Glyph value="parenleft"/>
++            <Glyph value="bracketleft"/>
 +            <Glyph value="uni2003"/>
 +            <Glyph value="uni2027"/>
 +            <Glyph value="uniFE17"/>
@@ -1684,6 +1689,7 @@
 +            <Glyph value="uniFE41"/>
 +            <Glyph value="uniFE43"/>
 +            <Glyph value="uniFE47"/>
++            <Glyph value="uniFF62"/>
 +            <Glyph value="glyph63145"/>
 +            <Glyph value="glyph63146"/>
 +            <Glyph value="glyph63148"/>

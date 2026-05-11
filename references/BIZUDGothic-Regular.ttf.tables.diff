@@ -1,0 +1,20 @@
+@@ -1,6 +1,7 @@
+ Font 0: "BIZ UDGothic" "Regular" PS="BIZUDGothic-Regular"
+ Tag  Size      
+ DSIG          8 [0]
++GPOS        696 [0]
+ GSUB     41,182 [0]
+ OS/2         96 [0]
+ cmap    202,155 [0]
+@@ -19,7 +20,7 @@
+ prep        835 [0]
+ vhea         36 [0]
+ vmtx     55,478 [0]
+-Total: 4,667,380
+-Data: 4,667,049
+-Gap: 331
+-Tables: 19
++Total: 4,668,092
++Data: 4,667,745
++Gap: 347
++Tables: 20

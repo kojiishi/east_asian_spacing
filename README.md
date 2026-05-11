@@ -345,7 +345,7 @@ This package automatically detects such cases and
 avoids applying spacings to such pairs.
 
 This automatic behavior can be disabled
-by specifying the [languages] below,
+by the `--skip-ink-bounds` option on the command line,
 or by setting `Config.use_ink_bounds` to `False` in your Python program.
 
 ### Languages
@@ -358,29 +358,56 @@ U+3002 IDEOGRAPHIC FULL STOP
 should be placed at the left-bottom corner of the glyph space in Japanese,
 while it should be placed at the center in Traditional Chinese.
 
-By default,
-this package determines such differences from glyph outlines
-as described in the [Algorithm] section above.
-But you can specify the [OpenType language system tag]
-to let this package follow the language convention
-instead of using glyph outlines.
-The following example
-disables the automatic determination by glyph outlines,
-and specifies that the font is a Japanese font.
+#### Language Detection
+
+The `-L`/`--languages` option controls how the language is determined.
+The supported [OpenType language system tags] are: `JAN`, `ZHS`, `ZHT`, `ZHH`.
+Note that `KOR` is no longer supported;
+Korean glyphs are handled through automatic detection instead.
+
+Specifying `-L`/`--languages` does **not** disable the ink bounds check (`use_ink_bounds`).
+To disable it, use the `--skip-ink-bounds` option explicitly:
 ```shell-session
-east-asian-spacing --language=JAN input-font-file
+east-asian-spacing --languages=JAN --skip-ink-bounds input-font-file
 ```
+Or set `Config.use_ink_bounds = False` in your Python program.
+
+When `-L` is not specified, or an empty value is given,
+the language is detected automatically
+by inspecting the LangSys records in the font's OpenType tables.
+
+If the font provides only a default LangSys and no named language systems are found,
+the tool falls back to applying all four supported languages: `JAN`, `ZHS`, `ZHT`, `ZHH`.
+To explicitly request this behaviour, pass them all:
+```shell-session
+east-asian-spacing -L JAN,ZHS,ZHT,ZHH input-font-file
+```
+
+To disable automatic detection and specify one or more languages explicitly,
+pass a comma-separated list with `-L`/`--languages`.
+The following example specifies that the font is a Japanese font:
+```shell-session
+east-asian-spacing --languages=JAN input-font-file
+```
+
+To apply multiple languages to a single font (e.g. a combined CJK font):
+```shell-session
+east-asian-spacing --languages=JAN,ZHS input-font-file
+```
+
+#### TrueType Collections (TTC)
 
 For TrueType Collections (TTC),
 the language option applies to all fonts in the TTC by default.
 When you want to specify different languages to each font in the TTC,
-it accepts a comma-separated list.
+use a semicolon-separated list where each entry is the comma-separated languages
+for the corresponding font (or empty to use automatic detection).
 The following example specifies
-Korean for the font index 1,
-Simplified Chinese for the font index 2,
+Simplified Chinese for the font index 1,
+Traditional Chinese for the font index 2,
 and automatic for all other fonts.
 ```shell-session
-east-asian-spacing --language=,KOR,ZHS input-font-file.ttc
+east-asian-spacing --languages=;ZHS;ZHT input-font-file.ttc
 ```
 
 You can combine these two options.
@@ -389,10 +416,10 @@ The following example applies
 and `ZHS` to the index 3.
 Other fonts in the TTC are not changed.
 ```shell-session
-east-asian-spacing --index=2,3 --language=JAN,ZHS input-font-file.ttc
+east-asian-spacing --index=2,3 --languages=JAN;ZHS input-font-file.ttc
 ```
 
-[OpenType language system tag]: https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
+[OpenType language system tags]: https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
 
 ### Character-Pairs
 
@@ -507,3 +534,4 @@ Followings are example usages.
 ./scripts/build.sh input-font-file.otf -v
 ./scripts/build-noto-cjk.sh ~/fonts/noto-cjk -v
 ```
+

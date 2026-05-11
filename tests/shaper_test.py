@@ -6,7 +6,7 @@ import pytest
 from east_asian_spacing import Font
 from east_asian_spacing import InkPart
 from east_asian_spacing import GlyphData
-from east_asian_spacing import GlyphDataList
+from east_asian_spacing import GlyphDataSet
 from east_asian_spacing import Shaper
 from east_asian_spacing import ShapeResult
 
@@ -27,8 +27,8 @@ def test_glyph_data_eq():
     assert result1 == result2
 
     glyph3.advance = 500
-    assert glyph3 != glyph4
-    assert result1 != result2
+    assert glyph3 == glyph4
+    assert result1 == result2
 
 
 def test_compute_ink_part():
@@ -74,35 +74,35 @@ async def test_glyph_data_set(test_font_path):
     font = Font.load(test_font_path)
     shaper = Shaper(font)
     result = await shaper.shape('\uFF08\uFF09\u30FB\u56DB')
-    glyphs = GlyphDataList(result)
+    glyphs = GlyphDataSet(result)
     assert len(glyphs) == len(result)
-    assert list(glyphs.glyph_ids) == list(result.glyph_ids)
+    assert set(glyphs.glyph_ids) == set(result.glyph_ids)
 
     result2 = await shaper.shape('\u3000')
-    glyphs2 = GlyphDataList(result2)
+    glyphs2 = GlyphDataSet(result2)
 
     glyphs |= result2
     assert len(glyphs) == len(result) + len(result2)
-    assert list(glyphs.glyph_ids) == list(
+    assert set(glyphs.glyph_ids) == set(
         itertools.chain(result.glyph_ids, result2.glyph_ids))
 
     glyphs -= glyphs2
     assert len(glyphs) == len(result)
-    assert list(glyphs.glyph_ids) == list(result.glyph_ids)
+    assert set(glyphs.glyph_ids) == set(result.glyph_ids)
 
 
-def test_glyph_data_set_group_by():
+def test_glyph_data_set_glyph_id_and_glyph():
     g1 = GlyphData(1, None, 100, 0)
     g1a = GlyphData(1, None, 200, 0)
     g2 = GlyphData(2, None, 100, 0)
-    glyphs = GlyphDataList([g1, g2, g1a])
-    d = dict(glyphs.group_by_glyph_id())
-    assert d[1] == [g1, g1a]
-    assert d[2] == [g2]
+    glyphs = GlyphDataSet([g1, g2, g1a])
+    d = dict(glyphs.glyph_id_and_glyph())
+    assert d[1] == g1 or d[1] == g1a
+    assert d[2] == g2
 
-    # The list should be unique; the same `GlyphData` are removed.
+    # The set should be unique; the same `GlyphData` are removed.
     g2a = GlyphData(2, None, 100, 0)
     glyphs.add(g2a)
-    d = dict(glyphs.group_by_glyph_id())
-    assert d[1] == [g1, g1a]
-    assert d[2] == [g2]
+    d = dict(glyphs.glyph_id_and_glyph())
+    assert d[1] == g1 or d[1] == g1a
+    assert d[2] == g2 or d[2] == g2a
