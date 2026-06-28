@@ -514,7 +514,8 @@ class Dump(object):
         dump_file_name = args.output is None and len(args.path) > 1
         for i, (path, diff_src, glyphs) in enumerate(Dump.expand_paths(args)):
             if dump_file_name:
-                if i: print()
+                if i:
+                    print()
                 print(f'File: {path}')
             if diff_src:
                 diffs = await Dump.diff_font(path,

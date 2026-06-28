@@ -9,12 +9,15 @@ tasks:
   check:
     - task: tests
     - task: type
+    - task: lint
     - task: fmtchk
     - git diff --exit-code
 
   download: "{{.RUN}} python3 ./tests/download_fonts.py"
+  fix: "{{.RUN}} ruff check --fix {{.CLI_ARGS}}"
   fmt: "{{.RUN}} yapf -ir -vv . {{.CLI_ARGS}}"
   fmtchk: "{{.RUN}} yapf -qr -vv . {{.CLI_ARGS}}"
+  lint: "{{.RUN}} ruff check {{.CLI_ARGS}}"
   test: "{{.RUN}} pytest {{.PYTEST}} {{.CLI_ARGS}}"
   tests: "{{.RUN}} tox {{.TOX}} {{.CLI_ARGS}}"
   type: "{{.RUN}} pyrefly check {{.PYREFLY}} {{.CLI_ARGS}}"

@@ -24,7 +24,8 @@ class ShapeTest(object):
     @staticmethod
     def create_list(font: Font, inputs: Iterable[Tuple[int, int]], index: int):
         off_features = ['fwid']
-        if font.is_vertical: off_features.append('vert')
+        if font.is_vertical:
+            off_features.append('vert')
         features = copy.copy(off_features)
         features.append('vchw' if font.is_vertical else 'chws')
         tests = tuple(

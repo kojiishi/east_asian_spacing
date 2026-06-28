@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from abc import abstractmethod
 import argparse
 import asyncio
 import enum
@@ -14,7 +13,6 @@ from subprocess import CalledProcessError
 from typing import Callable
 from typing import Iterable
 from typing import Iterator
-from typing import List
 from typing import Optional
 from typing import Union
 from typing import Tuple
@@ -195,7 +193,10 @@ class GlyphDataList(object):
         return self.glyph_id_set.isdisjoint(other.glyph_id_set)
 
     def group_by_glyph_id(self) -> Iterator[Tuple[int, 'GlyphDataList']]:
-        key_func = lambda g: g.glyph_id
+
+        def key_func(g):
+            return g.glyph_id
+
         glyphs = sorted(self._glyphs, key=key_func)
         glyphs = _uniq(glyphs)
         result = itertools.groupby(glyphs, key=key_func)
