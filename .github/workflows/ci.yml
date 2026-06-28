@@ -43,6 +43,9 @@ jobs:
       - name: Tests
         run: task test
 
+      - name: Type
+        run: task type
+
       - name: Lint
         run: task lint
 
