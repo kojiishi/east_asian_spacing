@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  default:
+    deps: [check]
+
+  check:
+    - task: tests
+    - task: type
+    - task: fmtchk
+    - git diff --exit-code
+
+  download: "{{.RUN}} python3 ./tests/download_fonts.py"
+  fmt: "{{.RUN}} yapf -ir -vv . {{.CLI_ARGS}}"
+  fmtchk: "{{.RUN}} yapf -qr -vv . {{.CLI_ARGS}}"
+  test: "{{.RUN}} pytest {{.PYTEST}} {{.CLI_ARGS}}"
+  tests: "{{.RUN}} tox {{.TOX}} {{.CLI_ARGS}}"
+  type: uvx --python 3.12 --with fonttools,uharfbuzz pytype src/east_asian_spacing
+
+  gen:
+    - "{{.RUN}} unicodedata-reader lb -t js/template.js {{.GEN}} {{.CLI_ARGS}}"
+    - "{{.RUN}} unicodedata-reader gc -t js/template.js {{.GEN}} {{.CLI_ARGS}}"
+
+  install-git-hooks:
+    desc: Create git hooks
+    cmds:
+      - echo '#!/bin/sh' > .git/hooks/pre-push
+      - echo 'task check' >> .git/hooks/pre-push
+      - cmd: chmod +x .git/hooks/pre-push
+        platforms: [linux, darwin]
+
+vars:
+  GEN: -fv
+  PYTEST: -v
+  RUN: uv run
+  TOX: -p

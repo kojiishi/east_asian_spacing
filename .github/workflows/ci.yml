@@ -27,18 +27,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # https://taskfile.dev/docs/installation#github-actions
+      - name: Install Task
+        uses: go-task/setup-task@v2
+
       - name: Install Dependencies
-        run: |
-          uv sync
-
-      - name: Download fonts for testing
-        run: |
-          uv run python3 ./tests/download_fonts.py
-
-      - name: Run Tests
-        run: |
-          uv run pytest -v
+        run: uv sync
 
       - name: Build
-        run: |
-          uv build
+        run: uv build
+
+      - name: Download fonts for testing
+        run: task download
+
+      - name: Tests
+        run: task test
+
+      - name: Format check
+        run: task fmtchk
