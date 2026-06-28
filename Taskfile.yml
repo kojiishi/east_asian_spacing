@@ -17,11 +17,7 @@ tasks:
   fmtchk: "{{.RUN}} yapf -qr -vv . {{.CLI_ARGS}}"
   test: "{{.RUN}} pytest {{.PYTEST}} {{.CLI_ARGS}}"
   tests: "{{.RUN}} tox {{.TOX}} {{.CLI_ARGS}}"
-  type: uvx --python 3.12 --with fonttools,uharfbuzz pytype src/east_asian_spacing
-
-  gen:
-    - "{{.RUN}} unicodedata-reader lb -t js/template.js {{.GEN}} {{.CLI_ARGS}}"
-    - "{{.RUN}} unicodedata-reader gc -t js/template.js {{.GEN}} {{.CLI_ARGS}}"
+  type: "{{.RUN}} pyrefly check {{.PYREFLY}} {{.CLI_ARGS}}"
 
   install-git-hooks:
     desc: Create git hooks
@@ -32,7 +28,7 @@ tasks:
         platforms: [linux, darwin]
 
 vars:
-  GEN: -fv
+  PYREFLY: --summarize-errors
   PYTEST: -v
   RUN: uv run
   TOX: -p
