@@ -17,6 +17,11 @@ from east_asian_spacing.tester import EastAsianSpacingTester
 from east_asian_spacing.utils import calc_output_path
 from east_asian_spacing.utils import init_logging
 
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "0.0.0+unknown"
+
 logger = logging.getLogger('build')
 
 
@@ -263,6 +268,10 @@ class Builder(object):
                             help="increase output verbosity",
                             action="count",
                             default=0)
+        parser.add_argument("-V",
+                            "--version",
+                            action="version",
+                            version=f"%(prog)s {__version__}")
         args = parser.parse_args()
         init_logging(args.verbose, main=logger, debug=args.debug)
         if args.em is not None:

@@ -1,6 +1,6 @@
 [project]
 name = "east_asian_spacing"
-version = "1.4.5"
+dynamic = ["version"]
 description = "East Asian Contextual Spacing Build Tools"
 authors = [{name = "Koji Ishii", email="kojii@chromium.org"}]
 readme = "README.md"
@@ -26,14 +26,20 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=82.0.1", "setuptools-scm>=10.2.0"]
+build-backend = "setuptools.build_meta"
 
 [project.scripts]
 east-asian-spacing = 'east_asian_spacing.__main__:main'
 
 [tool.pytest.ini_options]
 testpaths = "tests"
+
+[tool.setuptools_scm]
+# https://github.com/pypa/setuptools-scm
+version_file = "src/east_asian_spacing/_version.py"
+# https://github.com/dependabot/dependabot-core/issues/12340
+fallback_version = "0.0.0"
 
 [tool.yapf]
 based_on_style = "pep8"
