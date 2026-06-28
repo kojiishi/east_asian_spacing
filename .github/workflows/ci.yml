@@ -43,5 +43,8 @@ jobs:
       - name: Tests
         run: task test
 
+      - name: Lint
+        run: task lint
+
       - name: Format check
         run: task fmtchk

@@ -154,7 +154,6 @@ class Builder(object):
 
     def _united_spacings(self):
         assert self.has_spacings
-        font = self.font
         united_spacing = EastAsianSpacing()
         for spacing in self._spacings:
             united_spacing.unite(spacing)

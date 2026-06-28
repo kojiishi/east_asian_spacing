@@ -1,4 +1,3 @@
-from east_asian_spacing import Config
 from east_asian_spacing import Font
 from east_asian_spacing import GlyphData
 from east_asian_spacing import GlyphDataList

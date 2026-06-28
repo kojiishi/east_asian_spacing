@@ -22,7 +22,6 @@ from fontTools.ttLib.tables import otTables
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 from east_asian_spacing.shaper import GlyphData, GlyphDataList
-from east_asian_spacing.shaper import GlyphDataList
 from east_asian_spacing.shaper import InkPart
 from east_asian_spacing.shaper import Shaper
 from east_asian_spacing.utils import init_logging
@@ -215,8 +214,10 @@ class GlyphSets(object):
             # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
             features = []
             # Enable "fwid" feature to get fullwidth glyphs.
-            if fullwidth: features.append('fwid')
-            if font.is_vertical: features.append('vert')
+            if fullwidth:
+                features.append('fwid')
+            if font.is_vertical:
+                features.append('vert')
             shaper = Shaper(font,
                             language=language,
                             script='hani',
@@ -305,7 +306,8 @@ class GlyphSets(object):
         ja, zht = await asyncio.gather(shaper.shape(text, language="JAN"),
                                        shaper.shape(text, language="ZHT"))
         if not config.use_ink_bounds and ja == zht:
-            if not config.language: font.raise_require_language()
+            if not config.language:
+                font.raise_require_language()
             if config.language == "ZHT" or config.language == "ZHH":
                 ja.clear()
             else:
@@ -333,7 +335,8 @@ class GlyphSets(object):
             if not ja and not zhs:
                 return trio
             if ja == zhs:
-                if not config.language: font.raise_require_language()
+                if not config.language:
+                    font.raise_require_language()
                 if config.language == "ZHS":
                     ja.clear()
                 else:
@@ -369,7 +372,8 @@ class GlyphSets(object):
             ja.clear()
             zhs.ifilter_ink_part(InkPart.LEFT)
         if not config.use_ink_bounds and ja == zhs:
-            if not config.language: font.raise_require_language()
+            if not config.language:
+                font.raise_require_language()
             if config.language == "ZHS":
                 ja.clear()
             else:
