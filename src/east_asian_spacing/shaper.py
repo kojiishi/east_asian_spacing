@@ -19,6 +19,7 @@ from typing import Optional
 from typing import Union
 from typing import Tuple
 from typing import Set
+from typing import Dict
 
 import uharfbuzz as hb
 
@@ -30,14 +31,6 @@ logger = logging.getLogger('shaper')
 
 def show_dump_images():
     ShaperBase._dump_images = True
-
-
-def _uniq(items):
-    exists = set()
-    for item in items:
-        if item not in exists:
-            exists.add(item)
-            yield item
 
 
 class InkPart(enum.Enum):
@@ -88,26 +81,18 @@ class GlyphData(object):
         self.cluster_index = cluster_index
         self.advance = advance
         self.offset = offset
-        self.text = None  # type: Optional[str]
         self.bounds = None  # type: Optional[Tuple[int]]
         self.ink_part = None  # type: Optional[InkPart]
 
-    def __eq__(self, other: 'GlyphData'):
-        return (self.glyph_id == other.glyph_id
-                and self.cluster_index == other.cluster_index
-                and self.advance == other.advance
-                and self.offset == other.offset and self.text == other.text
-                and self.bounds == other.bounds
-                and self.ink_part == other.ink_part)
+    def __eq__(self, other: GlyphData):
+        # Note that two `GlyphData` are equal as long as the glyph ids are equal.
+        return self.glyph_id == other.glyph_id
 
     def __hash__(self):
-        return hash((self.glyph_id, self.cluster_index, self.advance,
-                     self.offset, self.text, self.bounds, self.ink_part))
+        return hash(self.glyph_id)
 
     def __str__(self):
         values = []
-        if self.text:
-            values.append(f't:"{self.text}"')
         if self.cluster_index is not None:
             values.append(f'c:{self.cluster_index}')
         values.append(f'g:{self.glyph_id}')
@@ -141,114 +126,11 @@ class GlyphData(object):
         return self.ink_part
 
 
-class GlyphDataList(object):
-    """Represents a list of `GlyphData`.
-
-    This class can keep multiple different `GlyphData` for a glyph id by using
-    a `List` as its internal storage. But the interface is similar to `dict` or
-    `set`, to ease `set`-like operations such as unions or subtractions.
-    """
-
-    def __init__(self, glyphs: Optional[Iterable[GlyphData]] = None):
-        self._glyphs = []  # type: List[GlyphData]
-        if glyphs is not None:
-            self |= glyphs
-
-    def __eq__(self, other):
-        if type(other) is GlyphDataList:
-            return self._glyphs == other._glyphs
-        return self._glyphs == other
-
-    def __bool__(self):
-        return len(self._glyphs) > 0
-
-    def __len__(self):
-        return len(self._glyphs)
-
-    def __iter__(self):
-        return iter(self._glyphs)
-
-    def __contains__(self, glyph: Union[GlyphData, int]):
-        if type(glyph) is GlyphData:
-            return glyph in self._glyphs
-        if type(glyph) is int:
-            return glyph in self.glyph_ids
-        assert False
-
-    def __or__(self, other: Optional[Iterable[GlyphData]]):
-        result = GlyphDataList(self)
-        result |= other
-        return result
-
-    def __str__(self):
-        return str(list(self.glyph_ids))
-
-    @property
-    def glyph_ids(self):
-        return (g.glyph_id for g in self._glyphs)
-
-    @property
-    def glyph_id_set(self) -> Set[int]:
-        return set(self.glyph_ids)
-
-    def isdisjoint(self, other: 'GlyphDataList'):
-        return self.glyph_id_set.isdisjoint(other.glyph_id_set)
-
-    def group_by_glyph_id(self) -> Iterator[Tuple[int, 'GlyphDataList']]:
-        key_func = lambda g: g.glyph_id
-        glyphs = sorted(self._glyphs, key=key_func)
-        glyphs = _uniq(glyphs)
-        result = itertools.groupby(glyphs, key=key_func)
-        result = map(lambda t: (t[0], GlyphDataList(t[1])), result)
-        return result
-
-    def add(self, glyph: GlyphData):
-        self._glyphs.append(glyph)
-
-    def clear(self):
-        self._glyphs.clear()
-
-    def __isub__(self, other: 'GlyphDataList'):
-        assert type(other) is GlyphDataList
-        other_glyph_ids = other.glyph_id_set
-        self._glyphs = list(g for g in self._glyphs
-                            if g.glyph_id not in other_glyph_ids)
-        return self
-
-    def __ior__(self, other: Optional[Iterable[GlyphData]]):
-        if other is None:
-            return self
-        self._glyphs.extend(other)
-        return self
-
-    def ifilter(self,
-                predicate: Callable[[GlyphData], bool],
-                non_match: 'GlyphDataList' = None) -> None:
-        match = []
-        for glyph in self._glyphs:
-            if predicate(glyph):
-                match.append(glyph)
-            elif non_match:
-                non_match.add(glyph)
-        self._glyphs = match
-
-    def ifilter_advance(self,
-                        advance: int,
-                        non_match: 'GlyphDataList' = None) -> None:
-        self.ifilter(lambda g: g.advance == advance, non_match)
-
-    def ifilter_ink_part(self,
-                         ink_part: InkPart,
-                         non_match: 'GlyphDataList' = None) -> None:
-        for g in self:
-            assert g.ink_part is not None
-        self.ifilter(lambda g: g.ink_part == ink_part, non_match)
-
-
 class ShapeResult(object):
 
     def __init__(self, glyphs: Iterable[GlyphData] = ()):
-        self._glyphs = tuple(glyphs)
+        self._glyphs = list(glyphs)
+        self._texts_by_glyph = {}  # type: Dict[GlyphData, Set[str]]
 
     def __eq__(self, other):
         return self._glyphs == other._glyphs
@@ -257,13 +139,16 @@ class ShapeResult(object):
         return len(self._glyphs)
 
     def __iter__(self) -> Iterator[GlyphData]:
-        return self._glyphs.__iter__()
+        return iter(self._glyphs)
 
     def __getitem__(self, item):
         return self._glyphs[item]
 
+    def get_texts(self, glyph: GlyphData) -> Set[str]:
+        return self._texts_by_glyph.get(glyph, set())
+
     def ifilter(self, predicate):
-        self._glyphs = tuple(filter(predicate, self._glyphs))
+        self._glyphs = [g for g in self._glyphs if predicate(g)]
 
     def ifilter_advance(self, advance: int) -> None:
         self.ifilter(lambda g: g.advance == advance)
@@ -283,24 +168,140 @@ class ShapeResult(object):
         return (g.glyph_id for g in self._glyphs)
 
     def set_text(self, text):
-        if len(self._glyphs) == 0:
+        if not self._glyphs:
             return
-        last = self._glyphs[0]
-        for glyph in self._glyphs[1:]:
-            last.text = text[last.cluster_index:glyph.cluster_index]
+        glyphs = iter(self._glyphs)
+        last = next(glyphs)
+        for glyph in glyphs:
+            t = text[last.cluster_index:glyph.cluster_index]
+            self._texts_by_glyph.setdefault(last, set()).add(t)
             last = glyph
-        last.text = text[last.cluster_index:]
+        t = text[last.cluster_index:]
+        self._texts_by_glyph.setdefault(last, set()).add(t)
 
     def clear_cluster_indexes(self):
         for g in self:
             g.clear_cluster_index()
 
     def compute_ink_parts(self, font):
-        for g in self._glyphs:
+        for g in self:
             g.compute_ink_part(font)
 
     def __str__(self):
-        return f'[{",".join(str(g) for g in self._glyphs)}]'
+        return f'[{",".join(f"{g}({self._texts_by_glyph.get(g)})" for g in self._glyphs)}]'
+
+
+class GlyphDataSet(object):
+    """Represents a set of `GlyphData`.
+
+    The interface is similar to `dict` or `set`,
+    to ease `set`-like operations such as unions or subtractions.
+    """
+
+    def __init__(self,
+                 glyphs: Optional[Union[GlyphDataSet, ShapeResult,
+                                        Iterable[GlyphData]]] = None):
+        self._texts_by_glyph = {}  # type: Dict[GlyphData, Set[str]]
+        self |= glyphs
+
+    def __eq__(self, other):
+        return self._texts_by_glyph == other._texts_by_glyph
+
+    def __bool__(self):
+        return len(self._texts_by_glyph) > 0
+
+    def __len__(self):
+        return len(self._texts_by_glyph)
+
+    def __iter__(self):
+        return iter(self._texts_by_glyph)
+
+    def __getitem__(self, item):
+        return list(self._texts_by_glyph.keys())[item]
+
+    def __contains__(self, glyph: Union[GlyphData, int]):
+        if type(glyph) is GlyphData:
+            return glyph in self._texts_by_glyph
+        if type(glyph) is int:
+            return glyph in self.glyph_ids
+        assert False
+
+    def __or__(self, other: Optional[Iterable[GlyphData]]):
+        result = GlyphDataSet(self)
+        result |= other
+        return result
+
+    def __str__(self):
+        return str(list(self.glyph_ids))
+
+    def get_texts(self, glyph: GlyphData) -> Set[str]:
+        return self._texts_by_glyph[glyph]
+
+    @property
+    def glyph_ids(self):
+        return (g.glyph_id for g in self._texts_by_glyph)
+
+    @property
+    def glyph_id_set(self) -> Set[int]:
+        return set(self.glyph_ids)
+
+    def isdisjoint(self, other: GlyphDataSet):
+        return self._texts_by_glyph.keys().isdisjoint(
+            other._texts_by_glyph.keys())
+
+    def glyph_id_and_glyph(self) -> Iterator[Tuple[int, GlyphData]]:
+        return ((glyph.glyph_id, glyph) for glyph in self._texts_by_glyph)
+
+    def add(self, glyph: GlyphData, texts=None):
+        if glyph not in self._texts_by_glyph:
+            self._texts_by_glyph[glyph] = set(texts) if texts else set()
+
+    def clear(self):
+        self._texts_by_glyph.clear()
+
+    def __isub__(self, other: GlyphDataSet):
+        assert type(other) is GlyphDataSet
+        self._texts_by_glyph = {
+            glyph: self._texts_by_glyph[glyph]
+            for glyph in self._texts_by_glyph.keys() -
+            other._texts_by_glyph.keys()
+        }
+        return self
+
+    def __ior__(self, other):
+        if other is None:
+            return self
+
+        if isinstance(other, (GlyphDataSet, ShapeResult)):
+            for glyph in other:
+                self._texts_by_glyph.setdefault(glyph, set()).update(
+                    other.get_texts(glyph))
+            return self
+
+        for glyph in other:
+            self._texts_by_glyph.setdefault(glyph, set())
+        return self
+
+    def ifilter(self,
+                predicate: Callable[[GlyphData], bool],
+                non_match: Optional[GlyphDataSet] = None) -> None:
+        for glyph in list(self._texts_by_glyph.keys()):
+            if not predicate(glyph):
+                texts = self._texts_by_glyph.pop(glyph)
+                if non_match:
+                    non_match.add(glyph, texts)
+
+    def ifilter_advance(self,
+                        advance: int,
+                        non_match: GlyphDataSet = None) -> None:
+        self.ifilter(lambda g: g.advance == advance, non_match)
+
+    def ifilter_ink_part(self,
+                         ink_part: InkPart,
+                         non_match: GlyphDataSet = None) -> None:
+        for g in self:
+            assert g.ink_part is not None
+        self.ifilter(lambda g: g.ink_part == ink_part, non_match)
 
 
 class ShaperBase(object):

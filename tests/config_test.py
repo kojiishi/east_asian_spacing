@@ -54,25 +54,25 @@ def test_down_sample_to():
 
 def test_calc_indices_and_languages():
 
-    def call(num_fonts, indices, language):
+    def call(num_fonts, indices, list_of_languages):
         return list(
             CollectionConfig._calc_indices_and_languages(
-                num_fonts, indices, language))
+                num_fonts, indices, list_of_languages))
 
     assert call(3, None, None) == [(0, None), (1, None), (2, None)]
     assert call(3, None, 'JAN') == [(0, 'JAN'), (1, 'JAN'), (2, 'JAN')]
-    assert call(3, None, 'JAN,') == [(0, 'JAN'), (1, ''), (2, None)]
-    assert call(3, None, 'JAN,ZHS') == [(0, 'JAN'), (1, 'ZHS'), (2, None)]
-    assert call(3, None, ',JAN') == [(0, ''), (1, 'JAN'), (2, None)]
+    assert call(3, None, 'JAN;') == [(0, 'JAN'), (1, None), (2, None)]
+    assert call(3, None, 'JAN;ZHS') == [(0, 'JAN'), (1, 'ZHS'), (2, None)]
+    assert call(3, None, ';JAN') == [(0, None), (1, 'JAN'), (2, None)]
 
     assert call(4, '0', None) == [(0, None)]
     assert call(4, '0,2', None) == [(0, None), (2, None)]
 
     assert call(4, '0', 'JAN') == [(0, 'JAN')]
     assert call(4, '0,2', 'JAN') == [(0, 'JAN'), (2, 'JAN')]
-    assert call(4, '0,2', 'JAN,ZHS') == [(0, 'JAN'), (2, 'ZHS')]
-    assert call(6, '0,2,5', 'JAN,ZHS') == [(0, 'JAN'), (2, 'ZHS'), (5, None)]
-    assert call(6, '0,2,5', 'JAN,,ZHS') == [(0, 'JAN'), (2, ''), (5, 'ZHS')]
+    assert call(4, '0,2', 'JAN;ZHS') == [(0, 'JAN'), (2, 'ZHS')]
+    assert call(6, '0,2,5', 'JAN;ZHS') == [(0, 'JAN'), (2, 'ZHS'), (5, None)]
+    assert call(6, '0,2,5', 'JAN;;ZHS') == [(0, 'JAN'), (2, None), (5, 'ZHS')]
 
 
 def test_config_for_font_name():
@@ -85,14 +85,15 @@ def test_config_for_font_name():
 def test_config_for_language():
     config = Config.default
     assert config.use_ink_bounds
-    assert not config.language
+    assert not config.languages
 
-    # `for_language` should clone and set the langauge.
-    jan = config.for_language('JAN')
+    # `for_languages` should clone and set the langauge.
+    jan = config.for_languages('JAN,ZHS')
+    jan.use_ink_bounds = False
     assert jan is not config
-    assert jan.language == 'JAN'
+    assert jan.languages == {'JAN', 'ZHS'}
     assert not jan.use_ink_bounds
 
     # The original `config` should not be modified.
     assert config.use_ink_bounds
-    assert not config.language
+    assert not config.languages

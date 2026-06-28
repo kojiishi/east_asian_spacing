@@ -1,0 +1,20 @@
+@@ -1,6 +1,7 @@
+ Font 0: "BIZ UDGothic" "Bold" PS="BIZUDGothic-Bold"
+ Tag  Size      
+ DSIG          8 [0]
++GPOS        696 [0]
+ GSUB     41,182 [0]
+ OS/2         96 [0]
+ cmap    202,155 [0]
+@@ -19,7 +20,7 @@
+ prep        913 [0]
+ vhea         36 [0]
+ vmtx     55,478 [0]
+-Total: 4,638,128
+-Data: 4,637,798
+-Gap: 330
+-Tables: 19
++Total: 4,638,840
++Data: 4,638,494
++Gap: 346
++Tables: 20

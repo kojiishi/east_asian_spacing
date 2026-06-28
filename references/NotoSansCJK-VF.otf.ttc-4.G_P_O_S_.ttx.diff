@@ -1487,6 +1487,8 @@
 +            <ClassDef glyph="glyph01398" class="1"/>
 +            <ClassDef glyph="glyph59058" class="1"/>
 +            <ClassDef glyph="glyph59060" class="1"/>
++            <ClassDef glyph="glyph63130" class="1"/>
++            <ClassDef glyph="glyph63133" class="1"/>
 +            <ClassDef glyph="glyph63147" class="1"/>
 +            <ClassDef glyph="glyph63150" class="1"/>
 +            <ClassDef glyph="glyph63151" class="1"/>
@@ -1600,6 +1602,8 @@
 +            <Glyph value="uniFF5B"/>
 +            <Glyph value="uniFF5F"/>
 +            <Glyph value="uniFF62"/>
++            <Glyph value="glyph63129"/>
++            <Glyph value="glyph63132"/>
 +            <Glyph value="uni3001"/>
 +            <Glyph value="uni3002"/>
 +            <Glyph value="uniFF0C"/>
@@ -1665,6 +1669,8 @@
 +          <ClassDef1>
 +          </ClassDef1>
 +          <ClassDef2>
++            <ClassDef glyph="bracketright" class="1"/>
++            <ClassDef glyph="glyph00733" class="1"/>
 +            <ClassDef glyph="glyph65141" class="1"/>
 +            <ClassDef glyph="glyph65142" class="1"/>
 +            <ClassDef glyph="glyph65143" class="1"/>
@@ -1677,6 +1683,7 @@
 +            <ClassDef glyph="glyph65454" class="1"/>
 +            <ClassDef glyph="glyph65457" class="1"/>
 +            <ClassDef glyph="glyph65458" class="1"/>
++            <ClassDef glyph="parenright" class="1"/>
 +            <ClassDef glyph="periodcentered" class="1"/>
 +            <ClassDef glyph="uni2003" class="1"/>
 +            <ClassDef glyph="uni3001" class="1"/>
@@ -1706,6 +1713,7 @@
 +            <ClassDef glyph="uniFE48" class="1"/>
 +            <ClassDef glyph="uniFF0C" class="1"/>
 +            <ClassDef glyph="uniFF0E" class="1"/>
++            <ClassDef glyph="uniFF63" class="1"/>
 +          </ClassDef2>
 +          <!-- Class1Count=1 -->
 +          <!-- Class2Count=2 -->
@@ -1752,6 +1760,9 @@
 +        <ChainContextPos index="0" Format="3">
 +          <!-- BacktrackGlyphCount=1 -->
 +          <BacktrackCoverage index="0">
++            <Glyph value="parenleft"/>
++            <Glyph value="bracketleft"/>
++            <Glyph value="glyph00733"/>
 +            <Glyph value="uni2003"/>
 +            <Glyph value="periodcentered"/>
 +            <Glyph value="uniFE17"/>
@@ -1764,6 +1775,7 @@
 +            <Glyph value="uniFE41"/>
 +            <Glyph value="uniFE43"/>
 +            <Glyph value="uniFE47"/>
++            <Glyph value="uniFF62"/>
 +            <Glyph value="uni3001"/>
 +            <Glyph value="uni3002"/>
 +            <Glyph value="uniFF0C"/>
