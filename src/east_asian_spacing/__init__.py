@@ -7,6 +7,11 @@ from east_asian_spacing.spacing import EastAsianSpacing, GlyphSets
 from east_asian_spacing.tester import EastAsianSpacingTester
 from east_asian_spacing.utils import calc_output_path, init_logging
 
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "0.0.0+unknown"
+
 __all__ = [
     'Builder',
     'CollectionConfig',
