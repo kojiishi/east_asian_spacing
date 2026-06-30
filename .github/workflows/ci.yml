@@ -37,9 +37,6 @@ jobs:
       - name: Build
         run: uv build
 
-      - name: Download fonts for testing
-        run: task download
-
       - name: Tests
         run: task test
 
