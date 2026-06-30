@@ -269,6 +269,7 @@ class Dump(object):
                                          dst_lines,
                                          fromfile=str(src),
                                          tofile=str(dst))
+        lines = [line.replace('\r', '') for line in lines]
 
         if hasattr(output, 'writelines'):
             output.writelines(lines)
