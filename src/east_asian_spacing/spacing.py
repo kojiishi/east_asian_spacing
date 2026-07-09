@@ -21,7 +21,7 @@ from fontTools.ttLib.tables import otTables
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
-from east_asian_spacing.shaper import GlyphData, GlyphDataList
+from east_asian_spacing.shaper import GlyphData, GlyphDataSet
 from east_asian_spacing.shaper import InkPart
 from east_asian_spacing.shaper import Shaper
 from east_asian_spacing.utils import init_logging
@@ -37,19 +37,19 @@ def _is_shaper_log_enabled():
 class GlyphSets(object):
 
     def __init__(self,
-                 left: Optional[GlyphDataList] = None,
-                 right: Optional[GlyphDataList] = None,
-                 middle: Optional[GlyphDataList] = None,
-                 space: Optional[GlyphDataList] = None):
-        self.left = left if left is not None else GlyphDataList()
-        self.right = right if right is not None else GlyphDataList()
-        self.middle = middle if middle is not None else GlyphDataList()
-        self.space = space if space is not None else GlyphDataList()
+                 left: Optional[GlyphDataSet] = None,
+                 right: Optional[GlyphDataSet] = None,
+                 middle: Optional[GlyphDataSet] = None,
+                 space: Optional[GlyphDataSet] = None):
+        self.left = left if left is not None else GlyphDataSet()
+        self.right = right if right is not None else GlyphDataSet()
+        self.middle = middle if middle is not None else GlyphDataSet()
+        self.space = space if space is not None else GlyphDataSet()
 
         # Not-applicable left and right. They are not kerned, but they can
         # appear in the context.
-        self.na_left = GlyphDataList()
-        self.na_right = GlyphDataList()
+        self.na_left = GlyphDataSet()
+        self.na_right = GlyphDataSet()
 
         self._add_glyphs_count = 0
         # For checking purposes. Because this class keeps glyph IDs, using the
@@ -57,7 +57,7 @@ class GlyphSets(object):
         # except they share the same glyph set.
         self._root_font = None
         # For debug/font analysis purpose, keeps all `GlyphData`.
-        self._all_glyphs = GlyphDataList()
+        self._all_glyphs = GlyphDataSet()
 
     def assert_font(self, font):
         if self._root_font:
@@ -66,18 +66,18 @@ class GlyphSets(object):
             self._root_font = font.root_or_self
 
     @property
-    def _glyph_data_lists(self):
+    def _glyph_data_sets(self):
         return (self.left, self.right, self.middle, self.space)
 
     @property
-    def _name_and_glyph_data_lists(self):
+    def _name_and_glyph_data_sets(self):
         return (('left', self.left), ('right', self.right),
                 ('middle', self.middle), ('space', self.space))
 
     @property
     def glyph_id_set(self) -> Set[int]:
         glyph_ids = set()
-        for glyph_data_set in self._glyph_data_lists:
+        for glyph_data_set in self._glyph_data_sets:
             glyph_ids |= glyph_data_set.glyph_id_set
         return glyph_ids
 
@@ -92,60 +92,59 @@ class GlyphSets(object):
         assert self.right.isdisjoint(self.na_right)
 
     def _to_str(self, glyph_ids=False):
-        name_and_glyph_data_lists = self._name_and_glyph_data_lists
+        name_and_glyph_data_sets = self._name_and_glyph_data_sets
         # Filter out empty glyph sets.
-        name_and_glyph_data_lists = filter(
+        name_and_glyph_data_sets = filter(
             lambda name_and_glyph: name_and_glyph[1],
-            name_and_glyph_data_lists)
+            name_and_glyph_data_sets)
         if glyph_ids:
             strs = (f'{name}={sorted(glyphs.glyph_ids)}'
-                    for name, glyphs in name_and_glyph_data_lists)
+                    for name, glyphs in name_and_glyph_data_sets)
         else:
             strs = (f'{len(glyphs)}{name[0].upper()}'
-                    for name, glyphs in name_and_glyph_data_lists)
+                    for name, glyphs in name_and_glyph_data_sets)
         return ', '.join(strs)
 
     def __str__(self):
         return self._to_str()
 
     def save_glyphs(self, output, prefix='', separator='\n', comment=0):
-        glyphs_by_glyph_id = (dict(self._all_glyphs.group_by_glyph_id())
-                              if comment else None)
 
-        def str_from_glyph_data(glyph_data: GlyphData):
-            if comment <= 1:
-                return ' '.join(f'U+{ord(c):04X} {c}' for c in glyph_data.text)
-            return str(glyph_data)
+        def comment_from_glyph(glyph: GlyphData, texts: Set[str], prefix=' # '):
+            if comment == 0:
+                return ''
 
-        def str_from_glyph_id(glyph_id):
-            if glyphs_by_glyph_id:
-                glyph_data_list = glyphs_by_glyph_id.get(glyph_id)
-                if glyph_data_list:
-                    glyph_data_list = (str_from_glyph_data(g)
-                                       for g in glyph_data_list)
-                    glyph_data_list = ', '.join(glyph_data_list)
-                    return f'{glyph_id} # {glyph_data_list}'
-            return str(glyph_id)
+            def format_text(t):
+                if len(t) == 1:
+                    return f'U+{ord(t):04X} {t}'
+                elif len(t) == 0:
+                    return 'empty'
+                else:
+                    return f'[{" ".join(f"U+{ord(c):04X}" for c in t)}] {t}'
 
-        for name, glyph_data_list in self._name_and_glyph_data_lists:
+            if comment == 1:
+                comment_str = ', '.join(format_text(t) for t in sorted(texts))
+            else:
+                comment_str = ', '.join(f'{glyph} {format_text(t)}' for t in sorted(texts))
+            return prefix + comment_str if comment_str else ''
+
+        for name, glyph_data_set in self._name_and_glyph_data_sets:
             output.write(f'# {prefix}{name}\n')
-            glyph_ids = sorted(glyph_data_list.glyph_id_set)
-            glyph_strs = (str_from_glyph_id(g) for g in glyph_ids)
+            glyph_strs = (
+                f"{g.glyph_id}{comment_from_glyph(g, glyph_data_set.get_texts(g))}"
+                for g in sorted(glyph_data_set, key=lambda g: g.glyph_id))
             output.write(separator.join(glyph_strs))
             output.write('\n')
 
-        if glyphs_by_glyph_id:
+        if comment:
             output.write(f'# {prefix}filtered\n')
             glyph_ids = self.glyph_id_set
-            for glyph_id, glyph_data_list in sorted(
-                    glyphs_by_glyph_id.items(),
-                    key=lambda key_value: key_value[0]):
-                if glyph_id in glyph_ids:
-                    continue
-                for glyph_data in glyph_data_list:
-                    output.write(
-                        f'# {glyph_data.glyph_id} {str_from_glyph_data(glyph_data)}\n'
-                    )
+            # yapf cannot handle this correctly. See https://github.com/google/yapf/issues/1136.
+            # yapf: disable
+            filtered_strs = (f'# {g.glyph_id}{comment_from_glyph(g, self._all_glyphs.get_texts(g), prefix=' ')}' for g in sorted(self._all_glyphs, key=lambda g: g.glyph_id) if g.glyph_id not in glyph_ids)
+            # yapf: enable
+            output.write(separator.join(filtered_strs))
+            output.write('\n')
 
     def unite(self, other):
         if not other:
@@ -208,7 +207,7 @@ class GlyphSets(object):
                         unicodes,
                         language=None,
                         fullwidth=True,
-                        temporary=False) -> GlyphDataList:
+                        temporary=False) -> GlyphDataSet:
             font = self._font
             text = ''.join(chr(c) for c in unicodes)
             # Unified code points (e.g., U+2018-201D) in most fonts are Latin glyphs.
@@ -232,9 +231,9 @@ class GlyphSets(object):
             result.ifilter_missing_glyphs()
             result.clear_cluster_indexes()
             result.compute_ink_parts(font)
-            return GlyphDataList(result)
+            return GlyphDataSet(result)
 
-    async def _shape(self, font, unicodes, language=None) -> GlyphDataList:
+    async def _shape(self, font, unicodes, language=None) -> GlyphDataSet:
         shaper = GlyphSets._ShapeHelper(self, font)
         result = await shaper.shape(unicodes,
                                     language=language,
@@ -415,7 +414,7 @@ class GlyphSets(object):
             self.add_glyphs(glyph_set_trio.right.glyph_ids, "R")
 
         def add_to_trio(self, glyph_set_trio, glyphs: Iterable[GlyphData]):
-            not_cached = GlyphDataList()
+            not_cached = GlyphDataSet()
             glyph_set_by_value = {
                 None: not_cached,
                 "L": glyph_set_trio.left,
@@ -431,7 +430,7 @@ class GlyphSets(object):
         cache = GlyphSets.GlyphTypeCache.get(font, create=True)
         cache.add_trio(self)
 
-    def add_from_cache(self, font, glyphs: GlyphDataList) -> GlyphDataList:
+    def add_from_cache(self, font, glyphs: GlyphDataSet) -> GlyphDataSet:
         cache = GlyphSets.GlyphTypeCache.get(font, create=False)
         if cache is None:
             return glyphs

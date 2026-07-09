@@ -1,6 +1,6 @@
 from east_asian_spacing import Font
 from east_asian_spacing import GlyphData
-from east_asian_spacing import GlyphDataList
+from east_asian_spacing import GlyphDataSet
 from east_asian_spacing import GlyphSets
 
 
@@ -10,8 +10,8 @@ def test_cache(test_font_path):
     g2 = GlyphData(2, 0, 0, 0)
     g3 = GlyphData(3, 0, 0, 0)
     g4 = GlyphData(4, 0, 0, 0)
-    trio = GlyphSets(GlyphDataList([g1]), GlyphDataList([g2]),
-                     GlyphDataList([g3]))
+    trio = GlyphSets(GlyphDataSet([g1]), GlyphDataSet([g2]),
+                     GlyphDataSet([g3]))
     assert trio.glyph_id_set == {1, 2, 3}
     trio.add_to_cache(font)
     trio2 = GlyphSets()
