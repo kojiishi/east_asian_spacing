@@ -10,7 +10,7 @@ import os
 import pathlib
 import shlex
 from subprocess import CalledProcessError
-from typing import Callable, Iterable, Iterator, Optional, Set, Tuple
+from typing import Callable, Iterable, Iterator, Set, Tuple
 
 import uharfbuzz as hb
 
@@ -74,8 +74,8 @@ def _compute_ink_part(min, max, left, right):
 
 class GlyphData(object):
 
-    def __init__(self, glyph_id: int, cluster_index: Optional[int],
-                 advance: int, offset: int):
+    def __init__(self, glyph_id: int, cluster_index: int | None, advance: int,
+                 offset: int):
         self.glyph_id = glyph_id
         self.cluster_index = cluster_index
         self.advance = advance
@@ -141,7 +141,7 @@ class GlyphDataList(object):
     `set`, to ease `set`-like operations such as unions or subtractions.
     """
 
-    def __init__(self, glyphs: Optional[Iterable[GlyphData]] = None):
+    def __init__(self, glyphs: Iterable[GlyphData] | None = None):
         self._glyphs = []  # type: List[GlyphData]
         if glyphs is not None:
             self |= glyphs
@@ -167,7 +167,7 @@ class GlyphDataList(object):
             return glyph in self.glyph_ids
         assert False
 
-    def __or__(self, other: Optional[Iterable[GlyphData]]):
+    def __or__(self, other: Iterable[GlyphData] | None):
         result = GlyphDataList(self)
         result |= other
         return result
@@ -210,7 +210,7 @@ class GlyphDataList(object):
                             if g.glyph_id not in other_glyph_ids)
         return self
 
-    def __ior__(self, other: Optional[Iterable[GlyphData]]):
+    def __ior__(self, other: Iterable[GlyphData] | None):
         if other is None:
             return self
         self._glyphs.extend(other)
@@ -304,7 +304,7 @@ class ShaperBase(object):
                  font,
                  language=None,
                  script=None,
-                 features: Optional[Iterable[str]] = None,
+                 features: Iterable[str] | None = None,
                  log_name=None):
         assert isinstance(font.path, pathlib.Path)
         self.font = font

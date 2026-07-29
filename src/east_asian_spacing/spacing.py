@@ -5,7 +5,7 @@ import itertools
 import logging
 import math
 import sys
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Iterable, List, Set, Tuple
 
 from fontTools.otlLib.builder import (
     ChainContextPosBuilder,
@@ -32,10 +32,10 @@ def _is_shaper_log_enabled():
 class GlyphSets(object):
 
     def __init__(self,
-                 left: Optional[GlyphDataList] = None,
-                 right: Optional[GlyphDataList] = None,
-                 middle: Optional[GlyphDataList] = None,
-                 space: Optional[GlyphDataList] = None):
+                 left: GlyphDataList | None = None,
+                 right: GlyphDataList | None = None,
+                 middle: GlyphDataList | None = None,
+                 space: GlyphDataList | None = None):
         self.left = left if left is not None else GlyphDataList()
         self.right = right if right is not None else GlyphDataList()
         self.middle = middle if middle is not None else GlyphDataList()

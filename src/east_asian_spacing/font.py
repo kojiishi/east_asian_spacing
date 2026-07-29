@@ -3,7 +3,7 @@ import argparse
 import itertools
 import logging
 import pathlib
-from typing import Any, Generator, Optional, Tuple
+from typing import Any, Generator, Tuple
 
 import fontTools.varLib.featureVars
 import uharfbuzz as hb
@@ -240,7 +240,7 @@ class Font(object):
         self._hbfont = hb.Font(hbface)
         return self._hbfont
 
-    def debug_name(self, *name_ids: int) -> Optional[str]:
+    def debug_name(self, *name_ids: int) -> str | None:
         # name_id:
         # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-id-examples
         if self.ttfont:
