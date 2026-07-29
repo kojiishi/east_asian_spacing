@@ -23,7 +23,7 @@ async def test_config(test_font_path, tmp_path):
 
     await builder.test()
 
-    # U+300A should fail because `cjk_opning` is limited only to U+3008.
+    # U+300A should fail because `cjk_opening` is limited only to U+3008.
     fail_config = config.clone()
     fail_config.cjk_opening = {0x300A}
     with pytest.raises(AssertionError):
