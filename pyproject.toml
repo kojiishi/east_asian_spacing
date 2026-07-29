@@ -42,7 +42,6 @@ ignore = [
     "C405", # Unnecessary tuple literal (rewrite as a set literal)
     "C408", # Unnecessary `tuple()` call (rewrite as a literal)
     "C417", # Unnecessary `map()` usage (rewrite using a generator expression)
-    "I001", # Import block is un-sorted or un-formatted
     "LOG015", # `info()` call on root logger
     "PLR0206", # Cannot have defined parameters for properties
     "PLR0402", # Use `from east_asian_spacing import utils` in lieu of alias

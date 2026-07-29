@@ -1,9 +1,6 @@
 import pytest
 
-from east_asian_spacing import Builder
-from east_asian_spacing import CollectionConfig
-from east_asian_spacing import Config
-from east_asian_spacing import EastAsianSpacingTester
+from east_asian_spacing import Builder, CollectionConfig, Config, EastAsianSpacingTester
 
 
 @pytest.mark.asyncio

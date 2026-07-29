@@ -6,16 +6,13 @@ import logging
 import pathlib
 import sys
 import time
-from typing import Optional
-from typing import TextIO
-from typing import Union
+from typing import Optional, TextIO, Union
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 from east_asian_spacing.spacing import EastAsianSpacing
 from east_asian_spacing.tester import EastAsianSpacingTester
-from east_asian_spacing.utils import calc_output_path
-from east_asian_spacing.utils import init_logging
+from east_asian_spacing.utils import calc_output_path, init_logging
 
 try:
     from ._version import version as __version__

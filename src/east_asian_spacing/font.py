@@ -3,18 +3,14 @@ import argparse
 import itertools
 import logging
 import pathlib
-from typing import Any
-from typing import Generator
-from typing import Optional
-from typing import Tuple
+from typing import Any, Generator, Optional, Tuple
 
-from fontTools.ttLib import newTable
-from fontTools.ttLib import TTFont
-from fontTools.ttLib.tables import otTables
-from fontTools.ttLib.ttCollection import TTCollection
-from fontTools.pens.boundsPen import BoundsPen
 import fontTools.varLib.featureVars
 import uharfbuzz as hb
+from fontTools.pens.boundsPen import BoundsPen
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import otTables
+from fontTools.ttLib.ttCollection import TTCollection
 
 logger = logging.getLogger('font')
 

@@ -3,8 +3,8 @@
 # Download fonts for testing.
 #
 import logging
-import pathlib
 import os
+import pathlib
 import urllib.request
 
 root_dir = pathlib.Path(__file__).parent.parent
