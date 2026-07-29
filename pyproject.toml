@@ -35,6 +35,32 @@ east-asian-spacing = 'east_asian_spacing.__main__:main'
 [tool.pytest.ini_options]
 testpaths = "tests"
 
+[tool.ruff.lint]
+ignore = [
+    "C400", # Unnecessary generator (rewrite as a list comprehension)
+    "C401", # Unnecessary generator (rewrite as a set comprehension)
+    "C405", # Unnecessary tuple literal (rewrite as a set literal)
+    "C408", # Unnecessary `tuple()` call (rewrite as a literal)
+    "C417", # Unnecessary `map()` usage (rewrite using a generator expression)
+    "I001", # Import block is un-sorted or un-formatted
+    "LOG015", # `info()` call on root logger
+    "SIM102", # Use a single `if` statement instead of nested `if` statements
+    "SIM103", # Return the condition directly
+    "UP004", # Class EastAsianSpacingTester` inherits from `object`
+    "UP006", # Use `set` instead of `Set` for type annotation
+    "UP007", # Use `X | Y` for type annotations
+    "UP030", # Use implicit references for positional format fields
+    "UP032", # Use f-string instead of `format` call
+    "UP034", # Avoid extraneous parentheses
+    "UP035", # `...` is deprecated, use `...` instead
+    "UP045", # Use `X | None` for type annotations
+    "PLR0206", # Cannot have defined parameters for properties
+    "PLR0402", # Use `from east_asian_spacing import utils` in lieu of alias
+    "RUF012", # Mutable default value for class attribute
+    "RUF022", # `__all__` is not sorted
+    "TRY002", # Create your own exception
+]
+
 [tool.setuptools_scm]
 # https://github.com/pypa/setuptools-scm
 version_file = "src/east_asian_spacing/_version.py"
