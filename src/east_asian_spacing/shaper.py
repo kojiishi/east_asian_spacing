@@ -10,7 +10,7 @@ import os
 import pathlib
 import shlex
 from subprocess import CalledProcessError
-from typing import Callable, Iterable, Iterator, Optional, Set, Tuple, Union
+from typing import Callable, Iterable, Iterator, Optional, Set, Tuple
 
 import uharfbuzz as hb
 
@@ -160,7 +160,7 @@ class GlyphDataList(object):
     def __iter__(self):
         return iter(self._glyphs)
 
-    def __contains__(self, glyph: Union[GlyphData, int]):
+    def __contains__(self, glyph: GlyphData | int):
         if type(glyph) is GlyphData:
             return glyph in self._glyphs
         if type(glyph) is int:
