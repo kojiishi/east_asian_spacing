@@ -5,7 +5,7 @@ import copy
 import itertools
 import logging
 import math
-from typing import Iterable, Set, Tuple
+from typing import Iterable
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
@@ -18,7 +18,7 @@ logger = logging.getLogger('test')
 class ShapeTest(object):
 
     @staticmethod
-    def create_list(font: Font, inputs: Iterable[Tuple[int, int]], index: int):
+    def create_list(font: Font, inputs: Iterable[tuple[int, int]], index: int):
         off_features = ['fwid']
         if font.is_vertical:
             off_features.append('vert')
@@ -29,7 +29,7 @@ class ShapeTest(object):
             for input in inputs)
         return tests
 
-    def __init__(self, font: Font, input: Tuple[int, int], index: int,
+    def __init__(self, font: Font, input: tuple[int, int], index: int,
                  features, off_features):
         self.font = font
         self.input = input
@@ -55,7 +55,7 @@ class ShapeTest(object):
     def should_have_offset(self) -> bool:
         return self.index != 0
 
-    def should_apply(self, glyph_id_sets: Tuple[Set[int]] | None, em=None):
+    def should_apply(self, glyph_id_sets: tuple[set[int]] | None, em=None):
         # If any glyphs are missing, or their advances are not em,
         # the feature should not apply.
         if em is None:
@@ -176,7 +176,7 @@ class EastAsianSpacingTester(object):
         return tests
 
     async def assert_trim(self, tests: Iterable[ShapeTest],
-                          glyph_id_sets: Tuple[Set[int]] | None):
+                          glyph_id_sets: tuple[set[int]] | None):
         font = self.font
         config = self._config
         coros = (test.shape(language=config.language) for test in tests)
