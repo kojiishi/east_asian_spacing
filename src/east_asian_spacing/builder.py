@@ -6,7 +6,7 @@ import logging
 import pathlib
 import sys
 import time
-from typing import Optional, TextIO, Union
+from typing import Optional, TextIO
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
@@ -45,7 +45,7 @@ class Builder(object):
     def save(self,
              output: Optional[pathlib.Path] = None,
              stem_suffix: Optional[str] = None,
-             glyph_out: Optional[Union[pathlib.Path, str, TextIO]] = None,
+             glyph_out: Optional[pathlib.Path | str | TextIO] = None,
              glyph_comment: int = 0,
              print_path: bool = False) -> pathlib.Path:
         assert self.has_spacings
@@ -161,7 +161,7 @@ class Builder(object):
             united_spacing.unite(spacing)
         return united_spacing
 
-    def save_glyphs(self, output: Union[pathlib.Path, str, TextIO], **kwargs):
+    def save_glyphs(self, output: pathlib.Path | str | TextIO, **kwargs):
         assert self.has_spacings
         font = self.font
         if isinstance(output, str):
