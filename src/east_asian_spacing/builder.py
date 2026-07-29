@@ -6,7 +6,7 @@ import logging
 import pathlib
 import sys
 import time
-from typing import Optional, TextIO
+from typing import TextIO
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
@@ -43,9 +43,9 @@ class Builder(object):
         return self.save(output, **kwargs)
 
     def save(self,
-             output: Optional[pathlib.Path] = None,
-             stem_suffix: Optional[str] = None,
-             glyph_out: Optional[pathlib.Path | str | TextIO] = None,
+             output: pathlib.Path | None = None,
+             stem_suffix: str | None = None,
+             glyph_out: pathlib.Path | str | TextIO | None = None,
              glyph_comment: int = 0,
              print_path: bool = False) -> pathlib.Path:
         assert self.has_spacings
@@ -67,7 +67,7 @@ class Builder(object):
                   flush=True)  # Flush, for better parallelism when piping.
         return output
 
-    async def _config_for_font(self, font: Font) -> Optional[Config]:
+    async def _config_for_font(self, font: Font) -> Config | None:
         config = self.config.for_font(font)
         if config is None:
             logger.info('Skipped by config: "%s"', font)

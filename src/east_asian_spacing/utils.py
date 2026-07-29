@@ -1,6 +1,5 @@
 import logging
 import pathlib
-from typing import Optional
 
 _log_shaper_logs = False
 
@@ -55,8 +54,8 @@ def init_logging(verbose: int, main=None, debug=None):
 
 
 def calc_output_path(input_path: pathlib.Path,
-                     output_path: Optional[pathlib.Path | str],
-                     stem_suffix: Optional[str] = None,
+                     output_path: pathlib.Path | str | None,
+                     stem_suffix: str | None = None,
                      is_file: bool = False) -> pathlib.Path:
     if output_path:
         if not isinstance(output_path, pathlib.Path):

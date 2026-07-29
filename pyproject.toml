@@ -55,7 +55,6 @@ ignore = [
     "UP032", # Use f-string instead of `format` call
     "UP034", # Avoid extraneous parentheses
     "UP035", # `...` is deprecated, use `...` instead
-    "UP045", # Use `X | None` for type annotations
 ]
 
 [tool.setuptools_scm]
