@@ -10,7 +10,7 @@ import os
 import pathlib
 import shlex
 from subprocess import CalledProcessError
-from typing import Callable, Iterable, Iterator, Set, Tuple
+from typing import Callable, Iterable, Iterator
 
 import uharfbuzz as hb
 
@@ -180,13 +180,13 @@ class GlyphDataList(object):
         return (g.glyph_id for g in self._glyphs)
 
     @property
-    def glyph_id_set(self) -> Set[int]:
+    def glyph_id_set(self) -> set[int]:
         return set(self.glyph_ids)
 
     def isdisjoint(self, other: 'GlyphDataList'):
         return self.glyph_id_set.isdisjoint(other.glyph_id_set)
 
-    def group_by_glyph_id(self) -> Iterator[Tuple[int, 'GlyphDataList']]:
+    def group_by_glyph_id(self) -> Iterator[tuple[int, 'GlyphDataList']]:
 
         def key_func(g):
             return g.glyph_id

@@ -3,7 +3,7 @@ import argparse
 import itertools
 import logging
 import pathlib
-from typing import Any, Generator, Tuple
+from typing import Any, Generator
 
 import fontTools.varLib.featureVars
 import uharfbuzz as hb
@@ -303,7 +303,7 @@ class Font(object):
             return (ttfont.getGlyphName(glyph_id) for glyph_id in glyph_ids)
         return (f'glyph{glyph_id:05}' for glyph_id in glyph_ids)
 
-    def glyph_bounds(self, glyph) -> Tuple[int]:
+    def glyph_bounds(self, glyph) -> tuple[int]:
         glyph = self.glyph_name(glyph)
         ttglyphset = self.ttglyphset
         ttglyph = ttglyphset[glyph]

@@ -5,7 +5,7 @@ import itertools
 import logging
 import math
 import sys
-from typing import Iterable, List, Set, Tuple
+from typing import Iterable
 
 from fontTools.otlLib.builder import (
     ChainContextPosBuilder,
@@ -70,7 +70,7 @@ class GlyphSets(object):
                 ('middle', self.middle), ('space', self.space))
 
     @property
-    def glyph_id_set(self) -> Set[int]:
+    def glyph_id_set(self) -> set[int]:
         glyph_ids = set()
         for glyph_data_set in self._glyph_data_lists:
             glyph_ids |= glyph_data_set.glyph_id_set
@@ -472,7 +472,7 @@ class GlyphSets(object):
 
         @property
         def glyphs_value_for_right(
-                self) -> Tuple[Tuple[Tuple[str], otBase.ValueRecord]]:
+                self) -> tuple[tuple[tuple[str], otBase.ValueRecord]]:
             return ((self.right, self.right_value), )
 
         @property
@@ -510,7 +510,7 @@ class GlyphSets(object):
         return True
 
     def _add_feature(self, font: Font, table: otTables.GPOS, feature_tag: str,
-                     lookup_indices: List[int]) -> None:
+                     lookup_indices: list[int]) -> None:
         logger.debug('Adding "%s" to: "%s" %s', feature_tag, font,
                      self._to_str(glyph_ids=True))
         assert not Font._has_ottable_feature(table, feature_tag)
@@ -542,15 +542,15 @@ class GlyphSets(object):
 
         Font._sort_features_ottable(table)
 
-    def _build_halt_lookup(self, font: Font, lookups: List[otTables.Lookup],
+    def _build_halt_lookup(self, font: Font, lookups: list[otTables.Lookup],
                            pos) -> int:
         lookup = self._build_single_pos_lookup(
             font, lookups, pos.glyphs_value_for_left_right_middle)
         return lookup.lookup_index
 
     def _build_single_pos_lookup(
-        self, font: Font, lookups: List[otTables.Lookup],
-        glyphs_value_list: Tuple[Tuple[Tuple[str], otBase.ValueRecord]]
+        self, font: Font, lookups: list[otTables.Lookup],
+        glyphs_value_list: tuple[tuple[tuple[str], otBase.ValueRecord]]
     ) -> otTables.Lookup:
         self.assert_font(font)
         ttfont = font.ttfont
@@ -565,8 +565,8 @@ class GlyphSets(object):
         lookups.append(lookup)
         return lookup
 
-    def _build_chws_lookup(self, font: Font, lookups: List[otTables.Lookup],
-                           pos: 'GlyphSets.PosValues') -> List[int]:
+    def _build_chws_lookup(self, font: Font, lookups: list[otTables.Lookup],
+                           pos: 'GlyphSets.PosValues') -> list[int]:
         self.assert_font(font)
         lookup_indices = []
 
