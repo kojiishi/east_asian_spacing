@@ -3,8 +3,7 @@ import shutil
 
 import pytest
 
-from east_asian_spacing import Dump
-from east_asian_spacing import Font
+from east_asian_spacing import Dump, Font
 
 diff_params = [None]
 if shutil.which('diff'):

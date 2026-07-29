@@ -1,14 +1,16 @@
 import itertools
 
-from east_asian_spacing.shaper import InkPartMargin
 import pytest
 
-from east_asian_spacing import Font
-from east_asian_spacing import InkPart
-from east_asian_spacing import GlyphData
-from east_asian_spacing import GlyphDataList
-from east_asian_spacing import Shaper
-from east_asian_spacing import ShapeResult
+from east_asian_spacing import (
+    Font,
+    GlyphData,
+    GlyphDataList,
+    InkPart,
+    Shaper,
+    ShapeResult,
+)
+from east_asian_spacing.shaper import InkPartMargin
 
 
 def test_glyph_data_eq():

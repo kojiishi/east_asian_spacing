@@ -1,12 +1,11 @@
 import io
 import pathlib
-import pytest
 import shutil
 import tempfile
 
-from east_asian_spacing import Builder
-from east_asian_spacing import EastAsianSpacing
-from east_asian_spacing import Font
+import pytest
+
+from east_asian_spacing import Builder, EastAsianSpacing, Font
 
 
 def test_expand_paths(monkeypatch):

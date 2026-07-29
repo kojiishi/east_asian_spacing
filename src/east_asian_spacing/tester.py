@@ -5,16 +5,12 @@ import copy
 import itertools
 import logging
 import math
-from typing import Iterable
-from typing import Optional
-from typing import Tuple
-from typing import Set
+from typing import Iterable, Optional, Set, Tuple
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
 from east_asian_spacing.shaper import Shaper
-from east_asian_spacing.spacing import EastAsianSpacing
-from east_asian_spacing.spacing import GlyphSets
+from east_asian_spacing.spacing import EastAsianSpacing, GlyphSets
 
 logger = logging.getLogger('test')
 

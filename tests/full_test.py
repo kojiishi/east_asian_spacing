@@ -1,8 +1,8 @@
 import logging
+
 import pytest
 
-from east_asian_spacing import Dump
-from east_asian_spacing import Builder
+from east_asian_spacing import Builder, Dump
 
 logger = logging.getLogger(__name__)
 

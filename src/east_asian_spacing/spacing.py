@@ -5,25 +5,20 @@ import itertools
 import logging
 import math
 import sys
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Set
+from typing import Iterable, List, Optional, Set, Tuple
 
-from fontTools.otlLib.builder import buildValue
-from fontTools.otlLib.builder import ChainContextPosBuilder
-from fontTools.otlLib.builder import ChainContextualRule
-from fontTools.otlLib.builder import PairPosBuilder
-from fontTools.otlLib.builder import SinglePosBuilder
-from fontTools.ttLib.tables import otBase
-from fontTools.ttLib.tables import otTables
+from fontTools.otlLib.builder import (
+    ChainContextPosBuilder,
+    ChainContextualRule,
+    PairPosBuilder,
+    SinglePosBuilder,
+    buildValue,
+)
+from fontTools.ttLib.tables import otBase, otTables
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
-from east_asian_spacing.shaper import GlyphData, GlyphDataList
-from east_asian_spacing.shaper import InkPart
-from east_asian_spacing.shaper import Shaper
+from east_asian_spacing.shaper import GlyphData, GlyphDataList, InkPart, Shaper
 from east_asian_spacing.utils import init_logging
 
 logger = logging.getLogger('spacing')

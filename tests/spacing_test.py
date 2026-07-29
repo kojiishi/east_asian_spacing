@@ -1,7 +1,4 @@
-from east_asian_spacing import Font
-from east_asian_spacing import GlyphData
-from east_asian_spacing import GlyphDataList
-from east_asian_spacing import GlyphSets
+from east_asian_spacing import Font, GlyphData, GlyphDataList, GlyphSets
 
 
 def test_cache(test_font_path):

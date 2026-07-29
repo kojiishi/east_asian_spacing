@@ -1,5 +1,6 @@
-import sys
 import pathlib
+import sys
+
 import pytest
 
 _test_dir = pathlib.Path(__file__).resolve().parent

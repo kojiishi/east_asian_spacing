@@ -10,18 +10,12 @@ import os
 import pathlib
 import shlex
 from subprocess import CalledProcessError
-from typing import Callable
-from typing import Iterable
-from typing import Iterator
-from typing import Optional
-from typing import Union
-from typing import Tuple
-from typing import Set
+from typing import Callable, Iterable, Iterator, Optional, Set, Tuple, Union
 
 import uharfbuzz as hb
 
-from east_asian_spacing.font import Font
 import east_asian_spacing.utils as utils
+from east_asian_spacing.font import Font
 
 logger = logging.getLogger('shaper')
 
