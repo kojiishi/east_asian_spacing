@@ -46,7 +46,6 @@ ignore = [
     "PLR0206", # Cannot have defined parameters for properties
     "PLR0402", # Use `from east_asian_spacing import utils` in lieu of alias
     "RUF012", # Mutable default value for class attribute
-    "RUF022", # `__all__` is not sorted
     "SIM102", # Use a single `if` statement instead of nested `if` statements
     "SIM103", # Return the condition directly
     "TRY002", # Create your own exception
