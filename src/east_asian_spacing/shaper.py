@@ -9,8 +9,8 @@ import logging
 import os
 import pathlib
 import shlex
+from collections.abc import Callable, Iterable, Iterator
 from subprocess import CalledProcessError
-from typing import Callable, Iterable, Iterator
 
 import uharfbuzz as hb
 

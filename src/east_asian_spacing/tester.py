@@ -5,7 +5,7 @@ import copy
 import itertools
 import logging
 import math
-from typing import Iterable
+from collections.abc import Iterable
 
 from east_asian_spacing.config import Config
 from east_asian_spacing.font import Font
