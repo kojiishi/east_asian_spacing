@@ -22,7 +22,7 @@ except ImportError:
 logger = logging.getLogger('build')
 
 
-class Builder(object):
+class Builder:
 
     def __init__(self, font, config=Config.default):
         if not isinstance(font, Font):

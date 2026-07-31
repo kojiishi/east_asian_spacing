@@ -4,7 +4,7 @@ import itertools
 import math
 
 
-class Config(object):
+class Config:
 
     def __init__(self):
         self.cjk_opening = {

@@ -18,7 +18,7 @@ from east_asian_spacing.utils import init_logging
 logger = logging.getLogger('dump')
 
 
-class TableEntry(object):
+class TableEntry:
 
     def __init__(self, reader, tag, offset, size, indices):
         self.reader = reader
@@ -95,7 +95,7 @@ class TableEntry(object):
         return (filtered, src_entry_by_tag.values())
 
 
-class Dump(object):
+class Dump:
 
     @staticmethod
     def dump_font_list(font, out_file=sys.stdout):
@@ -410,7 +410,7 @@ class Dump(object):
         logger.debug("diff completed: %s", font)
         return diff_paths
 
-    class References(object):
+    class References:
 
         def __init__(self, ref_dir):
             self.ref_dir = pathlib.Path(ref_dir)
