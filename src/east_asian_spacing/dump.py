@@ -204,12 +204,12 @@ class Dump:
             else:
                 args.append(f'-o{ttx_path}')
                 ttx_paths.append(ttx_path)
-            args.extend((f'-t{table}' for table in tables))
+            args.extend(f'-t{table}' for table in tables)
             args.append(str(font.path))
             logger.debug('run_ttx: %s', args)
             procs.append(await asyncio.create_subprocess_exec(*args))
         logger.debug("Awaiting %d dump_ttx for %s", len(procs), font)
-        tasks = list((asyncio.create_task(p.wait()) for p in procs))
+        tasks = list(asyncio.create_task(p.wait()) for p in procs)
         await asyncio.wait(tasks)
         logger.debug("dump_ttx completed: %s", font)
         return ttx_paths
