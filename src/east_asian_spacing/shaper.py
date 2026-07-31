@@ -42,7 +42,7 @@ class InkPart(enum.Enum):
         return self.name
 
 
-class InkPartMargin(object):
+class InkPartMargin:
     _current = 0
 
     def __init__(self, margin):
@@ -72,7 +72,7 @@ def _compute_ink_part(min, max, left, right):
     return InkPart.OTHER
 
 
-class GlyphData(object):
+class GlyphData:
 
     def __init__(self, glyph_id: int, cluster_index: int | None, advance: int,
                  offset: int):
@@ -133,7 +133,7 @@ class GlyphData(object):
         return self.ink_part
 
 
-class GlyphDataList(object):
+class GlyphDataList:
     """Represents a list of `GlyphData`.
 
     This class can keep multiple different `GlyphData` for a glyph id by using
@@ -240,7 +240,7 @@ class GlyphDataList(object):
         self.ifilter(lambda g: g.ink_part == ink_part, non_match)
 
 
-class ShapeResult(object):
+class ShapeResult:
 
     def __init__(self, glyphs: Iterable[GlyphData] = ()):
         self._glyphs = tuple(glyphs)
@@ -298,7 +298,7 @@ class ShapeResult(object):
         return f'[{",".join(str(g) for g in self._glyphs)}]'
 
 
-class ShaperBase(object):
+class ShaperBase:
 
     def __init__(self,
                  font,

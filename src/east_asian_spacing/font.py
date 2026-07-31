@@ -16,7 +16,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 logger = logging.getLogger('font')
 
 
-class Font(object):
+class Font:
 
     def __init__(self):
         self._byte_array = None

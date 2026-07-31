@@ -15,7 +15,7 @@ from east_asian_spacing.spacing import EastAsianSpacing, GlyphSets
 logger = logging.getLogger('test')
 
 
-class ShapeTest(object):
+class ShapeTest:
 
     @staticmethod
     def create_list(font: Font, inputs: Iterable[tuple[int, int]], index: int):
@@ -90,7 +90,7 @@ class ShapeTest(object):
         return (f'  {text}: {", ".join(self.fail_reasons)} ==> {glyphs_str}')
 
 
-class EastAsianSpacingTester(object):
+class EastAsianSpacingTester:
 
     def __init__(self,
                  font: Font,

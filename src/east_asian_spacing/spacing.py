@@ -29,7 +29,7 @@ def _is_shaper_log_enabled():
     return _log_shaper.isEnabledFor(logging.DEBUG)
 
 
-class GlyphSets(object):
+class GlyphSets:
 
     def __init__(self,
                  left: GlyphDataList | None = None,
@@ -192,7 +192,7 @@ class GlyphSets(object):
         self._add_glyphs_count += 1
         logger.debug('add_glyphs %s for "%s"', self, font)
 
-    class _ShapeHelper(object):
+    class _ShapeHelper:
 
         def __init__(self, glyph_sets: 'GlyphSets', font: Font, log_name=None):
             self._font = font
@@ -378,7 +378,7 @@ class GlyphSets(object):
         result.assert_glyphs_are_disjoint()
         return result
 
-    class GlyphTypeCache(object):
+    class GlyphTypeCache:
 
         def __init__(self):
             self.type_by_glyph_id = dict()
@@ -432,7 +432,7 @@ class GlyphSets(object):
             return glyphs
         return cache.add_to_trio(self, glyphs)
 
-    class PosValues(object):
+    class PosValues:
 
         def __init__(self, font: Font, glyph_sets: 'GlyphSets') -> None:
             glyph_sets.assert_glyphs_are_disjoint()
@@ -602,7 +602,7 @@ class GlyphSets(object):
         return lookup_indices
 
 
-class EastAsianSpacing(object):
+class EastAsianSpacing:
 
     def __init__(self):
         self.horizontal = GlyphSets()

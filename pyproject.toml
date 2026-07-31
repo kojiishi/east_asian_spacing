@@ -49,7 +49,6 @@ ignore = [
     "SIM102", # Use a single `if` statement instead of nested `if` statements
     "SIM103", # Return the condition directly
     "TRY002", # Create your own exception
-    "UP004", # Class EastAsianSpacingTester` inherits from `object`
     "UP030", # Use implicit references for positional format fields
     "UP032", # Use f-string instead of `format` call
     "UP034", # Avoid extraneous parentheses
