@@ -5,7 +5,7 @@ import itertools
 import logging
 import math
 import sys
-from typing import Iterable
+from collections.abc import Iterable
 
 from fontTools.otlLib.builder import (
     ChainContextPosBuilder,

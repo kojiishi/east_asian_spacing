@@ -10,7 +10,7 @@ import re
 import shutil
 import sys
 import tempfile
-from typing import Iterable
+from collections.abc import Iterable
 
 from east_asian_spacing.font import Font
 from east_asian_spacing.utils import init_logging

@@ -53,7 +53,6 @@ ignore = [
     "UP030", # Use implicit references for positional format fields
     "UP032", # Use f-string instead of `format` call
     "UP034", # Avoid extraneous parentheses
-    "UP035", # `...` is deprecated, use `...` instead
 ]
 
 [tool.setuptools_scm]
