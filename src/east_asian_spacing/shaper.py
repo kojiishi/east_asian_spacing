@@ -14,7 +14,7 @@ from subprocess import CalledProcessError
 
 import uharfbuzz as hb
 
-import east_asian_spacing.utils as utils
+from east_asian_spacing import utils
 from east_asian_spacing.font import Font
 
 logger = logging.getLogger('shaper')
