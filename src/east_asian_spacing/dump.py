@@ -147,9 +147,12 @@ class Dump:
         for entry in entries:
             sum_data += entry.size
             sum_gap += entry.gap
-        print("Total: {0:,}\nData: {1:,}\nGap: {2:,}\nTables: {3}".format(
-            sum_data + sum_gap, sum_data, sum_gap, len(entries)),
-              file=out_file)
+        print(
+            f"Total: {sum_data + sum_gap:,}\n"
+            f"Data: {sum_data:,}\n"
+            f"Gap: {sum_gap:,}\n"
+            f"Tables: {len(entries)}",
+            file=out_file)
 
     @staticmethod
     def dump_features(font, face_index, tag, out_file=sys.stdout):
