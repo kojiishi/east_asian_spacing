@@ -206,8 +206,9 @@ class GlyphDataList:
     def __isub__(self, other: 'GlyphDataList'):
         assert type(other) is GlyphDataList
         other_glyph_ids = other.glyph_id_set
-        self._glyphs = list(g for g in self._glyphs
-                            if g.glyph_id not in other_glyph_ids)
+        self._glyphs = [
+            g for g in self._glyphs if g.glyph_id not in other_glyph_ids
+        ]
         return self
 
     def __ior__(self, other: Iterable[GlyphData] | None):
@@ -331,7 +332,7 @@ class ShaperBase:
         by measuring a few representative glyphs."""
         result = await self.shape(text)
         result.ifilter_missing_glyphs()
-        advances = set(g.advance for g in result)
+        advances = {g.advance for g in result}
         logger.debug('fullwidth_advance=%s, upem=%d for "%s"', advances,
                      self.font.units_per_em, self.font)
         if len(advances) == 1:

@@ -145,7 +145,7 @@ class Builder:
         # Add to each font using the united `EastAsianSpacing`s.
         for spacing in spacings:
             logger.info('Adding features to: %s %s',
-                        list(font.font_index for font in spacing.from_fonts),
+                        [font.font_index for font in spacing.from_fonts],
                         spacing)
             result = False
             for font in spacing.from_fonts:

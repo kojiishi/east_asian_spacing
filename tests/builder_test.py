@@ -11,7 +11,7 @@ from east_asian_spacing import Builder, EastAsianSpacing, Font
 def test_expand_paths(monkeypatch):
 
     def call(items):
-        return list(str(path) for path in Builder.expand_paths(items))
+        return [str(path) for path in Builder.expand_paths(items)]
 
     assert call(['a', 'b']) == ['a', 'b']
 
@@ -21,7 +21,7 @@ def test_expand_paths(monkeypatch):
         for path in fonts + [dir / 'a.txt', dir / 'a.doc']:
             path.touch()
         # Compare sets to avoid different ordering by platforms.
-        fonts_set = set(str(font) for font in fonts)
+        fonts_set = {str(font) for font in fonts}
         assert set(call([dir_str])) == fonts_set
         result = call(['x', dir_str, 'y'])
         assert (result[0] == 'x' and set(result[1:-1]) == fonts_set
