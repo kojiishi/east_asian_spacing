@@ -381,7 +381,7 @@ class GlyphSets:
     class GlyphTypeCache:
 
         def __init__(self):
-            self.type_by_glyph_id = dict()
+            self.type_by_glyph_id = {}
 
         def add_glyphs(self, glyphs: Iterable[int], value):
             for glyph_id in glyphs:

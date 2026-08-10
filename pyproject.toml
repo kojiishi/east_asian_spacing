@@ -39,8 +39,6 @@ testpaths = "tests"
 ignore = [
     "C400", # Unnecessary generator (rewrite as a list comprehension)
     "C401", # Unnecessary generator (rewrite as a set comprehension)
-    "C405", # Unnecessary tuple literal (rewrite as a set literal)
-    "C408", # Unnecessary `tuple()` call (rewrite as a literal)
     "C417", # Unnecessary `map()` usage (rewrite using a generator expression)
     "LOG015", # `info()` call on root logger
     "PLR0206", # Cannot have defined parameters for properties
