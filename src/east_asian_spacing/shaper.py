@@ -194,7 +194,7 @@ class GlyphDataList:
         glyphs = sorted(self._glyphs, key=key_func)
         glyphs = _uniq(glyphs)
         result = itertools.groupby(glyphs, key=key_func)
-        result = map(lambda t: (t[0], GlyphDataList(t[1])), result)
+        result = ((t[0], GlyphDataList(t[1])) for t in result)
         return result
 
     def add(self, glyph: GlyphData):
