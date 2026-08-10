@@ -317,7 +317,7 @@ class ShaperBase:
     def features_dict(self):
         if not self.features:
             return None
-        features_dict = dict()
+        features_dict = {}
         for feature in self.features:
             features_dict[feature] = True
         return features_dict

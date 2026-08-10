@@ -145,7 +145,7 @@ class EastAsianSpacingTester:
         coros = []
         config = self._config
         if not config:
-            return tuple()
+            return ()
 
         font = self.font
         opening = config.cjk_opening

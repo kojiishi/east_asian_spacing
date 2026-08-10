@@ -168,7 +168,7 @@ class Font:
         # This speeds up saving significantly for large fonts.
         loaded_keys = ttfont.tables.keys()
         logger.debug("loaded_keys=%s", loaded_keys)
-        keys_to_save = set(('head', 'GPOS'))
+        keys_to_save = {'head', 'GPOS'}
         for key in tuple(loaded_keys):
             if key not in keys_to_save and ttfont.isLoaded(key):
                 del ttfont.tables[key]
