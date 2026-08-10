@@ -429,8 +429,8 @@ class Font:
     def _sort_features_ottable(ottable: otTables.GPOS):
         fontTools.varLib.featureVars.sortFeatureList(ottable)
 
-    _ot_extensions = set(ext.casefold() for ext in ('.otf', '.ttf'))
-    _ttc_extensions = set(ext.casefold() for ext in ('.otc', '.ttc'))
+    _ot_extensions = {ext.casefold() for ext in ('.otf', '.ttf')}
+    _ttc_extensions = {ext.casefold() for ext in ('.otc', '.ttc')}
     _font_extensions = _ttc_extensions | _ot_extensions
 
     @staticmethod
@@ -457,8 +457,9 @@ if __name__ == '__main__':
             continue
         table = tttable.table
         print(
-            tag + ":", ", ".join(
-                set(feature_record.FeatureTag
-                    for feature_record in table.FeatureList.FeatureRecord)))
+            tag + ":", ", ".join({
+                feature_record.FeatureTag
+                for feature_record in table.FeatureList.FeatureRecord
+            }))
         print("  " + "\n  ".join(
             str(i) for i in font.script_and_langsys_tags_for_table(table)))

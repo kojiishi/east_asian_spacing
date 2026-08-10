@@ -653,7 +653,7 @@ class EastAsianSpacing:
     async def is_monospace_ascii(font):
         shaper = Shaper(font)
         result = await shaper.shape('iIMW')
-        advances = set(g.advance for g in result)
+        advances = {g.advance for g in result}
         assert len(advances) > 0
         return len(advances) == 1
 

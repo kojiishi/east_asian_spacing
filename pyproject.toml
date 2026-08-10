@@ -37,8 +37,6 @@ testpaths = "tests"
 
 [tool.ruff.lint]
 ignore = [
-    "C400", # Unnecessary generator (rewrite as a list comprehension)
-    "C401", # Unnecessary generator (rewrite as a set comprehension)
     "C417", # Unnecessary `map()` usage (rewrite using a generator expression)
     "LOG015", # `info()` call on root logger
     "PLR0206", # Cannot have defined parameters for properties
