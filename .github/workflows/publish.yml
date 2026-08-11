@@ -8,28 +8,37 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v7
+    - uses: actions/checkout@v7
+      with:
+        # setuptools_scm requires the git clone to not be 'shallow'
+        fetch-depth: 0
+        persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.x'
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.x'
 
-      # https://docs.astral.sh/uv/guides/integration/github/
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+    # https://docs.astral.sh/uv/guides/integration/github/
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
 
-      - name: Install Dependencies
-        run: |
-          uv sync --all-extras --dev
+    - name: Install Dependencies
+      run: uv sync --all-extras --dev
 
-      - name: Build and publish
-        run: |
-          uv build
-          uv publish
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+    - name: Build and publish
+      run: |
+        uv build
+        uv publish
+      env:
+        UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
